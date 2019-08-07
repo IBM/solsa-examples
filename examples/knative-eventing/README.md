@@ -32,6 +32,7 @@ Consumer](../../tutorial#example-event-streams-consumer).
 
 The solution code in [example.js](example.js) is:
 ```javascript
+const path = require('path')
 const solsa = require('solsa')
 const bundle = new solsa.Bundle()
 module.exports = bundle
@@ -43,7 +44,7 @@ bundle.kafka = new solsa.EventStreams({ name: 'kafka', plan: 'standard', service
 bundle.topic = new bundle.kafka.Topic({ name: 'topic', topicName: 'MyTopic' })
 
 // Producer (containerized service) interfacing directly with Event Streams
-bundle.producer = new solsa.ContainerizedService({ name: 'producer', image: 'kafka-producer', build: '../../tutorial/kafka-producer' })
+bundle.producer = new solsa.ContainerizedService({ name: 'producer', image: 'kafka-producer', build: path.join(__dirname, '..', '..', 'tutorial', 'kafka-producer') })
 bundle.producer.env = {
   BROKERS: bundle.kafka.getSecret('kafka_brokers_sasl'),
   USER: bundle.kafka.getSecret('user'),
