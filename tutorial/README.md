@@ -465,7 +465,7 @@ producer code as a Kubernetes service on our cluster. In
 bundle.kafka = new solsa.EventStreams({ name: 'kafka', plan: 'standard', serviceClassType: 'CF' }).useExisting()
 bundle.topic = new bundle.kafka.Topic({ name: 'topic', topicName: 'MyTopic' }).useExisting()
 
-bundle.producer = new solsa.ContainerizedService({ name: 'producer', image: 'kafka-producer', build: 'kafka-producer' })
+bundle.producer = new solsa.ContainerizedService({ name: 'producer', image: 'kafka-producer', build: path.join(__dirname, 'kafka-producer') })
 
 bundle.producer.env = {
   BROKERS: bundle.kafka.getSecret('kafka_brokers_sasl'),
@@ -480,8 +480,10 @@ information we need about the instance and topic but omit them from the
 generated YAML.
 
 The `ContainerizedService` configuration is similar to previous examples, except
-for the addition of the `build` parameter with value `kafka-producer`. This
-parameter is the path to the Node.js module we want to containerize.
+for the addition of the `build` parameter. This parameter is the absolute path
+to the Node.js module we want to containerize. As illustrate here, the absolute
+path of the module may be obtained by prefixing the path relative to the current
+module with `__dirname`.
 
 The `env` parameter of the `ContainerizedService` instance makes use of the
 `getSecret` method of the `EventStreams` SolSA class to obtain the credentials.

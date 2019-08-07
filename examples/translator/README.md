@@ -33,6 +33,7 @@ translator to English.
 
 The solution architecture is defined in [solution.js](solution.js):
 ```javascript
+const path = require('path')
 const solsa = require('solsa')
 
 module.exports = function translator ({ name, language }) {
@@ -40,7 +41,7 @@ module.exports = function translator ({ name, language }) {
 
   bundle.watson = new solsa.LanguageTranslator({ name: 'watson-translator-for-' + name })
 
-  bundle.translator = new solsa.ContainerizedService({ name, image: 'solsa-translator', build: 'solsa-translator', port: 8080 })
+  bundle.translator = new solsa.ContainerizedService({ name, image: 'solsa-translator', build: path.join(__dirname, 'solsa-translator'), port: 8080 })
 
   bundle.translator.env = { LANGUAGE: { value: language }, WATSON_URL: bundle.watson.getSecret('url'), WATSON_APIKEY: bundle.watson.getSecret('apikey') }
 
