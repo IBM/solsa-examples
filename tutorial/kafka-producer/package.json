@@ -1,0 +1,6 @@
+{
+  "name": "kafka-producer",
+  "dependencies": {
+    "kafkajs": "^1.8.0"
+  }
+}

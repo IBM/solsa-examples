@@ -1,0 +1,7 @@
+{
+  "name": "solsa-translator",
+  "dependencies": {
+    "express": "^4.16.4",
+    "ibm-watson": "^4.3.0"
+  }
+}
