@@ -18,8 +18,13 @@
 # SolSA Examples
 
 This folder contains sample SolSA solutions that illustrate different use cases.
+* [Bookinfo](bookinfo) shows how an existing microservice based application is
+  expressed in SolSA as an application pattern and how SolSA simplifies the
+  reuse of that pattern in an enhanced application.
 * [Translator](translator) focuses on configuring a single newly-developed
   microservice that relies on an IBM Cloud Service for its core functionality.
 * [Knative Eventing](knative-eventing) shows how SolSA can simplify the
   specification of a Knative eventing pattern that connects a Kafka event source
   to a Knative service sink.
+* [K-Container](k-container) shows how SolSA can be used to capture an
+  event-driven architecture pattern from the IBM Cloud Garage.

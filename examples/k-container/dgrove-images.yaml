@@ -1,0 +1,16 @@
+images:
+  - name: kc-fleetms
+    registry: dgrove
+    tag: 'ee496d9'
+  - name: kc-ordercmdms
+    registry: dgrove
+    tag: 'ibmcase-v1'
+  - name: kc-orderqueryms
+    registry: dgrove
+    tag: 'ibmcase-v1'
+  - name: kc-voyagesms
+    registry: dgrove
+    tag: 'ee496d9'
+  - name: kc-ui
+    registry: dgrove
+    tag: ibmcase-v1

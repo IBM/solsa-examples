@@ -1,0 +1,9 @@
+{
+  "name": "bookinfo",
+  "main": "bookinfo.js",
+  "dependencies": {
+    "express": "^4.16.4",
+    "needle": "^2.2.4",
+    "ibm-watson": "^4.3.0"
+  }
+}
