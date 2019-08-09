@@ -90,7 +90,9 @@ Next, deploy the solution instance with:
 ```shell
 solsa yaml instance.js | kubectl apply -f -
 ```
-Finally, test it with curl:
+If we use cluster `mycluster` with the configuration file from
+https://github.com/IBM/solsa/blob/master/docs/SolSAConfig.md#example, we can
+test the deployed solution through its ingress:
 ```shell
 curl -X POST -H "Content-Type: application/json" $(kubectl get ingress my-translator -o jsonpath={.spec.rules[0].host})/translate -d '{ "text": "Hola senor" }'
 ```
