@@ -29,11 +29,11 @@ let solsa = require('solsa')
  * @param getImage a function mapping from logical image names to concrete image names
  * @returns a SolSA bundle containing the k-container instance
  */
-module.exports = function kcontainer ({ name, getImage }) {
+module.exports = function kcontainer ({ getImage }) {
   let bundle = new solsa.Bundle()
 
   // EventStreams configuration
-  bundle.es = new solsa.EventStreams({ name: `${name}-es`, plan: 'standard' })
+  bundle.es = new solsa.EventStreams({ name: 'kcontainer-es', plan: 'standard' })
   bundle.es.addTopic('allocated-orders')
   bundle.es.addTopic('bluewaterContainer')
   bundle.es.addTopic('bluewaterProblem')
@@ -46,20 +46,20 @@ module.exports = function kcontainer ({ name, getImage }) {
 
   // Common environment variables shared across kcontainer microservices
   let commonEnv = {
-    APPLICATION_NAME: name,
+    APPLICATION_NAME: 'kcontainer',
     KAFKA_ENV: 'IBMCLOUD',
     KAFKA_BROKERS: bundle.es.getSecret('kafka_brokers_sasl_flat'),
     KAFKA_APIKEY: bundle.es.getSecret('api_key')
   }
 
   // Internal microservices
-  bundle.fleetms = new solsa.ContainerizedService({ name: `${name}-fleetms`, image: getImage('kc-fleetms'), port: 9080, env: commonEnv })
-  bundle.ordercmdms = new solsa.ContainerizedService({ name: `${name}-ordercmdms`, image: getImage('kc-ordercmdms'), port: 9080, env: commonEnv })
-  bundle.orderqueryms = new solsa.ContainerizedService({ name: `${name}-orderqueryms`, image: getImage('kc-orderqueryms'), port: 9080, env: commonEnv })
-  bundle.voyagesms = new solsa.ContainerizedService({ name: `${name}-voyagesms`, image: getImage('kc-voyagesms'), port: 3000, env: commonEnv })
+  bundle.fleetms = new solsa.ContainerizedService({ name: 'kc-fleetms', image: getImage('kc-fleetms'), port: 9080, env: commonEnv })
+  bundle.ordercmdms = new solsa.ContainerizedService({ name: 'kc-ordercmdms', image: getImage('kc-ordercmdms'), port: 9080, env: commonEnv })
+  bundle.orderqueryms = new solsa.ContainerizedService({ name: 'kc-orderqueryms', image: getImage('kc-orderqueryms'), port: 9080, env: commonEnv })
+  bundle.voyagesms = new solsa.ContainerizedService({ name: 'kc-voyagesms', image: getImage('kc-voyagesms'), port: 3000, env: commonEnv })
 
   // UI connects with fleet, ordercmd, orderquery, and voyages via names/ports provided in its environment
-  bundle.ui = new solsa.ContainerizedService({ name: `${name}-ui`, image: getImage('kc-ui'), port: 3010 })
+  bundle.ui = new solsa.ContainerizedService({ name: 'kc-ui', image: getImage('kc-ui'), port: 3010 })
   bundle.ui.env = Object.assign({
     FLEETMS_SERVICE_SERVICE_HOST: bundle.fleetms.name,
     FLEETMS_SERVICE_SERVICE_PORT: bundle.fleetms.port,
