@@ -36,13 +36,13 @@ below (cf. [bookinfo.js](bookinfo.js)):
 ```javascript
 let solsa = require('solsa')
 
-module.exports = function bookinfo ({ name }) {
+module.exports = function bookinfo () {
   let bundle = new solsa.Bundle()
 
-  bundle.details = new solsa.ContainerizedService({ name: `${name}-details`, image: 'istio/examples-bookinfo-details-v1:1.15.0', port: 9080 })
-  bundle.ratings = new solsa.ContainerizedService({ name: `${name}-ratings`, image: 'istio/examples-bookinfo-ratings-v1:1.15.0', port: 9080 })
-  bundle.reviews = new solsa.ContainerizedService({ name: `${name}-reviews`, image: 'istio/examples-bookinfo-reviews-v1:1.15.0', port: 9080 })
-  bundle.productpage = new solsa.ContainerizedService({ name: `${name}-productpage`, image: 'istio/examples-bookinfo-productpage-v1:1.15.0', port: 9080 })
+  bundle.details = new solsa.ContainerizedService({ name: 'details', image: 'istio/examples-bookinfo-details-v1:1.15.0', port: 9080 })
+  bundle.ratings = new solsa.ContainerizedService({ name: 'ratings', image: 'istio/examples-bookinfo-ratings-v1:1.15.0', port: 9080 })
+  bundle.reviews = new solsa.ContainerizedService({ name: 'reviews', image: 'istio/examples-bookinfo-reviews-v1:1.15.0', port: 9080 })
+  bundle.productpage = new solsa.ContainerizedService({ name: 'productpage', image: 'istio/examples-bookinfo-productpage-v1:1.15.0', port: 9080 })
   bundle.productpage.env = {
     DETAILS_HOSTNAME: bundle.details.name,
     RATINGS_HOSTNAME: bundle.ratings.name,
@@ -63,7 +63,7 @@ it depends.
 An instance of the Bookinfo pattern is instantiated as shown below (cf. [instance.js](instance.js)):
 ```javascript
 const bookinfo = require('./bookinfo')
-module.exports = bookinfo({ name: 'my-library' })
+module.exports = bookinfo()
 ```
 
 ## A Foreign Language Bookinfo
@@ -76,13 +76,13 @@ application as shown below (cf. [bookinfo-translator.js](bookinfo-translator.js)
 let solsa = require('solsa')
 let bookinfo = require('./bookinfo.js')
 
-module.exports = function translatingBookinfo ({ name, language }) {
-  // Create an instance of the vanilla Bookinfo application pattern
-  let bundle = bookinfo({ name: name })
+module.exports = function translatingBookinfo ({ language }) {
+  // Create an instance of the basic Bookinfo application pattern
+  let bundle = bookinfo()
 
   // Configure a translating review service
-  bundle.translator = new solsa.LanguageTranslator({ name: `${name}-watson-translator` })
-  bundle.translatedReviews = new solsa.ContainerizedService({ name: `${name}-reviews-translator`, image: 'solsa-reviews-translator', build: __dirname, main: 'reviews-translator.js', port: 9080 })
+  bundle.translator = new solsa.LanguageTranslator({ name: 'bookinfo-watson-translator' })
+  bundle.translatedReviews = new solsa.ContainerizedService({ name: 'reviews-translator', image: 'solsa-reviews-translator', build: __dirname, main: 'reviews-translator.js', port: 9080 })
   bundle.translatedReviews.env = {
     LANGUAGE: { value: language },
     WATSON_TRANSLATOR_URL: bundle.translator.getSecret('url'),
@@ -90,17 +90,18 @@ module.exports = function translatingBookinfo ({ name, language }) {
     REVIEWS_HOSTNAME: bundle.reviews.name,
     REVIEWS_PORT: bundle.reviews.port
   }
+  bundle.translatedReviews.readinessProbe = { httpGet: { path: '/solsa/readinessProbe', port: bundle.translatedReviews.port } }
 
-  // Modify existing Bookinfo productpage to use the translating review service
+  // Modify the Bookinfo productpage to use the translating review service
   bundle.productpage.env.REVIEWS_HOSTNAME = bundle.translatedReviews.name
 
   return bundle
 }
 ```
 The first block of code creates an instance of the basic Bookinfo
-application pattern by inviking the `bookinfo` function imported from `bookinfo.js`.
+application pattern by invoking the `bookinfo` function imported from `bookinfo.js`.
 
-The middle block of code defines a new `translator`
+The middle block of code defines a new `reviews-translator`
 microservice and configures it to:
 1. access its instance of the Watson Language Translator
 2. access the original `reviews` microservice to get the reviews
@@ -114,7 +115,7 @@ Finally, we can instantiate a bookinfo that translates reviews to
 Spanish with the snippet (cf. [instance-sp.js](instance-sp.js))
 ```javascript
 const bookinfo = require('./bookinfo-translator')
-module.exports = bookinfo({ name: 'my-library-es', language: 'spanish' })
+module.exports = bookinfo({ language: 'spanish' })
 ```
 
 Note: before using `sosla yaml` to deploy this application, you will first need to build

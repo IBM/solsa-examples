@@ -15,5 +15,4 @@
  */
 
 const bookinfo = require('./bookinfo')
-
-module.exports = bookinfo({ name: 'my-library' })
+module.exports = bookinfo()

@@ -19,13 +19,13 @@
 
 let solsa = require('solsa')
 
-module.exports = function bookinfo ({ name }) {
+module.exports = function bookinfo () {
   let bundle = new solsa.Bundle()
 
-  bundle.details = new solsa.ContainerizedService({ name: `${name}-details`, image: 'istio/examples-bookinfo-details-v1:1.15.0', port: 9080 })
-  bundle.ratings = new solsa.ContainerizedService({ name: `${name}-ratings`, image: 'istio/examples-bookinfo-ratings-v1:1.15.0', port: 9080 })
-  bundle.reviews = new solsa.ContainerizedService({ name: `${name}-reviews`, image: 'istio/examples-bookinfo-reviews-v1:1.15.0', port: 9080 })
-  bundle.productpage = new solsa.ContainerizedService({ name: `${name}-productpage`, image: 'istio/examples-bookinfo-productpage-v1:1.15.0', port: 9080 })
+  bundle.details = new solsa.ContainerizedService({ name: 'details', image: 'istio/examples-bookinfo-details-v1:1.15.0', port: 9080 })
+  bundle.ratings = new solsa.ContainerizedService({ name: 'ratings', image: 'istio/examples-bookinfo-ratings-v1:1.15.0', port: 9080 })
+  bundle.reviews = new solsa.ContainerizedService({ name: 'reviews', image: 'istio/examples-bookinfo-reviews-v1:1.15.0', port: 9080 })
+  bundle.productpage = new solsa.ContainerizedService({ name: 'productpage', image: 'istio/examples-bookinfo-productpage-v1:1.15.0', port: 9080 })
   bundle.productpage.env = {
     DETAILS_HOSTNAME: bundle.details.name,
     RATINGS_HOSTNAME: bundle.ratings.name,

@@ -23,13 +23,13 @@
 let solsa = require('solsa')
 let bookinfo = require('./bookinfo.js')
 
-module.exports = function translatingBookinfo ({ name, language }) {
-  // Create an instance of the vanilla Bookinfo application pattern
-  let bundle = bookinfo({ name: name })
+module.exports = function translatingBookinfo ({ language }) {
+  // Create an instance of the basic Bookinfo application pattern
+  let bundle = bookinfo()
 
   // Configure a translating review service
-  bundle.translator = new solsa.LanguageTranslator({ name: `${name}-watson-translator` })
-  bundle.translatedReviews = new solsa.ContainerizedService({ name: `${name}-reviews-translator`, image: 'solsa-reviews-translator', build: __dirname, main: 'reviews-translator.js', port: 9080 })
+  bundle.translator = new solsa.LanguageTranslator({ name: 'bookinfo-watson-translator' })
+  bundle.translatedReviews = new solsa.ContainerizedService({ name: 'reviews-translator', image: 'solsa-reviews-translator', build: __dirname, main: 'reviews-translator.js', port: 9080 })
   bundle.translatedReviews.env = {
     LANGUAGE: { value: language },
     WATSON_TRANSLATOR_URL: bundle.translator.getSecret('url'),
@@ -39,7 +39,7 @@ module.exports = function translatingBookinfo ({ name, language }) {
   }
   bundle.translatedReviews.readinessProbe = { httpGet: { path: '/solsa/readinessProbe', port: bundle.translatedReviews.port } }
 
-  // Modify existing Bookinfo productpage to use the translating review service
+  // Modify the Bookinfo productpage to use the translating review service
   bundle.productpage.env.REVIEWS_HOSTNAME = bundle.translatedReviews.name
 
   return bundle

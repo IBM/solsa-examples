@@ -16,4 +16,4 @@
 
 const bookinfo = require('./bookinfo-translator')
 
-module.exports = bookinfo({ name: 'my-library-es', language: 'spanish' })
+module.exports = bookinfo({ language: 'spanish' })
