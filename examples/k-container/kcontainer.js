@@ -44,4 +44,4 @@ function getImage (shortname) {
   return res
 }
 
-module.exports = kcontainer({ name: 'kcontainer', getImage: getImage })
+module.exports = kcontainer({ getImage: getImage })
