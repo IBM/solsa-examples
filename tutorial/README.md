@@ -341,15 +341,13 @@ kind: Service
 metadata:
   name: hello-knative
 spec:
-  runLatest:
-    configuration:
-      revisionTemplate:
-        spec:
-          container:
-            env:
-            - name: TARGET
-              value: Knative
-            image: docker.io/ibmcom/kn-helloworld
+  template:
+    spec:
+      containers:
+      - env:
+        - name: TARGET
+          value: Knative
+        image: docker.io/ibmcom/kn-helloworld
 ```
 To deploy this example, we run:
 ```shell
