@@ -56,7 +56,7 @@ module.exports = function bookinfo () {
 The code above defines the four component microservices by
 indicating their names, container image, and exposed port.
 The dependencies from the `productpage` microservice to
-the other services is represented explicitly in the specification of
+the other services are represented explicitly in the specification of
 its environment, which captures the names of the services on which
 it depends.
 

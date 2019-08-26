@@ -14,9 +14,6 @@
  * limitations under the License.
  */
 
-// An example of deploying existing microservices using SolSA to manage dependencies
-// This is the Istio Bookinfo sample application (https://istio.io/docs/examples/bookinfo/)
-
 let solsa = require('solsa')
 
 module.exports = function bookinfo () {
