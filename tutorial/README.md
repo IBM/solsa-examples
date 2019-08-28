@@ -91,6 +91,18 @@ SolSA synthesized both a Kubernetes `Deployment` and a `Service` for our
 as the number of replicas, labels, selectors, environment variables, and a
 readiness probe.
 
+Note that in addition to the YAML output, you will also see the following warnings
+messages from `sosla`
+```shell
+Warning: Unable to load solsa configuration file "/.../.solsa.yaml"
+Warning: Generating YAML without clutser or context specific layers:
+           Unable to generate Ingress
+           Unable to generate image name rewriting directives
+```
+These can be safely ignored for now.  We will cover defining a `sosla.yaml`
+configuration file [later in this tutorial](# Example:_Ingress)
+
+
 While SolSA makes it possible to directly configure resources such as Kubernetes
 deployments or services, SolSA encourages developers to use higher-level
 abstractions such as the `ContainerizedService` class. These abstractions are
