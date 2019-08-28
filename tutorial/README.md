@@ -100,7 +100,7 @@ Warning: Generating YAML without clutser or context specific layers:
            Unable to generate image name rewriting directives
 ```
 These can be safely ignored for now.  We will cover defining a `sosla.yaml`
-configuration file [later in this tutorial](# Example:_Ingress)
+configuration file [later in this tutorial](#example-ingress)
 
 
 While SolSA makes it possible to directly configure resources such as Kubernetes
