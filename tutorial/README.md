@@ -353,7 +353,7 @@ To deploy this example, we run:
 ```shell
 solsa yaml knative.js | kubectl apply -f -
 ```
-After a few seconds, we can query the deployed service using command:
+After a few seconds (wait until `kubectl get service.serving.knative.dev hello-knative` reports that hello-knative is `Ready`), we can query the deployed service using command:
 ```shell
 curl $(kubectl get ksvc/hello-knative -o jsonpath={.status.url})
 ```
