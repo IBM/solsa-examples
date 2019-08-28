@@ -91,6 +91,18 @@ SolSA synthesized both a Kubernetes `Deployment` and a `Service` for our
 as the number of replicas, labels, selectors, environment variables, and a
 readiness probe.
 
+Note that in addition to the YAML output, you will also see the following warnings
+messages from `sosla`
+```shell
+Warning: Unable to load solsa configuration file "/.../.solsa.yaml"
+Warning: Generating YAML without clutser or context specific layers:
+           Unable to generate Ingress
+           Unable to generate image name rewriting directives
+```
+These warnings can be safely ignored for now.  We will cover (a) defining a `sosla.yaml`
+configuration file and (b) how `sosla` figures out which of your Kubernetes
+clusters it should be targeting [later in this tutorial](#example-ingress).
+
 While SolSA makes it possible to directly configure resources such as Kubernetes
 deployments or services, SolSA encourages developers to use higher-level
 abstractions such as the `ContainerizedService` class. These abstractions are
@@ -216,15 +228,23 @@ the port of the ingress from the port of the containerized service.
 
 To synthesize YAML for an ingress, SolSA needs to know about the cluster this
 ingress is intended for. This information must be provided as part of a SolSA
-configuration file as discussed in
+configuration file. By default, the `sosla` CLI looks for a configuration file
+named `.solsa.yaml`  in the user's homedir. A different path can be specified
+using either the `--config` flag or the `SOLSA_CONFIG` environment variable.
+The content and format of the configuration file is specified in
 [solsa/docs/SolSAConfig.md](https://github.com/IBM/solsa/tree/master/docs/SolSAConfig.md).
 
-By default the `solsa` CLI uses the cluster for the current Kubernetes context.
-But a different context may be specified using the `--context` flag, or a
-cluster with the `--cluster` flag. By default, the CLI looks for a configuration
-file named `.solsa.yaml` in the user's homedir. A different path can be
-specified using either the `--config` flag or the `SOLSA_CONFIG` environment
-variable.
+If you are following along in this tutorial and deploying each example on
+your own cluster, you should pause here, consult
+[SolSAConfig.md](https://github.com/IBM/solsa/tree/master/docs/SolSAConfig.md)
+and define a `$HOME/.solsa.yaml` that defines the Ingress characteristics
+of your cluster before continuing.
+
+By default the `solsa` CLI targets the cluster for the current Kubernetes context
+Under the covers, `sosla` just invokes `kubectl config current-context` to get this information.
+Therefore any scheme you have for managing your Kubernetes environments that works for `kubectl`
+will also just work for `sosla`.  However, you can also explictly tell `sosla` to target
+a different context using  the `--context` flag, or a different cluster with the `--cluster` flag.
 
 ### Generated Ingress on Kubernetes
 
