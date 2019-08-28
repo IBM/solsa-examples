@@ -15,5 +15,4 @@
  */
 
 const bookinfo = require('./bookinfo-translator')
-
 module.exports = bookinfo({ language: 'spanish' })
