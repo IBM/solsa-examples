@@ -18,5 +18,20 @@ const solsa = require('solsa')
 const app = new solsa.Bundle()
 module.exports = app
 
+const bcAuth = require('./bluecompute-auth')
+app.auth = bcAuth()
+
+const bcCatalog = require('./bluecompute-catalog')
+app.catalog = bcCatalog()
+
+const bcCustomer = require('./bluecompute-customer')
+app.catalog = bcCustomer()
+
 const bcOrders = require('./bluecompute-orders')
 app.orders = bcOrders()
+
+const bcInventory = require('./bluecompute-inventory')
+app.inventory = bcInventory()
+
+const bcWeb = require('./bluecompute-web')
+app.web = bcWeb()
