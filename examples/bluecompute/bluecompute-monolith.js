@@ -1,8 +1,8 @@
+/* eslint-disable no-template-curly-in-string */
 const solsa = require('solsa')
+
 const app = new solsa.Bundle()
 module.exports = app
-
-/* eslint-disable no-template-curly-in-string */
 
 app.bluecomputePodSecurityPolicy = new solsa.extensions.v1beta1.PodSecurityPolicy({
   metadata: {
@@ -14,31 +14,14 @@ app.bluecomputePodSecurityPolicy = new solsa.extensions.v1beta1.PodSecurityPolic
     }
   },
   spec: {
-    allowedCapabilities: [
-      'IPC_LOCK'
-    ],
-    fsGroup: {
-      rule: 'RunAsAny'
-    },
-    hostPorts: [
-      {
-        max: 65535,
-        min: 1
-      }
-    ],
+    allowedCapabilities: [ 'IPC_LOCK' ],
+    fsGroup: { rule: 'RunAsAny' },
+    hostPorts: [ { max: 65535, min: 1 } ],
     privileged: true,
-    runAsUser: {
-      rule: 'RunAsAny'
-    },
-    seLinux: {
-      rule: 'RunAsAny'
-    },
-    supplementalGroups: {
-      rule: 'RunAsAny'
-    },
-    volumes: [
-      '*'
-    ]
+    runAsUser: { rule: 'RunAsAny' },
+    seLinux: { rule: 'RunAsAny' },
+    supplementalGroups: { rule: 'RunAsAny' },
+    volumes: [ '*' ]
   }
 })
 
@@ -54,10 +37,7 @@ app.bluecomputeGrafanaSecret = new solsa.core.v1.Secret({
     name: 'bluecompute-grafana-secret'
   },
   type: 'Opaque',
-  data: {
-    username: 'YWRtaW4=',
-    password: 'YWRtaW4='
-  }
+  data: { username: 'YWRtaW4=', password: 'YWRtaW4=' }
 })
 
 app.bluecomputeBindingRefarchComposeForElasticsearch_Secret = new solsa.core.v1.Secret({
@@ -86,9 +66,7 @@ app.bluecomputeInventoryMysqlSecret = new solsa.core.v1.Secret({
     }
   },
   type: 'Opaque',
-  data: {
-    'mysql-password': 'cGFzc3dvcmQ='
-  }
+  data: { 'mysql-password': 'cGFzc3dvcmQ=' }
 })
 
 app.bluecomputeInventorydb_Secret = new solsa.core.v1.Secret({
@@ -103,27 +81,16 @@ app.bluecomputeInventorydb_Secret = new solsa.core.v1.Secret({
     }
   },
   type: 'Opaque',
-  data: {
-    'mysql-root-password': 'cGFzc3dvcmQ=',
-    'mysql-password': 'cGFzc3dvcmQ='
-  }
+  data: { 'mysql-root-password': 'cGFzc3dvcmQ=', 'mysql-password': 'cGFzc3dvcmQ=' }
 })
 
 app.bluecomputeMariadb_Secret = new solsa.core.v1.Secret({
   metadata: {
     name: 'bluecompute-mariadb',
-    labels: {
-      app: 'mariadb',
-      chart: 'mariadb-5.2.2',
-      release: 'bluecompute',
-      heritage: 'Tiller'
-    }
+    labels: { app: 'mariadb', chart: 'mariadb-5.2.2', release: 'bluecompute', heritage: 'Tiller' }
   },
   type: 'Opaque',
-  data: {
-    'mariadb-root-password': 'cGFzc3dvcmQ=',
-    'mariadb-password': 'cGFzc3dvcmQ='
-  }
+  data: { 'mariadb-root-password': 'cGFzc3dvcmQ=', 'mariadb-password': 'cGFzc3dvcmQ=' }
 })
 
 app.bluecomputeMysql_Secret = new solsa.core.v1.Secret({
@@ -137,10 +104,7 @@ app.bluecomputeMysql_Secret = new solsa.core.v1.Secret({
     }
   },
   type: 'Opaque',
-  data: {
-    'mysql-root-password': 'cGFzc3dvcmQ=',
-    'mysql-password': 'cGFzc3dvcmQ='
-  }
+  data: { 'mysql-root-password': 'cGFzc3dvcmQ=', 'mysql-password': 'cGFzc3dvcmQ=' }
 })
 
 app.bluecomputeOrdersMariadbSecret = new solsa.core.v1.Secret({
@@ -153,9 +117,7 @@ app.bluecomputeOrdersMariadbSecret = new solsa.core.v1.Secret({
     }
   },
   type: 'Opaque',
-  data: {
-    'mariadb-password': 'cGFzc3dvcmQ='
-  }
+  data: { 'mariadb-password': 'cGFzc3dvcmQ=' }
 })
 
 app.bluecomputeOrdersdb_Secret = new solsa.core.v1.Secret({
@@ -170,16 +132,11 @@ app.bluecomputeOrdersdb_Secret = new solsa.core.v1.Secret({
     }
   },
   type: 'Opaque',
-  data: {
-    'mysql-root-password': 'cGFzc3dvcmQ=',
-    'mysql-password': 'cGFzc3dvcmQ='
-  }
+  data: { 'mysql-root-password': 'cGFzc3dvcmQ=', 'mysql-password': 'cGFzc3dvcmQ=' }
 })
 
 app.bluecomputeCatalogConfig_ConfigMap = new solsa.core.v1.ConfigMap({
-  metadata: {
-    name: 'bluecompute-catalog-config'
-  },
+  metadata: { name: 'bluecompute-catalog-config' },
   data: {
     'jvm.options': '\n' +
       '-Dclient.InventoryServiceClient/mp-rest/url=http://bluecompute-inventory:9080/inventory/rest/inventory\n'
@@ -187,9 +144,7 @@ app.bluecomputeCatalogConfig_ConfigMap = new solsa.core.v1.ConfigMap({
 })
 
 app.bluecomputeCustomerConfig_ConfigMap = new solsa.core.v1.ConfigMap({
-  metadata: {
-    name: 'bluecompute-customer-config'
-  },
+  metadata: { name: 'bluecompute-customer-config' },
   data: {
     'jvm.options': '-Dapplication.rest.client.CloudantClientService/mp-rest/url=http://bluecompute-cloudant-service:80\n'
   }
@@ -206,9 +161,7 @@ app.bluecomputePrometheusAlertrules_ConfigMap = new solsa.core.v1.ConfigMap({
     },
     name: 'bluecompute-prometheus-alertrules'
   },
-  data: {
-    'alert.rules': ''
-  }
+  data: { 'alert.rules': '' }
 })
 
 app.bluecomputePrometheusAlertmanager_ConfigMap = new solsa.core.v1.ConfigMap({
@@ -10245,9 +10198,7 @@ app.bluecomputeMariadb_ConfigMap = new solsa.core.v1.ConfigMap({
 })
 
 app.bluecomputeMariadbTests_ConfigMap = new solsa.core.v1.ConfigMap({
-  metadata: {
-    name: 'bluecompute-mariadb-tests'
-  },
+  metadata: { name: 'bluecompute-mariadb-tests' },
   data: {
     'run.sh': '@test "Testing MariaDB is accessible" {\n' +
       "  mysql -h bluecompute-mariadb -uroot -p$MARIADB_ROOT_PASSWORD -e 'show databases;'\n" +
@@ -10412,30 +10363,11 @@ app.bluecomputePrometheus_ClusterRole = new solsa.rbac.v1beta1.ClusterRole({
   },
   rules: [
     {
-      apiGroups: [
-        ''
-      ],
-      resources: [
-        'nodes',
-        'nodes/proxy',
-        'services',
-        'endpoints',
-        'pods'
-      ],
-      verbs: [
-        'get',
-        'list',
-        'watch'
-      ]
+      apiGroups: [ '' ],
+      resources: [ 'nodes', 'nodes/proxy', 'services', 'endpoints', 'pods' ],
+      verbs: [ 'get', 'list', 'watch' ]
     },
-    {
-      nonResourceURLs: [
-        '/metrics'
-      ],
-      verbs: [
-        'get'
-      ]
-    }
+    { nonResourceURLs: [ '/metrics' ], verbs: [ 'get' ] }
   ]
 })
 
@@ -10450,18 +10382,10 @@ app.bluecomputeClusterRole = new solsa.rbac.v1beta1.ClusterRole({
   },
   rules: [
     {
-      apiGroups: [
-        'extensions'
-      ],
-      resources: [
-        'podsecuritypolicies'
-      ],
-      resourceNames: [
-        'bluecompute-pod-security-policy'
-      ],
-      verbs: [
-        'use'
-      ]
+      apiGroups: [ 'extensions' ],
+      resources: [ 'podsecuritypolicies' ],
+      resourceNames: [ 'bluecompute-pod-security-policy' ],
+      verbs: [ 'use' ]
     }
   ]
 })
@@ -10482,31 +10406,13 @@ app.bluecomputePrometheus_ClusterRoleBinding = new solsa.rbac.v1beta1.ClusterRol
     kind: 'ClusterRole',
     name: 'bluecompute-prometheus'
   },
-  subjects: [
-    {
-      kind: 'ServiceAccount',
-      name: 'default',
-      namespace: 'bluecompute'
-    }
-  ]
+  subjects: [ { kind: 'ServiceAccount', name: 'default', namespace: 'bluecompute' } ]
 })
 
 app.bluecomputeFabric8Rbac_ClusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
-  metadata: {
-    name: 'bluecompute-fabric8-rbac'
-  },
-  subjects: [
-    {
-      kind: 'ServiceAccount',
-      name: 'default',
-      namespace: 'bluecompute'
-    }
-  ],
-  roleRef: {
-    kind: 'ClusterRole',
-    name: 'cluster-admin',
-    apiGroup: 'rbac.authorization.k8s.io'
-  }
+  metadata: { name: 'bluecompute-fabric8-rbac' },
+  subjects: [ { kind: 'ServiceAccount', name: 'default', namespace: 'bluecompute' } ],
+  roleRef: { kind: 'ClusterRole', name: 'cluster-admin', apiGroup: 'rbac.authorization.k8s.io' }
 })
 
 app.bluecomputeClusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
@@ -10518,13 +10424,7 @@ app.bluecomputeClusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
       implementation: 'microprofile'
     }
   },
-  subjects: [
-    {
-      kind: 'ServiceAccount',
-      name: 'default',
-      namespace: 'bluecompute'
-    }
-  ],
+  subjects: [ { kind: 'ServiceAccount', name: 'default', namespace: 'bluecompute' } ],
   roleRef: {
     apiGroup: 'rbac.authorization.k8s.io',
     kind: 'ClusterRole',
@@ -10543,16 +10443,7 @@ app.bluecomputeAuth_Service = new solsa.core.v1.Service({
   },
   spec: {
     type: 'NodePort',
-    ports: [
-      {
-        name: 'http',
-        port: 9080
-      },
-      {
-        name: 'https',
-        port: 9443
-      }
-    ],
+    ports: [ { name: 'http', port: 9080 }, { name: 'https', port: 9443 } ],
     selector: {
       app: 'bluecompute',
       micro: 'auth',
@@ -10565,9 +10456,7 @@ app.bluecomputeAuth_Service = new solsa.core.v1.Service({
 
 app.bluecomputeCatalog_Service = new solsa.core.v1.Service({
   metadata: {
-    annotations: {
-      bluecompute: 'true'
-    },
+    annotations: { bluecompute: 'true' },
     name: 'bluecompute-catalog',
     labels: {
       chart: 'bluecompute-catalog-0.0.1',
@@ -10577,16 +10466,7 @@ app.bluecomputeCatalog_Service = new solsa.core.v1.Service({
   },
   spec: {
     type: 'NodePort',
-    ports: [
-      {
-        name: 'http',
-        port: 9080
-      },
-      {
-        name: 'https',
-        port: 9443
-      }
-    ],
+    ports: [ { name: 'http', port: 9080 }, { name: 'https', port: 9443 } ],
     selector: {
       app: 'bluecompute-catalog-selector',
       release: 'bluecompute',
@@ -10598,20 +10478,11 @@ app.bluecomputeCatalog_Service = new solsa.core.v1.Service({
 app.bluecomputeCloudantService = new solsa.core.v1.Service({
   metadata: {
     name: 'bluecompute-cloudant-service',
-    labels: {
-      chart: 'customer-0.0.1',
-      release: 'bluecompute',
-      implementation: 'microprofile'
-    }
+    labels: { chart: 'customer-0.0.1', release: 'bluecompute', implementation: 'microprofile' }
   },
   spec: {
     type: 'NodePort',
-    ports: [
-      {
-        port: 80,
-        nodePort: 31222
-      }
-    ],
+    ports: [ { port: 80, nodePort: 31222 } ],
     selector: {
       micro: 'customer',
       service: 'cloudant-db',
@@ -10632,16 +10503,7 @@ app.bluecomputeCustomer_Service = new solsa.core.v1.Service({
   },
   spec: {
     type: 'NodePort',
-    ports: [
-      {
-        name: 'http',
-        port: 9080
-      },
-      {
-        name: 'https',
-        port: 9443
-      }
-    ],
+    ports: [ { name: 'http', port: 9080 }, { name: 'https', port: 9443 } ],
     selector: {
       app: 'bluecompute',
       micro: 'customer',
@@ -10664,14 +10526,7 @@ app.bluecomputePrometheusAlertmanager_Service = new solsa.core.v1.Service({
     name: 'bluecompute-prometheus-alertmanager'
   },
   spec: {
-    ports: [
-      {
-        name: 'web',
-        port: 9093,
-        protocol: 'TCP',
-        targetPort: 9093
-      }
-    ],
+    ports: [ { name: 'web', port: 9093, protocol: 'TCP', targetPort: 9093 } ],
     selector: {
       app: 'bluecompute-prometheus-alertmanager',
       component: 'alertmanager',
@@ -10693,19 +10548,8 @@ app.bluecomputeGrafana_Service = new solsa.core.v1.Service({
     name: 'bluecompute-grafana'
   },
   spec: {
-    ports: [
-      {
-        name: 'web',
-        port: 3000,
-        protocol: 'TCP',
-        targetPort: 3000
-      }
-    ],
-    selector: {
-      app: 'bluecompute-grafana',
-      component: 'grafana',
-      release: 'bluecompute'
-    },
+    ports: [ { name: 'web', port: 3000, protocol: 'TCP', targetPort: 3000 } ],
+    selector: { app: 'bluecompute-grafana', component: 'grafana', release: 'bluecompute' },
     type: 'NodePort'
   }
 })
@@ -10722,19 +10566,8 @@ app.bluecomputePrometheus_Service = new solsa.core.v1.Service({
     name: 'bluecompute-prometheus'
   },
   spec: {
-    ports: [
-      {
-        name: 'http',
-        port: 9090,
-        protocol: 'TCP',
-        targetPort: 9090
-      }
-    ],
-    selector: {
-      app: 'bluecompute-prometheus',
-      component: 'prometheus',
-      release: 'bluecompute'
-    },
+    ports: [ { name: 'http', port: 9090, protocol: 'TCP', targetPort: 9090 } ],
+    selector: { app: 'bluecompute-prometheus', component: 'prometheus', release: 'bluecompute' },
     type: 'NodePort'
   }
 })
@@ -10750,28 +10583,16 @@ app.bluecomputeCatalogElasticsearch_Service = new solsa.core.v1.Service({
   },
   spec: {
     ports: [
-      {
-        name: 'http',
-        port: 9200,
-        protocol: 'TCP'
-      },
-      {
-        name: 'transport',
-        port: 9300,
-        protocol: 'TCP'
-      }
+      { name: 'http', port: 9200, protocol: 'TCP' },
+      { name: 'transport', port: 9300, protocol: 'TCP' }
     ],
-    selector: {
-      datastore: 'elasticsearch'
-    }
+    selector: { datastore: 'elasticsearch' }
   }
 })
 
 app.bluecomputeInventory_Service = new solsa.core.v1.Service({
   metadata: {
-    annotations: {
-      bluecompute: 'true'
-    },
+    annotations: { bluecompute: 'true' },
     name: 'bluecompute-inventory',
     labels: {
       chart: 'bluecompute-inventory-0.0.1',
@@ -10781,16 +10602,7 @@ app.bluecomputeInventory_Service = new solsa.core.v1.Service({
   },
   spec: {
     type: 'NodePort',
-    ports: [
-      {
-        name: 'http',
-        port: 9080
-      },
-      {
-        name: 'https',
-        port: 9443
-      }
-    ],
+    ports: [ { name: 'http', port: 9080 }, { name: 'https', port: 9443 } ],
     selector: {
       app: 'bluecompute-inventory-selector',
       release: 'bluecompute',
@@ -10812,17 +10624,8 @@ app.bluecomputeInventorydb_Service = new solsa.core.v1.Service({
   },
   spec: {
     type: 'ClusterIP',
-    ports: [
-      {
-        name: 'mysql',
-        port: 3306,
-        targetPort: 'mysql'
-      }
-    ],
-    selector: {
-      app: 'bluecompute-inventorydb',
-      implementation: 'microprofile'
-    }
+    ports: [ { name: 'mysql', port: 3306, targetPort: 'mysql' } ],
+    selector: { app: 'bluecompute-inventorydb', implementation: 'microprofile' }
   }
 })
 
@@ -10839,18 +10642,8 @@ app.bluecomputeMariadb_Service = new solsa.core.v1.Service({
   },
   spec: {
     type: 'ClusterIP',
-    ports: [
-      {
-        name: 'mysql',
-        port: 3307,
-        targetPort: 'mysql'
-      }
-    ],
-    selector: {
-      app: 'mariadb',
-      component: 'master',
-      release: 'bluecompute'
-    }
+    ports: [ { name: 'mysql', port: 3307, targetPort: 'mysql' } ],
+    selector: { app: 'mariadb', component: 'master', release: 'bluecompute' }
   }
 })
 
@@ -10866,16 +10659,8 @@ app.bluecomputeMysql_Service = new solsa.core.v1.Service({
   },
   spec: {
     type: 'ClusterIP',
-    ports: [
-      {
-        name: 'mysql',
-        port: 3306,
-        targetPort: 'mysql'
-      }
-    ],
-    selector: {
-      app: 'bluecompute-mysql'
-    }
+    ports: [ { name: 'mysql', port: 3306, targetPort: 'mysql' } ],
+    selector: { app: 'bluecompute-mysql' }
   }
 })
 
@@ -10890,16 +10675,7 @@ app.bluecomputeRabbitmq_Service = new solsa.core.v1.Service({
   },
   spec: {
     type: 'NodePort',
-    ports: [
-      {
-        name: 'main',
-        port: 5672
-      },
-      {
-        name: 'management',
-        port: 15672
-      }
-    ],
+    ports: [ { name: 'main', port: 5672 }, { name: 'management', port: 15672 } ],
     selector: {
       micro: 'orders',
       service: 'chat',
@@ -10920,16 +10696,7 @@ app.bluecomputeOrders_Service = new solsa.core.v1.Service({
   },
   spec: {
     type: 'NodePort',
-    ports: [
-      {
-        name: 'http',
-        port: 9080
-      },
-      {
-        name: 'https',
-        port: 9443
-      }
-    ],
+    ports: [ { name: 'http', port: 9080 }, { name: 'https', port: 9443 } ],
     selector: {
       app: 'bluecompute',
       micro: 'orders',
@@ -10953,18 +10720,8 @@ app.bluecomputeOrdersdb_Service = new solsa.core.v1.Service({
   },
   spec: {
     type: 'ClusterIP',
-    ports: [
-      {
-        name: 'mysql',
-        port: 3306,
-        targetPort: 'mysql'
-      }
-    ],
-    selector: {
-      app: 'bluecompute-ordersdb',
-      release: 'bluecompute',
-      implementation: 'microprofile'
-    }
+    ports: [ { name: 'mysql', port: 3306, targetPort: 'mysql' } ],
+    selector: { app: 'bluecompute-ordersdb', release: 'bluecompute', implementation: 'microprofile' }
   }
 })
 
@@ -10983,14 +10740,7 @@ app.bluecomputeWeb_Service = new solsa.core.v1.Service({
   },
   spec: {
     type: 'NodePort',
-    ports: [
-      {
-        name: 'http',
-        protocol: 'TCP',
-        port: 80,
-        targetPort: 8000
-      }
-    ],
+    ports: [ { name: 'http', protocol: 'TCP', port: 80, targetPort: 8000 } ],
     selector: {
       app: 'bluecompute',
       micro: 'web-bff',
@@ -11013,16 +10763,8 @@ app.bluecomputeZipkin_Service = new solsa.core.v1.Service({
   },
   spec: {
     type: 'NodePort',
-    selector: {
-      app: 'bluecompute-zipkin-selector'
-    },
-    ports: [
-      {
-        name: 'zipkin',
-        port: 9411,
-        targetPort: 9411
-      }
-    ]
+    selector: { app: 'bluecompute-zipkin-selector' },
+    ports: [ { name: 'zipkin', port: 9411, targetPort: 9411 } ]
   }
 })
 
@@ -11059,56 +10801,24 @@ app.bluecomputeAuth_Deployment = new solsa.extensions.v1beta1.Deployment({
             image: 'ibmcase/auth-mp:v3.0.0',
             imagePullPolicy: 'Always',
             readinessProbe: {
-              httpGet: {
-                path: '/',
-                port: 9443,
-                scheme: 'HTTPS'
-              },
+              httpGet: { path: '/', port: 9443, scheme: 'HTTPS' },
               initialDelaySeconds: 60,
               timeoutSeconds: 60
             },
             livenessProbe: {
-              httpGet: {
-                path: '/health',
-                port: 9443,
-                scheme: 'HTTPS'
-              },
+              httpGet: { path: '/health', port: 9443, scheme: 'HTTPS' },
               initialDelaySeconds: 60,
               timeoutSeconds: 60
             },
-            resources: {
-              requests: {
-                cpu: '200m',
-                memory: '300Mi'
-              }
-            },
+            resources: { requests: { cpu: '200m', memory: '300Mi' } },
             env: [
-              {
-                name: 'PORT',
-                value: '9080'
-              },
-              {
-                name: 'APPLICATION_NAME',
-                value: 'bluecompute'
-              }
+              { name: 'PORT', value: '9080' },
+              { name: 'APPLICATION_NAME', value: 'bluecompute' }
             ],
-            volumeMounts: [
-              {
-                name: 'keystorevol',
-                mountPath: '/etc/keystorevol',
-                readOnly: true
-              }
-            ]
+            volumeMounts: [ { name: 'keystorevol', mountPath: '/etc/keystorevol', readOnly: true } ]
           }
         ],
-        volumes: [
-          {
-            name: 'keystorevol',
-            secret: {
-              secretName: 'keystoresecret'
-            }
-          }
-        ]
+        volumes: [ { name: 'keystorevol', secret: { secretName: 'keystoresecret' } } ]
       }
     }
   }
@@ -11142,27 +10852,16 @@ app.bluecomputeCatalog_Deployment = new solsa.extensions.v1beta1.Deployment({
             image: 'ibmcase/catalog-mp:v3.0.0',
             imagePullPolicy: 'IfNotPresent',
             readinessProbe: {
-              httpGet: {
-                path: '/',
-                port: 9080
-              },
+              httpGet: { path: '/', port: 9080 },
               initialDelaySeconds: 60,
               timeoutSeconds: 60
             },
             livenessProbe: {
-              httpGet: {
-                path: '/health',
-                port: 9080
-              },
+              httpGet: { path: '/health', port: 9080 },
               initialDelaySeconds: 1500,
               timeoutSeconds: 500
             },
-            resources: {
-              requests: {
-                cpu: '200m',
-                memory: '300Mi'
-              }
-            },
+            resources: { requests: { cpu: '200m', memory: '300Mi' } },
             env: [
               {
                 name: 'inventory_health',
@@ -11172,40 +10871,20 @@ app.bluecomputeCatalog_Deployment = new solsa.extensions.v1beta1.Deployment({
                 name: 'elasticsearch_url',
                 value: 'http://bluecompute-catalog-elasticsearch:9200'
               },
-              {
-                name: 'zipkinHost',
-                value: 'bluecompute-zipkin'
-              },
-              {
-                name: 'zipkinPort',
-                value: '9411'
-              },
-              {
-                name: 'PORT',
-                value: '9080'
-              },
-              {
-                name: 'APPLICATION_NAME',
-                value: 'bluecompute'
-              },
+              { name: 'zipkinHost', value: 'bluecompute-zipkin' },
+              { name: 'zipkinPort', value: '9411' },
+              { name: 'PORT', value: '9080' },
+              { name: 'APPLICATION_NAME', value: 'bluecompute' },
               {
                 name: 'IBM_APM_SERVER_URL',
                 valueFrom: {
-                  secretKeyRef: {
-                    name: 'apm-server-config',
-                    key: 'ibm_apm_server_url',
-                    optional: true
-                  }
+                  secretKeyRef: { name: 'apm-server-config', key: 'ibm_apm_server_url', optional: true }
                 }
               },
               {
                 name: 'IBM_APM_KEYFILE',
                 valueFrom: {
-                  secretKeyRef: {
-                    name: 'apm-server-config',
-                    key: 'ibm_apm_keyfile',
-                    optional: true
-                  }
+                  secretKeyRef: { name: 'apm-server-config', key: 'ibm_apm_keyfile', optional: true }
                 }
               },
               {
@@ -11221,11 +10900,7 @@ app.bluecomputeCatalog_Deployment = new solsa.extensions.v1beta1.Deployment({
               {
                 name: 'IBM_APM_INGRESS_URL',
                 valueFrom: {
-                  secretKeyRef: {
-                    name: 'apm-server-config',
-                    key: 'ibm_apm_ingress_url',
-                    optional: true
-                  }
+                  secretKeyRef: { name: 'apm-server-config', key: 'ibm_apm_ingress_url', optional: true }
                 }
               },
               {
@@ -11239,22 +10914,10 @@ app.bluecomputeCatalog_Deployment = new solsa.extensions.v1beta1.Deployment({
                 }
               }
             ],
-            volumeMounts: [
-              {
-                name: 'config-volume',
-                mountPath: '/opt/ibm/wlp/usr/shared'
-              }
-            ]
+            volumeMounts: [ { name: 'config-volume', mountPath: '/opt/ibm/wlp/usr/shared' } ]
           }
         ],
-        volumes: [
-          {
-            name: 'config-volume',
-            configMap: {
-              name: 'bluecompute-catalog-config'
-            }
-          }
-        ]
+        volumes: [ { name: 'config-volume', configMap: { name: 'bluecompute-catalog-config' } } ]
       }
     }
   }
@@ -11292,17 +10955,8 @@ app.bluecomputeCloudant_Deployment = new solsa.extensions.v1beta1.Deployment({
             name: 'cloudant',
             image: 'ibmcom/cloudant-developer',
             imagePullPolicy: 'Always',
-            ports: [
-              {
-                containerPort: 80
-              }
-            ],
-            env: [
-              {
-                name: 'CLOUDANT_ROOT_PASSWORD',
-                value: 'pass'
-              }
-            ]
+            ports: [ { containerPort: 80 } ],
+            env: [ { name: 'CLOUDANT_ROOT_PASSWORD', value: 'pass' } ]
           }
         ]
       }
@@ -11343,20 +10997,12 @@ app.bluecomputeCustomer_Deployment = new solsa.extensions.v1beta1.Deployment({
             image: 'ibmcase/customer-mp:v4.0.0',
             imagePullPolicy: 'IfNotPresent',
             readinessProbe: {
-              httpGet: {
-                path: '/',
-                port: 9443,
-                scheme: 'HTTPS'
-              },
+              httpGet: { path: '/', port: 9443, scheme: 'HTTPS' },
               initialDelaySeconds: 60,
               timeoutSeconds: 60
             },
             livenessProbe: {
-              httpGet: {
-                path: '/health',
-                port: 9443,
-                scheme: 'HTTPS'
-              },
+              httpGet: { path: '/health', port: 9443, scheme: 'HTTPS' },
               initialDelaySeconds: 1500,
               timeoutSeconds: 500
             },
@@ -11373,67 +11019,24 @@ app.bluecomputeCustomer_Deployment = new solsa.extensions.v1beta1.Deployment({
                 name: 'administratorRealm',
                 value: 'user:https://bluecompute-auth:9443/oidc/endpoint/OP/user'
               },
-              {
-                name: 'auth_health',
-                value: 'https://bluecompute-auth:9443/health'
-              },
-              {
-                name: 'host',
-                value: 'bluecompute-cloudant-service'
-              },
-              {
-                name: 'PORT',
-                value: '9080'
-              },
-              {
-                name: 'RELEASE_NAME',
-                value: 'bluecompute'
-              },
-              {
-                name: 'jwtid',
-                value: 'myMpJwt'
-              },
-              {
-                name: 'zipkinHost',
-                value: 'bluecompute-zipkin'
-              },
-              {
-                name: 'zipkinPort',
-                value: '9411'
-              }
+              { name: 'auth_health', value: 'https://bluecompute-auth:9443/health' },
+              { name: 'host', value: 'bluecompute-cloudant-service' },
+              { name: 'PORT', value: '9080' },
+              { name: 'RELEASE_NAME', value: 'bluecompute' },
+              { name: 'jwtid', value: 'myMpJwt' },
+              { name: 'zipkinHost', value: 'bluecompute-zipkin' },
+              { name: 'zipkinPort', value: '9411' }
             ],
-            resources: {
-              requests: {
-                cpu: '200m',
-                memory: '300Mi'
-              }
-            },
+            resources: { requests: { cpu: '200m', memory: '300Mi' } },
             volumeMounts: [
-              {
-                name: 'keystorevol',
-                mountPath: '/etc/keystorevol',
-                readOnly: true
-              },
-              {
-                name: 'config-volume',
-                mountPath: '/opt/ibm/wlp/usr/shared'
-              }
+              { name: 'keystorevol', mountPath: '/etc/keystorevol', readOnly: true },
+              { name: 'config-volume', mountPath: '/opt/ibm/wlp/usr/shared' }
             ]
           }
         ],
         volumes: [
-          {
-            name: 'keystorevol',
-            secret: {
-              secretName: 'keystoresecret'
-            }
-          },
-          {
-            name: 'config-volume',
-            configMap: {
-              name: 'bluecompute-customer-config'
-            }
-          }
+          { name: 'keystorevol', secret: { secretName: 'keystoresecret' } },
+          { name: 'config-volume', configMap: { name: 'bluecompute-customer-config' } }
         ]
       }
     }
@@ -11462,11 +11065,7 @@ app.bluecomputePrometheusAlertmanager_Deployment = new solsa.extensions.v1beta1.
           release: 'bluecompute',
           heritage: 'Tiller'
         },
-        annotations: {
-          productName: 'alertmanager',
-          productVersion: '0.13.0',
-          productID: 'none'
-        }
+        annotations: { productName: 'alertmanager', productVersion: '0.13.0', productID: 'none' }
       },
       spec: {
         affinity: {
@@ -11478,10 +11077,7 @@ app.bluecomputePrometheusAlertmanager_Deployment = new solsa.extensions.v1beta1.
                     {
                       key: 'beta.kubernetes.io/arch',
                       operator: 'In',
-                      values: [
-                        'amd64',
-                        'ppc64le'
-                      ]
+                      values: [ 'amd64', 'ppc64le' ]
                     }
                   ]
                 }
@@ -11494,17 +11090,8 @@ app.bluecomputePrometheusAlertmanager_Deployment = new solsa.extensions.v1beta1.
             name: 'configmap-reload',
             image: 'ibmcom/configmap-reload:v0.1',
             imagePullPolicy: 'Always',
-            args: [
-              '--volume-dir=/etc/config',
-              '--webhook-url=http://localhost:9093/-/reload'
-            ],
-            volumeMounts: [
-              {
-                name: 'config-volume',
-                mountPath: '/etc/config',
-                readOnly: true
-              }
-            ]
+            args: [ '--volume-dir=/etc/config', '--webhook-url=http://localhost:9093/-/reload' ],
+            volumeMounts: [ { name: 'config-volume', mountPath: '/etc/config', readOnly: true } ]
           },
           {
             name: 'alertmanager',
@@ -11514,44 +11101,23 @@ app.bluecomputePrometheusAlertmanager_Deployment = new solsa.extensions.v1beta1.
               '--config.file=/etc/config/alertmanager.yml',
               '--storage.path=/var/lib/alertmanager/data'
             ],
-            ports: [
-              {
-                containerPort: 9093
-              }
-            ],
+            ports: [ { containerPort: 9093 } ],
             resources: {
-              limits: {
-                cpu: '200m',
-                memory: '256Mi'
-              },
-              requests: {
-                cpu: '10m',
-                memory: '64Mi'
-              }
+              limits: { cpu: '200m', memory: '256Mi' },
+              requests: { cpu: '10m', memory: '64Mi' }
             },
             volumeMounts: [
-              {
-                name: 'config-volume',
-                mountPath: '/etc/config'
-              },
-              {
-                name: 'storage-volume',
-                mountPath: '/var/lib/alertmanager/data'
-              }
+              { name: 'config-volume', mountPath: '/etc/config' },
+              { name: 'storage-volume', mountPath: '/var/lib/alertmanager/data' }
             ]
           }
         ],
         volumes: [
           {
             name: 'config-volume',
-            configMap: {
-              name: 'bluecompute-prometheus-alertmanager'
-            }
+            configMap: { name: 'bluecompute-prometheus-alertmanager' }
           },
-          {
-            name: 'storage-volume',
-            emptyDir: {}
-          }
+          { name: 'storage-volume', emptyDir: {} }
         ]
       }
     }
@@ -11580,11 +11146,7 @@ app.bluecomputeGrafana_Deployment = new solsa.extensions.v1beta1.Deployment({
           release: 'bluecompute',
           heritage: 'Tiller'
         },
-        annotations: {
-          productName: 'grafana',
-          productVersion: '4.6.3',
-          productID: 'none'
-        }
+        annotations: { productName: 'grafana', productVersion: '4.6.3', productID: 'none' }
       },
       spec: {
         affinity: {
@@ -11596,10 +11158,7 @@ app.bluecomputeGrafana_Deployment = new solsa.extensions.v1beta1.Deployment({
                     {
                       key: 'beta.kubernetes.io/arch',
                       operator: 'In',
-                      values: [
-                        'amd64',
-                        'ppc64le'
-                      ]
+                      values: [ 'amd64', 'ppc64le' ]
                     }
                   ]
                 }
@@ -11612,88 +11171,40 @@ app.bluecomputeGrafana_Deployment = new solsa.extensions.v1beta1.Deployment({
             name: 'grafana',
             image: 'ibmcom/grafana:4.6.3',
             imagePullPolicy: 'Always',
-            command: [
-              '/opt/entry/entrypoint.sh'
-            ],
+            command: [ '/opt/entry/entrypoint.sh' ],
             env: [
               {
                 name: 'GF_SECURITY_ADMIN_USER',
-                valueFrom: {
-                  secretKeyRef: {
-                    name: 'bluecompute-grafana-secret',
-                    key: 'username'
-                  }
-                }
+                valueFrom: { secretKeyRef: { name: 'bluecompute-grafana-secret', key: 'username' } }
               },
               {
                 name: 'GF_SECURITY_ADMIN_PASSWORD',
-                valueFrom: {
-                  secretKeyRef: {
-                    name: 'bluecompute-grafana-secret',
-                    key: 'password'
-                  }
-                }
+                valueFrom: { secretKeyRef: { name: 'bluecompute-grafana-secret', key: 'password' } }
               }
             ],
-            ports: [
-              {
-                name: 'web',
-                containerPort: 3000
-              }
-            ],
+            ports: [ { name: 'web', containerPort: 3000 } ],
             resources: {
-              limits: {
-                cpu: '500m',
-                memory: '512Mi'
-              },
-              requests: {
-                cpu: '100m',
-                memory: '128Mi'
-              }
+              limits: { cpu: '500m', memory: '512Mi' },
+              requests: { cpu: '100m', memory: '128Mi' }
             },
             volumeMounts: [
-              {
-                name: 'grafana-storage',
-                mountPath: '/var/lib/grafana'
-              },
-              {
-                name: 'config-volume',
-                mountPath: '/tmp/grafana/config'
-              },
-              {
-                name: 'dashboard-volume',
-                mountPath: '/tmp/grafana/dashboards'
-              },
-              {
-                mountPath: '/opt/entry',
-                name: 'grafana-entry'
-              }
+              { name: 'grafana-storage', mountPath: '/var/lib/grafana' },
+              { name: 'config-volume', mountPath: '/tmp/grafana/config' },
+              { name: 'dashboard-volume', mountPath: '/tmp/grafana/dashboards' },
+              { mountPath: '/opt/entry', name: 'grafana-entry' }
             ]
           }
         ],
         volumes: [
-          {
-            name: 'grafana-storage',
-            emptyDir: {}
-          },
-          {
-            name: 'config-volume',
-            configMap: {
-              name: 'bluecompute-grafana'
-            }
-          },
+          { name: 'grafana-storage', emptyDir: {} },
+          { name: 'config-volume', configMap: { name: 'bluecompute-grafana' } },
           {
             name: 'dashboard-volume',
-            configMap: {
-              name: 'bluecompute-grafana-dashboards'
-            }
+            configMap: { name: 'bluecompute-grafana-dashboards' }
           },
           {
             name: 'grafana-entry',
-            configMap: {
-              name: 'bluecompute-grafana-entry-config',
-              defaultMode: 484
-            }
+            configMap: { name: 'bluecompute-grafana-entry-config', defaultMode: 484 }
           }
         ]
       }
@@ -11723,11 +11234,7 @@ app.bluecomputePrometheus_Deployment = new solsa.extensions.v1beta1.Deployment({
           release: 'bluecompute',
           heritage: 'Tiller'
         },
-        annotations: {
-          productName: 'prometheus',
-          productVersion: '2.0.0',
-          productID: 'none'
-        }
+        annotations: { productName: 'prometheus', productVersion: '2.0.0', productID: 'none' }
       },
       spec: {
         affinity: {
@@ -11739,10 +11246,7 @@ app.bluecomputePrometheus_Deployment = new solsa.extensions.v1beta1.Deployment({
                     {
                       key: 'beta.kubernetes.io/arch',
                       operator: 'In',
-                      values: [
-                        'amd64',
-                        'ppc64le'
-                      ]
+                      values: [ 'amd64', 'ppc64le' ]
                     }
                   ]
                 }
@@ -11761,25 +11265,15 @@ app.bluecomputePrometheus_Deployment = new solsa.extensions.v1beta1.Deployment({
               '--webhook-url=http://localhost:9090/-/reload'
             ],
             volumeMounts: [
-              {
-                name: 'config-volume',
-                mountPath: '/etc/config',
-                readOnly: true
-              },
-              {
-                name: 'rules-volume',
-                mountPath: '/etc/alert-rules',
-                readOnly: true
-              }
+              { name: 'config-volume', mountPath: '/etc/config', readOnly: true },
+              { name: 'rules-volume', mountPath: '/etc/alert-rules', readOnly: true }
             ]
           },
           {
             name: 'prometheus',
             image: 'ibmcom/prometheus:v2.0.0',
             imagePullPolicy: 'Always',
-            securityContext: {
-              runAsUser: 0
-            },
+            securityContext: { runAsUser: 0 },
             args: [
               '--config.file=/etc/config/prometheus.yml',
               '--web.enable-lifecycle',
@@ -11787,54 +11281,25 @@ app.bluecomputePrometheus_Deployment = new solsa.extensions.v1beta1.Deployment({
               '--storage.tsdb.path=/var/lib/prometheus/data',
               '--storage.tsdb.retention=24h'
             ],
-            ports: [
-              {
-                containerPort: 9090
-              }
-            ],
+            ports: [ { containerPort: 9090 } ],
             resources: {
-              limits: {
-                cpu: '500m',
-                memory: '512Mi'
-              },
-              requests: {
-                cpu: '100m',
-                memory: '128Mi'
-              }
+              limits: { cpu: '500m', memory: '512Mi' },
+              requests: { cpu: '100m', memory: '128Mi' }
             },
             volumeMounts: [
-              {
-                name: 'config-volume',
-                mountPath: '/etc/config'
-              },
-              {
-                name: 'rules-volume',
-                mountPath: '/etc/alert-rules'
-              },
-              {
-                name: 'storage-volume',
-                mountPath: '/var/lib/prometheus/data'
-              }
+              { name: 'config-volume', mountPath: '/etc/config' },
+              { name: 'rules-volume', mountPath: '/etc/alert-rules' },
+              { name: 'storage-volume', mountPath: '/var/lib/prometheus/data' }
             ]
           }
         ],
         volumes: [
-          {
-            name: 'config-volume',
-            configMap: {
-              name: 'bluecompute-prometheus'
-            }
-          },
+          { name: 'config-volume', configMap: { name: 'bluecompute-prometheus' } },
           {
             name: 'rules-volume',
-            configMap: {
-              name: 'bluecompute-prometheus-alertrules'
-            }
+            configMap: { name: 'bluecompute-prometheus-alertrules' }
           },
-          {
-            name: 'storage-volume',
-            emptyDir: {}
-          }
+          { name: 'storage-volume', emptyDir: {} }
         ]
       }
     }
@@ -11854,30 +11319,15 @@ app.bluecomputeDefaultClusterElasticsearch_Deployment = new solsa.extensions.v1b
   spec: {
     replicas: 1,
     template: {
-      metadata: {
-        labels: {
-          datastore: 'elasticsearch'
-        }
-      },
+      metadata: { labels: { datastore: 'elasticsearch' } },
       spec: {
         volumes: [
-          {
-            name: 'storage',
-            hostPath: {
-              path: '/var/lib/elasticsearch-default-cluster'
-            }
-          }
+          { name: 'storage', hostPath: { path: '/var/lib/elasticsearch-default-cluster' } }
         ],
         containers: [
           {
             name: 'elasticsearch',
-            securityContext: {
-              capabilities: {
-                add: [
-                  'IPC_LOCK'
-                ]
-              }
-            },
+            securityContext: { capabilities: { add: [ 'IPC_LOCK' ] } },
             image: 'quay.io/pires/docker-elasticsearch-kubernetes:1.7.1-4',
             imagePullPolicy: 'Always',
             env: [
@@ -11887,62 +11337,20 @@ app.bluecomputeDefaultClusterElasticsearch_Deployment = new solsa.extensions.v1b
               },
               {
                 name: 'NAMESPACE',
-                valueFrom: {
-                  fieldRef: {
-                    fieldPath: 'metadata.namespace'
-                  }
-                }
+                valueFrom: { fieldRef: { fieldPath: 'metadata.namespace' } }
               },
-              {
-                name: 'CLUSTER_NAME',
-                value: 'default-cluster'
-              },
-              {
-                name: 'DISCOVERY_SERVICE',
-                value: 'bluecompute-catalog-elasticsearch'
-              },
-              {
-                name: 'NODE_MASTER',
-                value: 'true'
-              },
-              {
-                name: 'NODE_DATA',
-                value: 'true'
-              },
-              {
-                name: 'HTTP_ENABLE',
-                value: 'true'
-              },
-              {
-                name: 'ES_JAVA_OPTS',
-                value: '-Xms256m -Xmx256m'
-              }
+              { name: 'CLUSTER_NAME', value: 'default-cluster' },
+              { name: 'DISCOVERY_SERVICE', value: 'bluecompute-catalog-elasticsearch' },
+              { name: 'NODE_MASTER', value: 'true' },
+              { name: 'NODE_DATA', value: 'true' },
+              { name: 'HTTP_ENABLE', value: 'true' },
+              { name: 'ES_JAVA_OPTS', value: '-Xms256m -Xmx256m' }
             ],
-            volumeMounts: [
-              {
-                mountPath: '/data',
-                name: 'storage'
-              }
-            ],
-            resources: {
-              limits: {
-                memory: '700Mi'
-              },
-              requests: {
-                memory: '350Mi'
-              }
-            },
+            volumeMounts: [ { mountPath: '/data', name: 'storage' } ],
+            resources: { limits: { memory: '700Mi' }, requests: { memory: '350Mi' } },
             ports: [
-              {
-                containerPort: 9200,
-                name: 'http',
-                protocol: 'TCP'
-              },
-              {
-                containerPort: 9300,
-                name: 'transport',
-                protocol: 'TCP'
-              }
+              { containerPort: 9200, name: 'http', protocol: 'TCP' },
+              { containerPort: 9300, name: 'transport', protocol: 'TCP' }
             ]
           }
         ]
@@ -11979,52 +11387,26 @@ app.bluecomputeInventory_Deployment = new solsa.extensions.v1beta1.Deployment({
             image: 'ibmcase/inventory-mp:v2.0.0',
             imagePullPolicy: 'IfNotPresent',
             readinessProbe: {
-              httpGet: {
-                path: '/',
-                port: 9080
-              },
+              httpGet: { path: '/', port: 9080 },
               initialDelaySeconds: 60,
               timeoutSeconds: 60
             },
             livenessProbe: {
-              httpGet: {
-                path: '/health',
-                port: 9080
-              },
+              httpGet: { path: '/health', port: 9080 },
               initialDelaySeconds: 1500,
               timeoutSeconds: 500
             },
-            resources: {
-              requests: {
-                cpu: '200m',
-                memory: '300Mi'
-              }
-            },
+            resources: { requests: { cpu: '200m', memory: '300Mi' } },
             env: [
               {
                 name: 'jdbcURL',
                 value: 'jdbc:mysql://bluecompute-mysql:3306/inventorydb?useSSL=false'
               },
-              {
-                name: 'rabbit',
-                value: 'bluecompute-rabbitmq'
-              },
-              {
-                name: 'PORT',
-                value: '9080'
-              },
-              {
-                name: 'APPLICATION_NAME',
-                value: 'bluecompute'
-              },
-              {
-                name: 'zipkinHost',
-                value: 'bluecompute-zipkin'
-              },
-              {
-                name: 'zipkinPort',
-                value: '9411'
-              }
+              { name: 'rabbit', value: 'bluecompute-rabbitmq' },
+              { name: 'PORT', value: '9080' },
+              { name: 'APPLICATION_NAME', value: 'bluecompute' },
+              { name: 'zipkinHost', value: 'bluecompute-zipkin' },
+              { name: 'zipkinPort', value: '9411' }
             ]
           }
         ]
@@ -12059,17 +11441,8 @@ app.bluecomputeInventorydb_Deployment = new solsa.extensions.v1beta1.Deployment(
             name: 'remove-lost-found',
             image: 'busybox:1.25.0',
             imagePullPolicy: 'Always',
-            command: [
-              'rm',
-              '-fr',
-              '/var/lib/mysql/lost+found'
-            ],
-            volumeMounts: [
-              {
-                name: 'data',
-                mountPath: '/var/lib/mysql'
-              }
-            ]
+            command: [ 'rm', '-fr', '/var/lib/mysql/lost+found' ],
+            volumeMounts: [ { name: 'data', mountPath: '/var/lib/mysql' } ]
           }
         ],
         containers: [
@@ -12077,53 +11450,27 @@ app.bluecomputeInventorydb_Deployment = new solsa.extensions.v1beta1.Deployment(
             name: 'bluecompute-inventorydb',
             image: 'ibmcase/bc-inventorydb:v2.0.0',
             imagePullPolicy: 'Always',
-            resources: {
-              requests: {
-                cpu: '100m',
-                memory: '256Mi'
-              }
-            },
+            resources: { requests: { cpu: '100m', memory: '256Mi' } },
             env: [
               {
                 name: 'MYSQL_ROOT_PASSWORD',
                 valueFrom: {
-                  secretKeyRef: {
-                    name: 'bluecompute-inventorydb',
-                    key: 'mysql-root-password'
-                  }
+                  secretKeyRef: { name: 'bluecompute-inventorydb', key: 'mysql-root-password' }
                 }
               },
               {
                 name: 'MYSQL_PASSWORD',
                 valueFrom: {
-                  secretKeyRef: {
-                    name: 'bluecompute-inventorydb',
-                    key: 'mysql-password'
-                  }
+                  secretKeyRef: { name: 'bluecompute-inventorydb', key: 'mysql-password' }
                 }
               },
-              {
-                name: 'MYSQL_USER',
-                value: ''
-              },
-              {
-                name: 'MYSQL_DATABASE',
-                value: ''
-              }
+              { name: 'MYSQL_USER', value: '' },
+              { name: 'MYSQL_DATABASE', value: '' }
             ],
-            ports: [
-              {
-                name: 'mysql',
-                containerPort: 3306
-              }
-            ],
+            ports: [ { name: 'mysql', containerPort: 3306 } ],
             livenessProbe: {
               exec: {
-                command: [
-                  'sh',
-                  '-c',
-                  'mysqladmin ping -u root -p${MYSQL_ROOT_PASSWORD}'
-                ]
+                command: [ 'sh', '-c', 'mysqladmin ping -u root -p${MYSQL_ROOT_PASSWORD}' ]
               },
               initialDelaySeconds: 30,
               periodSeconds: 10,
@@ -12133,11 +11480,7 @@ app.bluecomputeInventorydb_Deployment = new solsa.extensions.v1beta1.Deployment(
             },
             readinessProbe: {
               exec: {
-                command: [
-                  'sh',
-                  '-c',
-                  'mysqladmin ping -u root -p${MYSQL_ROOT_PASSWORD}'
-                ]
+                command: [ 'sh', '-c', 'mysqladmin ping -u root -p${MYSQL_ROOT_PASSWORD}' ]
               },
               initialDelaySeconds: 5,
               periodSeconds: 10,
@@ -12145,20 +11488,10 @@ app.bluecomputeInventorydb_Deployment = new solsa.extensions.v1beta1.Deployment(
               successThreshold: 1,
               failureThreshold: 3
             },
-            volumeMounts: [
-              {
-                name: 'data',
-                mountPath: '/var/lib/mysql'
-              }
-            ]
+            volumeMounts: [ { name: 'data', mountPath: '/var/lib/mysql' } ]
           }
         ],
-        volumes: [
-          {
-            name: 'data',
-            emptyDir: {}
-          }
-        ]
+        volumes: [ { name: 'data', emptyDir: {} } ]
       }
     }
   }
@@ -12176,28 +11509,15 @@ app.bluecomputeMysql_Deployment = new solsa.extensions.v1beta1.Deployment({
   },
   spec: {
     template: {
-      metadata: {
-        labels: {
-          app: 'bluecompute-mysql'
-        }
-      },
+      metadata: { labels: { app: 'bluecompute-mysql' } },
       spec: {
         initContainers: [
           {
             name: 'remove-lost-found',
             image: 'busybox:1.25.0',
             imagePullPolicy: 'IfNotPresent',
-            command: [
-              'rm',
-              '-fr',
-              '/var/lib/mysql/lost+found'
-            ],
-            volumeMounts: [
-              {
-                name: 'data',
-                mountPath: '/var/lib/mysql'
-              }
-            ]
+            command: [ 'rm', '-fr', '/var/lib/mysql/lost+found' ],
+            volumeMounts: [ { name: 'data', mountPath: '/var/lib/mysql' } ]
           }
         ],
         containers: [
@@ -12205,53 +11525,23 @@ app.bluecomputeMysql_Deployment = new solsa.extensions.v1beta1.Deployment({
             name: 'bluecompute-mysql',
             image: 'mysql:5.7.14',
             imagePullPolicy: 'IfNotPresent',
-            resources: {
-              requests: {
-                cpu: '100m',
-                memory: '256Mi'
-              }
-            },
+            resources: { requests: { cpu: '100m', memory: '256Mi' } },
             env: [
               {
                 name: 'MYSQL_ROOT_PASSWORD',
-                valueFrom: {
-                  secretKeyRef: {
-                    name: 'bluecompute-mysql',
-                    key: 'mysql-root-password'
-                  }
-                }
+                valueFrom: { secretKeyRef: { name: 'bluecompute-mysql', key: 'mysql-root-password' } }
               },
               {
                 name: 'MYSQL_PASSWORD',
-                valueFrom: {
-                  secretKeyRef: {
-                    name: 'bluecompute-mysql',
-                    key: 'mysql-password'
-                  }
-                }
+                valueFrom: { secretKeyRef: { name: 'bluecompute-mysql', key: 'mysql-password' } }
               },
-              {
-                name: 'MYSQL_USER',
-                value: 'dbuser'
-              },
-              {
-                name: 'MYSQL_DATABASE',
-                value: 'inventorydb'
-              }
+              { name: 'MYSQL_USER', value: 'dbuser' },
+              { name: 'MYSQL_DATABASE', value: 'inventorydb' }
             ],
-            ports: [
-              {
-                name: 'mysql',
-                containerPort: 3306
-              }
-            ],
+            ports: [ { name: 'mysql', containerPort: 3306 } ],
             livenessProbe: {
               exec: {
-                command: [
-                  'sh',
-                  '-c',
-                  'mysqladmin ping -u root -p${MYSQL_ROOT_PASSWORD}'
-                ]
+                command: [ 'sh', '-c', 'mysqladmin ping -u root -p${MYSQL_ROOT_PASSWORD}' ]
               },
               initialDelaySeconds: 30,
               periodSeconds: 10,
@@ -12261,11 +11551,7 @@ app.bluecomputeMysql_Deployment = new solsa.extensions.v1beta1.Deployment({
             },
             readinessProbe: {
               exec: {
-                command: [
-                  'sh',
-                  '-c',
-                  'mysqladmin ping -u root -p${MYSQL_ROOT_PASSWORD}'
-                ]
+                command: [ 'sh', '-c', 'mysqladmin ping -u root -p${MYSQL_ROOT_PASSWORD}' ]
               },
               initialDelaySeconds: 5,
               periodSeconds: 10,
@@ -12273,20 +11559,10 @@ app.bluecomputeMysql_Deployment = new solsa.extensions.v1beta1.Deployment({
               successThreshold: 1,
               failureThreshold: 3
             },
-            volumeMounts: [
-              {
-                name: 'data',
-                mountPath: '/var/lib/mysql'
-              }
-            ]
+            volumeMounts: [ { name: 'data', mountPath: '/var/lib/mysql' } ]
           }
         ],
-        volumes: [
-          {
-            name: 'data',
-            emptyDir: {}
-          }
-        ]
+        volumes: [ { name: 'data', emptyDir: {} } ]
       }
     }
   }
@@ -12319,13 +11595,7 @@ app.bluecomputeRabbitmq_Deployment = new solsa.extensions.v1beta1.Deployment({
         }
       },
       spec: {
-        containers: [
-          {
-            name: 'rabbitmq',
-            image: 'rabbitmq',
-            imagePullPolicy: 'Always'
-          }
-        ]
+        containers: [ { name: 'rabbitmq', image: 'rabbitmq', imagePullPolicy: 'Always' } ]
       }
     }
   }
@@ -12364,27 +11634,16 @@ app.bluecomputeOrders_Deployment = new solsa.extensions.v1beta1.Deployment({
             image: 'ibmcase/orders-mp:v4.0.0',
             imagePullPolicy: 'IfNotPresent',
             readinessProbe: {
-              httpGet: {
-                path: '/',
-                port: 9443,
-                scheme: 'HTTPS'
-              },
+              httpGet: { path: '/', port: 9443, scheme: 'HTTPS' },
               initialDelaySeconds: 30
             },
             livenessProbe: {
-              httpGet: {
-                path: '/health',
-                port: 9443,
-                scheme: 'HTTPS'
-              },
+              httpGet: { path: '/health', port: 9443, scheme: 'HTTPS' },
               initialDelaySeconds: 1500,
               timeoutSeconds: 500
             },
             env: [
-              {
-                name: 'auth_health',
-                value: 'https://bluecompute-auth:9443/health'
-              },
+              { name: 'auth_health', value: 'https://bluecompute-auth:9443/health' },
               {
                 name: 'inventory_url',
                 value: 'http://bluecompute-inventory:9080/inventory/rest/inventory/stock'
@@ -12413,54 +11672,18 @@ app.bluecomputeOrders_Deployment = new solsa.extensions.v1beta1.Deployment({
                 name: 'jdbcURL',
                 value: 'jdbc:mysql://bluecompute-mariadb:3307/ordersdb?useSSL=false'
               },
-              {
-                name: 'rabbit',
-                value: 'bluecompute-rabbitmq'
-              },
-              {
-                name: 'PORT',
-                value: '9080'
-              },
-              {
-                name: 'RELEASE_NAME',
-                value: 'bluecompute'
-              },
-              {
-                name: 'jwtid',
-                value: 'myMpJwt'
-              },
-              {
-                name: 'zipkinHost',
-                value: 'bluecompute-zipkin'
-              },
-              {
-                name: 'zipkinPort',
-                value: '9411'
-              }
+              { name: 'rabbit', value: 'bluecompute-rabbitmq' },
+              { name: 'PORT', value: '9080' },
+              { name: 'RELEASE_NAME', value: 'bluecompute' },
+              { name: 'jwtid', value: 'myMpJwt' },
+              { name: 'zipkinHost', value: 'bluecompute-zipkin' },
+              { name: 'zipkinPort', value: '9411' }
             ],
-            resources: {
-              requests: {
-                cpu: '200m',
-                memory: '300Mi'
-              }
-            },
-            volumeMounts: [
-              {
-                name: 'keystorevol',
-                mountPath: '/etc/keystorevol',
-                readOnly: true
-              }
-            ]
+            resources: { requests: { cpu: '200m', memory: '300Mi' } },
+            volumeMounts: [ { name: 'keystorevol', mountPath: '/etc/keystorevol', readOnly: true } ]
           }
         ],
-        volumes: [
-          {
-            name: 'keystorevol',
-            secret: {
-              secretName: 'keystoresecret'
-            }
-          }
-        ]
+        volumes: [ { name: 'keystorevol', secret: { secretName: 'keystoresecret' } } ]
       }
     }
   }
@@ -12492,17 +11715,8 @@ app.bluecomputeOrdersdb_Deployment = new solsa.extensions.v1beta1.Deployment({
             name: 'remove-lost-found',
             image: 'busybox:1.25.0',
             imagePullPolicy: 'Always',
-            command: [
-              'rm',
-              '-fr',
-              '/var/lib/mysql/lost+found'
-            ],
-            volumeMounts: [
-              {
-                name: 'data',
-                mountPath: '/var/lib/mysql'
-              }
-            ]
+            command: [ 'rm', '-fr', '/var/lib/mysql/lost+found' ],
+            volumeMounts: [ { name: 'data', mountPath: '/var/lib/mysql' } ]
           }
         ],
         containers: [
@@ -12510,53 +11724,25 @@ app.bluecomputeOrdersdb_Deployment = new solsa.extensions.v1beta1.Deployment({
             name: 'bluecompute-ordersdb',
             image: 'ibmcase/bc-ordersdb:v2.0.0',
             imagePullPolicy: 'Always',
-            resources: {
-              requests: {
-                cpu: '100m',
-                memory: '256Mi'
-              }
-            },
+            resources: { requests: { cpu: '100m', memory: '256Mi' } },
             env: [
               {
                 name: 'MYSQL_ROOT_PASSWORD',
                 valueFrom: {
-                  secretKeyRef: {
-                    name: 'bluecompute-ordersdb',
-                    key: 'mysql-root-password'
-                  }
+                  secretKeyRef: { name: 'bluecompute-ordersdb', key: 'mysql-root-password' }
                 }
               },
               {
                 name: 'MYSQL_PASSWORD',
-                valueFrom: {
-                  secretKeyRef: {
-                    name: 'bluecompute-ordersdb',
-                    key: 'mysql-password'
-                  }
-                }
+                valueFrom: { secretKeyRef: { name: 'bluecompute-ordersdb', key: 'mysql-password' } }
               },
-              {
-                name: 'MYSQL_USER',
-                value: ''
-              },
-              {
-                name: 'MYSQL_DATABASE',
-                value: ''
-              }
+              { name: 'MYSQL_USER', value: '' },
+              { name: 'MYSQL_DATABASE', value: '' }
             ],
-            ports: [
-              {
-                name: 'mysql',
-                containerPort: 3306
-              }
-            ],
+            ports: [ { name: 'mysql', containerPort: 3306 } ],
             livenessProbe: {
               exec: {
-                command: [
-                  'sh',
-                  '-c',
-                  'mysqladmin ping -u root -p${MYSQL_ROOT_PASSWORD}'
-                ]
+                command: [ 'sh', '-c', 'mysqladmin ping -u root -p${MYSQL_ROOT_PASSWORD}' ]
               },
               initialDelaySeconds: 30,
               periodSeconds: 10,
@@ -12566,11 +11752,7 @@ app.bluecomputeOrdersdb_Deployment = new solsa.extensions.v1beta1.Deployment({
             },
             readinessProbe: {
               exec: {
-                command: [
-                  'sh',
-                  '-c',
-                  'mysqladmin ping -u root -p${MYSQL_ROOT_PASSWORD}'
-                ]
+                command: [ 'sh', '-c', 'mysqladmin ping -u root -p${MYSQL_ROOT_PASSWORD}' ]
               },
               initialDelaySeconds: 5,
               periodSeconds: 10,
@@ -12578,20 +11760,10 @@ app.bluecomputeOrdersdb_Deployment = new solsa.extensions.v1beta1.Deployment({
               successThreshold: 1,
               failureThreshold: 3
             },
-            volumeMounts: [
-              {
-                name: 'data',
-                mountPath: '/var/lib/mysql'
-              }
-            ]
+            volumeMounts: [ { name: 'data', mountPath: '/var/lib/mysql' } ]
           }
         ],
-        volumes: [
-          {
-            name: 'data',
-            emptyDir: {}
-          }
-        ]
+        volumes: [ { name: 'data', emptyDir: {} } ]
       }
     }
   }
@@ -12627,18 +11799,8 @@ app.bluecomputeWeb_Deployment = new solsa.extensions.v1beta1.Deployment({
             name: 'web',
             image: 'ibmcase/bc-web-mp:v2.0.0',
             imagePullPolicy: 'Always',
-            ports: [
-              {
-                containerPort: 8000,
-                protocol: 'TCP'
-              }
-            ],
-            volumeMounts: [
-              {
-                name: 'config-volume',
-                mountPath: '/StoreWebApp/config'
-              }
-            ]
+            ports: [ { containerPort: 8000, protocol: 'TCP' } ],
+            volumeMounts: [ { name: 'config-volume', mountPath: '/StoreWebApp/config' } ]
           }
         ],
         volumes: [
@@ -12647,14 +11809,8 @@ app.bluecomputeWeb_Deployment = new solsa.extensions.v1beta1.Deployment({
             configMap: {
               name: 'bluecompute-web-config',
               items: [
-                {
-                  key: 'checks',
-                  path: 'checks'
-                },
-                {
-                  key: 'default.json',
-                  path: 'default.json'
-                }
+                { key: 'checks', path: 'checks' },
+                { key: 'default.json', path: 'default.json' }
               ]
             }
           }
@@ -12689,17 +11845,9 @@ app.bluecomputeZipkin_Deployment = new solsa.extensions.v1beta1.Deployment({
           {
             name: 'zipkin',
             image: 'openzipkin/zipkin',
-            ports: [
-              {
-                containerPort: 9411,
-                name: 'zipkin-api'
-              }
-            ],
+            ports: [ { containerPort: 9411, name: 'zipkin-api' } ],
             readinessProbe: {
-              httpGet: {
-                path: '/',
-                port: 9411
-              },
+              httpGet: { path: '/', port: 9411 },
               initialDelaySeconds: 30,
               timeoutSeconds: 60
             }
@@ -12722,18 +11870,10 @@ app.bluecomputeMariadb_StatefulSet = new solsa.apps.v1beta1.StatefulSet({
     }
   },
   spec: {
-    selector: {
-      matchLabels: {
-        release: 'bluecompute',
-        component: 'master',
-        app: 'mariadb'
-      }
-    },
+    selector: { matchLabels: { release: 'bluecompute', component: 'master', app: 'mariadb' } },
     serviceName: 'bluecompute-mariadb',
     replicas: 1,
-    updateStrategy: {
-      type: 'RollingUpdate'
-    },
+    updateStrategy: { type: 'RollingUpdate' },
     template: {
       metadata: {
         labels: {
@@ -12744,10 +11884,7 @@ app.bluecomputeMariadb_StatefulSet = new solsa.apps.v1beta1.StatefulSet({
         }
       },
       spec: {
-        securityContext: {
-          fsGroup: 1001,
-          runAsUser: 1001
-        },
+        securityContext: { fsGroup: 1001, runAsUser: 1001 },
         affinity: {
           podAntiAffinity: {
             preferredDuringSchedulingIgnoredDuringExecution: [
@@ -12755,12 +11892,7 @@ app.bluecomputeMariadb_StatefulSet = new solsa.apps.v1beta1.StatefulSet({
                 weight: 1,
                 podAffinityTerm: {
                   topologyKey: 'kubernetes.io/hostname',
-                  labelSelector: {
-                    matchLabels: {
-                      app: 'mariadb',
-                      release: 'bluecompute'
-                    }
-                  }
+                  labelSelector: { matchLabels: { app: 'mariadb', release: 'bluecompute' } }
                 }
               }
             ]
@@ -12775,43 +11907,20 @@ app.bluecomputeMariadb_StatefulSet = new solsa.apps.v1beta1.StatefulSet({
               {
                 name: 'MARIADB_ROOT_PASSWORD',
                 valueFrom: {
-                  secretKeyRef: {
-                    name: 'bluecompute-mariadb',
-                    key: 'mariadb-root-password'
-                  }
+                  secretKeyRef: { name: 'bluecompute-mariadb', key: 'mariadb-root-password' }
                 }
               },
-              {
-                name: 'MARIADB_USER',
-                value: 'dbuser'
-              },
+              { name: 'MARIADB_USER', value: 'dbuser' },
               {
                 name: 'MARIADB_PASSWORD',
-                valueFrom: {
-                  secretKeyRef: {
-                    name: 'bluecompute-mariadb',
-                    key: 'mariadb-password'
-                  }
-                }
+                valueFrom: { secretKeyRef: { name: 'bluecompute-mariadb', key: 'mariadb-password' } }
               },
-              {
-                name: 'MARIADB_DATABASE',
-                value: 'ordersdb'
-              }
+              { name: 'MARIADB_DATABASE', value: 'ordersdb' }
             ],
-            ports: [
-              {
-                name: 'mysql',
-                containerPort: 3306
-              }
-            ],
+            ports: [ { name: 'mysql', containerPort: 3306 } ],
             livenessProbe: {
               exec: {
-                command: [
-                  'sh',
-                  '-c',
-                  'exec mysqladmin status -uroot -p$MARIADB_ROOT_PASSWORD'
-                ]
+                command: [ 'sh', '-c', 'exec mysqladmin status -uroot -p$MARIADB_ROOT_PASSWORD' ]
               },
               initialDelaySeconds: 120,
               periodSeconds: 10,
@@ -12821,11 +11930,7 @@ app.bluecomputeMariadb_StatefulSet = new solsa.apps.v1beta1.StatefulSet({
             },
             readinessProbe: {
               exec: {
-                command: [
-                  'sh',
-                  '-c',
-                  'exec mysqladmin status -uroot -p$MARIADB_ROOT_PASSWORD'
-                ]
+                command: [ 'sh', '-c', 'exec mysqladmin status -uroot -p$MARIADB_ROOT_PASSWORD' ]
               },
               initialDelaySeconds: 30,
               periodSeconds: 10,
@@ -12835,10 +11940,7 @@ app.bluecomputeMariadb_StatefulSet = new solsa.apps.v1beta1.StatefulSet({
             },
             resources: {},
             volumeMounts: [
-              {
-                name: 'data',
-                mountPath: '/bitnami/mariadb'
-              },
+              { name: 'data', mountPath: '/bitnami/mariadb' },
               {
                 name: 'config',
                 mountPath: '/opt/bitnami/mariadb/conf/my.cnf',
@@ -12848,16 +11950,8 @@ app.bluecomputeMariadb_StatefulSet = new solsa.apps.v1beta1.StatefulSet({
           }
         ],
         volumes: [
-          {
-            name: 'config',
-            configMap: {
-              name: 'bluecompute-mariadb'
-            }
-          },
-          {
-            name: 'data',
-            emptyDir: {}
-          }
+          { name: 'config', configMap: { name: 'bluecompute-mariadb' } },
+          { name: 'data', emptyDir: {} }
         ]
       }
     }
@@ -12865,9 +11959,7 @@ app.bluecomputeMariadb_StatefulSet = new solsa.apps.v1beta1.StatefulSet({
 })
 
 app.bluecomputePopulate_Job = new solsa.batch.v1.Job({
-  metadata: {
-    name: 'bluecompute-populate'
-  },
+  metadata: { name: 'bluecompute-populate' },
   spec: {
     template: {
       spec: {
@@ -12876,10 +11968,7 @@ app.bluecomputePopulate_Job = new solsa.batch.v1.Job({
             name: 'populate-db',
             image: 'ibmcase/populate',
             imagePullPolicy: 'IfNotPresent',
-            args: [
-              'bluecompute-cloudant-service',
-              '80'
-            ]
+            args: [ 'bluecompute-cloudant-service', '80' ]
           }
         ],
         restartPolicy: 'Never'
@@ -12903,11 +11992,7 @@ app.bluecomputeGrafanaDs_Job = new solsa.batch.v1.Job({
     activeDeadlineSeconds: 1800,
     template: {
       metadata: {
-        labels: {
-          app: 'bluecompute-grafana',
-          component: 'setds',
-          release: 'bluecompute'
-        }
+        labels: { app: 'bluecompute-grafana', component: 'setds', release: 'bluecompute' }
       },
       spec: {
         affinity: {
@@ -12919,10 +12004,7 @@ app.bluecomputeGrafanaDs_Job = new solsa.batch.v1.Job({
                     {
                       key: 'beta.kubernetes.io/arch',
                       operator: 'In',
-                      values: [
-                        'amd64',
-                        'ppc64le'
-                      ]
+                      values: [ 'amd64', 'ppc64le' ]
                     }
                   ]
                 }
@@ -12935,44 +12017,24 @@ app.bluecomputeGrafanaDs_Job = new solsa.batch.v1.Job({
             name: 'grafana-ds',
             image: 'ibmcom/curl:3.6',
             imagePullPolicy: 'Always',
-            command: [
-              '/opt/entry/entrypoint.sh'
-            ],
+            command: [ '/opt/entry/entrypoint.sh' ],
             env: [
               {
                 name: 'GF_SECURITY_ADMIN_USER',
-                valueFrom: {
-                  secretKeyRef: {
-                    name: 'bluecompute-grafana-secret',
-                    key: 'username'
-                  }
-                }
+                valueFrom: { secretKeyRef: { name: 'bluecompute-grafana-secret', key: 'username' } }
               },
               {
                 name: 'GF_SECURITY_ADMIN_PASSWORD',
-                valueFrom: {
-                  secretKeyRef: {
-                    name: 'bluecompute-grafana-secret',
-                    key: 'password'
-                  }
-                }
+                valueFrom: { secretKeyRef: { name: 'bluecompute-grafana-secret', key: 'password' } }
               }
             ],
-            volumeMounts: [
-              {
-                mountPath: '/opt/entry',
-                name: 'grafana-ds-entry'
-              }
-            ]
+            volumeMounts: [ { mountPath: '/opt/entry', name: 'grafana-ds-entry' } ]
           }
         ],
         volumes: [
           {
             name: 'grafana-ds-entry',
-            configMap: {
-              name: 'bluecompute-grafana-ds-entry-config',
-              defaultMode: 484
-            }
+            configMap: { name: 'bluecompute-grafana-ds-entry-config', defaultMode: 484 }
           }
         ],
         restartPolicy: 'OnFailure'
@@ -13013,29 +12075,14 @@ app.bluecomputeInventoryJob = new solsa.batch.v1.Job({
               'until mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT} -u${MYSQL_USER} -p${MYSQL_PASSWORD} -e status; do echo waiting for mysql; sleep 1; done'
             ],
             env: [
-              {
-                name: 'MYSQL_HOST',
-                value: 'bluecompute-mysql'
-              },
-              {
-                name: 'MYSQL_PORT',
-                value: '3306'
-              },
-              {
-                name: 'MYSQL_DATABASE',
-                value: 'inventorydb'
-              },
-              {
-                name: 'MYSQL_USER',
-                value: 'root'
-              },
+              { name: 'MYSQL_HOST', value: 'bluecompute-mysql' },
+              { name: 'MYSQL_PORT', value: '3306' },
+              { name: 'MYSQL_DATABASE', value: 'inventorydb' },
+              { name: 'MYSQL_USER', value: 'root' },
               {
                 name: 'MYSQL_PASSWORD',
                 valueFrom: {
-                  secretKeyRef: {
-                    name: 'bluecompute-inventory-mysql-secret',
-                    key: 'mysql-password'
-                  }
+                  secretKeyRef: { name: 'bluecompute-inventory-mysql-secret', key: 'mysql-password' }
                 }
               }
             ]
@@ -13046,90 +12093,45 @@ app.bluecomputeInventoryJob = new solsa.batch.v1.Job({
             name: 'populate-mysql',
             image: 'mysql:5.7.14',
             imagePullPolicy: 'Always',
-            volumeMounts: [
-              {
-                mountPath: '/inventory-data',
-                name: 'inventory-data',
-                readOnly: false
-              }
-            ],
-            command: [
-              '/bin/bash',
-              '-c'
-            ],
+            volumeMounts: [ { mountPath: '/inventory-data', name: 'inventory-data', readOnly: false } ],
+            command: [ '/bin/bash', '-c' ],
             args: [
               'cp /inventory-data/mysql_data.sql .; sed -i "s/inventorydb/${MYSQL_DATABASE}/g" mysql_data.sql; until mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT} -u${MYSQL_USER} -p${MYSQL_PASSWORD} <mysql_data.sql; do echo "waiting for mysql"; sleep 1; done; echo "Loaded data into database";'
             ],
             env: [
-              {
-                name: 'MYSQL_HOST',
-                value: 'bluecompute-mysql'
-              },
-              {
-                name: 'MYSQL_PORT',
-                value: '3306'
-              },
-              {
-                name: 'MYSQL_DATABASE',
-                value: 'inventorydb'
-              },
-              {
-                name: 'MYSQL_USER',
-                value: 'root'
-              },
+              { name: 'MYSQL_HOST', value: 'bluecompute-mysql' },
+              { name: 'MYSQL_PORT', value: '3306' },
+              { name: 'MYSQL_DATABASE', value: 'inventorydb' },
+              { name: 'MYSQL_USER', value: 'root' },
               {
                 name: 'MYSQL_PASSWORD',
                 valueFrom: {
-                  secretKeyRef: {
-                    name: 'bluecompute-inventory-mysql-secret',
-                    key: 'mysql-password'
-                  }
+                  secretKeyRef: { name: 'bluecompute-inventory-mysql-secret', key: 'mysql-password' }
                 }
               }
             ]
           }
         ],
-        volumes: [
-          {
-            name: 'inventory-data',
-            configMap: {
-              name: 'bluecompute-inventory-data'
-            }
-          }
-        ]
+        volumes: [ { name: 'inventory-data', configMap: { name: 'bluecompute-inventory-data' } } ]
       }
     }
   }
 })
 
 app.bluecomputeKeystoreJob = new solsa.batch.v1.Job({
-  metadata: {
-    name: 'bluecompute-keystore-job'
-  },
+  metadata: { name: 'bluecompute-keystore-job' },
   spec: {
     template: {
-      metadata: {
-        name: 'bluecompute-keystore-job'
-      },
+      metadata: { name: 'bluecompute-keystore-job' },
       spec: {
         containers: [
           {
             name: 'keystore',
             image: 'ibmcase/keygen-mp:v3.0.0',
             imagePullPolicy: 'Always',
-            resources: {
-              requests: {
-                cpu: '200m',
-                memory: '300Mi'
-              }
-            },
-            command: [
-              'sh',
-              './bc_certs/keygen.sh'
-            ],
-            args: [
-              'bluecompute'
-            ]
+            resources: { requests: { cpu: '200m', memory: '300Mi' } },
+            command: [ 'sh', './bc_certs/keygen.sh' ],
+            args: [ 'bluecompute' ]
           }
         ],
         restartPolicy: 'Never'
@@ -13170,29 +12172,14 @@ app.bluecomputeOrdersJob = new solsa.batch.v1.Job({
               'until mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT} -u${MYSQL_USER} -p${MYSQL_PASSWORD} -e status; do echo waiting for mariadb; sleep 1; done'
             ],
             env: [
-              {
-                name: 'MYSQL_HOST',
-                value: 'bluecompute-mariadb'
-              },
-              {
-                name: 'MYSQL_PORT',
-                value: '3307'
-              },
-              {
-                name: 'MYSQL_DATABASE',
-                value: 'ordersdb'
-              },
-              {
-                name: 'MYSQL_USER',
-                value: 'root'
-              },
+              { name: 'MYSQL_HOST', value: 'bluecompute-mariadb' },
+              { name: 'MYSQL_PORT', value: '3307' },
+              { name: 'MYSQL_DATABASE', value: 'ordersdb' },
+              { name: 'MYSQL_USER', value: 'root' },
               {
                 name: 'MYSQL_PASSWORD',
                 valueFrom: {
-                  secretKeyRef: {
-                    name: 'bluecompute-orders-mariadb-secret',
-                    key: 'mariadb-password'
-                  }
+                  secretKeyRef: { name: 'bluecompute-orders-mariadb-secret', key: 'mariadb-password' }
                 }
               }
             ]
@@ -13203,57 +12190,26 @@ app.bluecomputeOrdersJob = new solsa.batch.v1.Job({
             name: 'populate-mysql',
             image: 'mysql:5.7.14',
             imagePullPolicy: 'IfNotPresent',
-            volumeMounts: [
-              {
-                mountPath: '/orders-data',
-                name: 'orders-data',
-                readOnly: false
-              }
-            ],
-            command: [
-              '/bin/bash',
-              '-c'
-            ],
+            volumeMounts: [ { mountPath: '/orders-data', name: 'orders-data', readOnly: false } ],
+            command: [ '/bin/bash', '-c' ],
             args: [
               'cp /orders-data/mysql_data.sql .; sed -i "s/ordersdb/${MYSQL_DATABASE}/g" mysql_data.sql; until mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT} -u${MYSQL_USER} -p${MYSQL_PASSWORD} <mysql_data.sql; do echo "waiting for mysql"; sleep 1; done; echo "Loaded data into database";'
             ],
             env: [
-              {
-                name: 'MYSQL_HOST',
-                value: 'bluecompute-mariadb'
-              },
-              {
-                name: 'MYSQL_PORT',
-                value: '3307'
-              },
-              {
-                name: 'MYSQL_DATABASE',
-                value: 'ordersdb'
-              },
-              {
-                name: 'MYSQL_USER',
-                value: 'root'
-              },
+              { name: 'MYSQL_HOST', value: 'bluecompute-mariadb' },
+              { name: 'MYSQL_PORT', value: '3307' },
+              { name: 'MYSQL_DATABASE', value: 'ordersdb' },
+              { name: 'MYSQL_USER', value: 'root' },
               {
                 name: 'MYSQL_PASSWORD',
                 valueFrom: {
-                  secretKeyRef: {
-                    name: 'bluecompute-orders-mariadb-secret',
-                    key: 'mariadb-password'
-                  }
+                  secretKeyRef: { name: 'bluecompute-orders-mariadb-secret', key: 'mariadb-password' }
                 }
               }
             ]
           }
         ],
-        volumes: [
-          {
-            name: 'orders-data',
-            configMap: {
-              name: 'bluecompute-orders-data'
-            }
-          }
-        ]
+        volumes: [ { name: 'orders-data', configMap: { name: 'bluecompute-orders-data' } } ]
       }
     }
   }
@@ -13276,17 +12232,9 @@ app.bluecomputeWeb_Ingress = new solsa.extensions.v1beta1.Ingress({
   spec: {
     rules: [
       {
-        host: 'bluecompute.mycluster.us-south.containers.appdomain.cloud',
+        host: 'bluecompute.mycluster12345.us-south.containers.appdomain.cloud',
         http: {
-          paths: [
-            {
-              path: '/',
-              backend: {
-                serviceName: 'bluecompute-web',
-                servicePort: 80
-              }
-            }
-          ]
+          paths: [ { path: '/', backend: { serviceName: 'bluecompute-web', servicePort: 80 } } ]
         }
       }
     ]
