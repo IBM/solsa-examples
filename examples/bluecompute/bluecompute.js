@@ -18,6 +18,9 @@ const solsa = require('solsa')
 const app = new solsa.Bundle()
 module.exports = app
 
+const bcConfig = require('./bluecompute-config')
+app.config = bcConfig()
+
 const bcAuth = require('./bluecompute-auth')
 app.auth = bcAuth()
 
