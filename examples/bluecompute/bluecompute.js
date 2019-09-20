@@ -28,7 +28,7 @@ const bcCatalog = require('./bluecompute-catalog')
 app.catalog = bcCatalog()
 
 const bcCustomer = require('./bluecompute-customer')
-app.catalog = bcCustomer()
+app.customer = bcCustomer()
 
 const bcOrders = require('./bluecompute-orders')
 app.orders = bcOrders()

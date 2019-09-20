@@ -119,33 +119,18 @@ module.exports = function bcInventory () {
       annotations: { bluecompute: 'true' },
       name: 'bluecompute-inventory',
       labels: {
-        app: 'inventory',
-        implementation: 'microprofile',
-        tier: 'backend',
-        version: 'v1',
-        'app.kubernetes.io/name': 'bluecompute-inventory',
-        'app.kubernetes.io/managed-by': 'Tiller',
-        'app.kubernetes.io/instance': 'bluecompute',
-        heritage: 'Tiller',
+        chart: 'bluecompute-inventory-0.0.1',
         release: 'bluecompute',
-        chart: 'inventory-0.1.0'
+        implementation: 'microprofile'
       }
     },
     spec: {
       type: 'NodePort',
-      ports: [{ name: 'http', port: 9080 }, { name: 'https', port: 9443 }],
+      ports: [ { name: 'http', port: 9080 }, { name: 'https', port: 9443 } ],
       selector: {
-        app: 'inventory',
-        implementation: 'microprofile',
-        tier: 'backend',
-        version: 'v1',
-        'app.kubernetes.io/name': 'bluecompute-inventory',
-        'helm.sh/chart': 'inventory-0.1.0',
-        'app.kubernetes.io/managed-by': 'Tiller',
-        'app.kubernetes.io/instance': 'bluecompute',
-        heritage: 'Tiller',
+        app: 'bluecompute-inventory-selector',
         release: 'bluecompute',
-        chart: 'inventory-0.1.0'
+        implementation: 'microprofile'
       }
     }
   })

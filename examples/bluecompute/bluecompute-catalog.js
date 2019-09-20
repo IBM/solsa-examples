@@ -93,7 +93,7 @@ module.exports = function bcCatalog () {
     metadata: { name: 'bluecompute-catalog-config' },
     data: {
       'jvm.options': '\n' +
-      '-Dclient.InventoryServiceClient/mp-rest/url=http://bluecompute-inventory:9080/inventory/rest/inventory\n'
+        '-Dclient.InventoryServiceClient/mp-rest/url=http://bluecompute-inventory:9080/inventory/rest/inventory\n'
     }
   })
 
