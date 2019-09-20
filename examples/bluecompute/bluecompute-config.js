@@ -109,31 +109,5 @@ module.exports = function bcConfig () {
     }
   })
 
-  app.bluecomputeWeb_Ingress = new solsa.extensions.v1beta1.Ingress({
-    metadata: {
-      annotations: null,
-      name: 'bluecompute-web',
-      labels: {
-        app: 'bluecompute',
-        micro: 'web-bff',
-        tier: 'frontend',
-        implementation: 'microprofile',
-        heritage: 'Tiller',
-        release: 'bluecompute',
-        chart: 'web-0.0.1'
-      }
-    },
-    spec: {
-      rules: [
-        {
-          host: 'bluecompute.mycluster12345.us-south.containers.appdomain.cloud',
-          http: {
-            paths: [ { path: '/', backend: { serviceName: 'bluecompute-web', servicePort: 80 } } ]
-          }
-        }
-      ]
-    }
-  })
-
   return app
 }
