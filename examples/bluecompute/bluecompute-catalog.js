@@ -53,11 +53,11 @@ module.exports = function bcCatalog () {
       template: {
         metadata: { labels: { datastore: 'elasticsearch' } },
         spec: {
-          volumes: [ { name: 'storage', hostPath: { path: '/var/lib/elasticsearch-catalog' } } ],
+          volumes: [{ name: 'storage', hostPath: { path: '/var/lib/elasticsearch-catalog' } }],
           containers: [
             {
               name: 'elasticsearch',
-              securityContext: { capabilities: { add: [ 'IPC_LOCK' ] } },
+              securityContext: { capabilities: { add: ['IPC_LOCK'] } },
               image: 'quay.io/pires/docker-elasticsearch-kubernetes:1.7.1-4',
               imagePullPolicy: 'Always',
               env: [
@@ -76,7 +76,7 @@ module.exports = function bcCatalog () {
                 { name: 'HTTP_ENABLE', value: 'true' },
                 { name: 'ES_JAVA_OPTS', value: '-Xms256m -Xmx256m' }
               ],
-              volumeMounts: [ { mountPath: '/data', name: 'storage' } ],
+              volumeMounts: [{ mountPath: '/data', name: 'storage' }],
               resources: { limits: { memory: '700Mi' }, requests: { memory: '350Mi' } },
               ports: [
                 { containerPort: 9200, name: 'http', protocol: 'TCP' },
@@ -112,7 +112,7 @@ module.exports = function bcCatalog () {
     },
     spec: {
       type: 'NodePort',
-      ports: [ { name: 'http', port: 9080 }, { name: 'https', port: 9443 } ],
+      ports: [{ name: 'http', port: 9080 }, { name: 'https', port: 9443 }],
       selector: {
         'app.kubernetes.io/name': 'bluecompute-catalog',
         'app.kubernetes.io/managed-by': 'Tiller',
@@ -225,10 +225,10 @@ module.exports = function bcCatalog () {
                   }
                 }
               ],
-              volumeMounts: [ { name: 'config-volume', mountPath: '/opt/ibm/wlp/usr/shared' } ]
+              volumeMounts: [{ name: 'config-volume', mountPath: '/opt/ibm/wlp/usr/shared' }]
             }
           ],
-          volumes: [ { name: 'config-volume', configMap: { name: 'bluecompute-catalog-config' } } ]
+          volumes: [{ name: 'config-volume', configMap: { name: 'bluecompute-catalog-config' } }]
         }
       }
     }
