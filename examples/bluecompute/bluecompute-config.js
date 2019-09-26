@@ -47,16 +47,7 @@ module.exports = function bcConfig () {
   })
 
   app.bluecomputePrometheus_ClusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
-    metadata: {
-      labels: {
-        app: 'bluecompute-prometheus',
-        chart: 'ibm-icpmonitoring-1.1.0',
-        component: 'prometheus',
-        release: 'bluecompute',
-        heritage: 'Tiller'
-      },
-      name: 'bluecompute-prometheus'
-    },
+    metadata: { name: 'bluecompute-prometheus' },
     roleRef: {
       apiGroup: 'rbac.authorization.k8s.io',
       kind: 'ClusterRole',
@@ -72,14 +63,7 @@ module.exports = function bcConfig () {
   })
 
   app.bluecomputeClusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
-    metadata: {
-      name: 'bluecompute-cluster-role-binding',
-      labels: {
-        chart: 'bluecompute-bluecompute-0.0.6',
-        release: 'bluecompute',
-        implementation: 'microprofile'
-      }
-    },
+    metadata: { name: 'bluecompute-cluster-role-binding' },
     subjects: [ { kind: 'ServiceAccount', name: 'default', namespace: 'bluecompute' } ],
     roleRef: {
       apiGroup: 'rbac.authorization.k8s.io',
