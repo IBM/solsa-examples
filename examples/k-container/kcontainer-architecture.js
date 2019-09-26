@@ -72,7 +72,7 @@ module.exports = function kcontainer ({ getImage }) {
   }, commonEnv)
 
   // expose UI
-  bundle.ingress = new bundle.ui.Ingress()
+  bundle.ingress = bundle.ui.getIngress()
 
   return bundle
 }
