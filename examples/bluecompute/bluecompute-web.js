@@ -122,7 +122,7 @@ module.exports = function bcWeb () {
       }
     },
     spec: {
-      type: 'NodePort',
+      type: 'ClusterIP',
       ports: [ { name: 'http', protocol: 'TCP', port: 80, targetPort: 8000 } ],
       selector: {
         app: 'bluecompute',

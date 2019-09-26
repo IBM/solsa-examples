@@ -137,7 +137,7 @@ module.exports = function bcOrders () {
       }
     },
     spec: {
-      type: 'NodePort',
+      type: 'ClusterIP',
       ports: [ { name: 'http', port: 9080 }, { name: 'https', port: 9443 } ],
       selector: {
         app: 'orders',
@@ -172,7 +172,7 @@ module.exports = function bcOrders () {
       }
     },
     spec: {
-      type: 'NodePort',
+      type: 'ClusterIP',
       ports: [
         { name: 'main', port: 5672 },
         { name: 'management', port: 15672 },

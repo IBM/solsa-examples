@@ -21,7 +21,7 @@ module.exports = function bcAuth () {
       }
     },
     spec: {
-      type: 'NodePort',
+      type: 'ClusterIP',
       ports: [ { name: 'http', port: 9080 }, { name: 'https', port: 9443 } ],
       selector: {
         app: 'auth',

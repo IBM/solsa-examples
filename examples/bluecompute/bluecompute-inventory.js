@@ -125,7 +125,7 @@ module.exports = function bcInventory () {
       }
     },
     spec: {
-      type: 'NodePort',
+      type: 'ClusterIP',
       ports: [ { name: 'http', port: 9080 }, { name: 'https', port: 9443 } ],
       selector: {
         app: 'bluecompute-inventory-selector',

@@ -21,7 +21,7 @@ module.exports = function bcCustomer () {
       }
     },
     spec: {
-      type: 'NodePort',
+      type: 'ClusterIP',
       ports: [ { name: 'http', port: 9080 }, { name: 'https', port: 9443 } ],
       selector: {
         app: 'bluecompute',
@@ -38,8 +38,8 @@ module.exports = function bcCustomer () {
       labels: { chart: 'customer-0.0.1', release: 'bluecompute', implementation: 'microprofile' }
     },
     spec: {
-      type: 'NodePort',
-      ports: [ { port: 80, nodePort: 31222 } ],
+      type: 'ClusterIP',
+      ports: [ { port: 80 } ],
       selector: {
         micro: 'customer',
         service: 'cloudant-db',
