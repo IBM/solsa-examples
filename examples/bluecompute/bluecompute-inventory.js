@@ -1,46 +1,41 @@
+/*
+ * Copyright 2019 IBM Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* eslint-disable no-template-curly-in-string */
+// @ts-check
+
 const solsa = require('solsa')
 
 module.exports = function bcInventory () {
   const app = new solsa.Bundle()
 
   app.bluecomputeInventoryMysqlSecret = new solsa.core.v1.Secret({
-    metadata: {
-      name: 'bluecompute-inventory-mysql-secret',
-      labels: {
-        chart: 'bluecompute-inventory-0.0.1',
-        release: 'bluecompute',
-        implementation: 'microprofile'
-      }
-    },
+    metadata: { name: 'bluecompute-inventory-mysql-secret' },
     type: 'Opaque',
     data: { 'mysql-password': 'cGFzc3dvcmQ=' }
   })
 
   app.bluecomputeMysql_Secret = new solsa.core.v1.Secret({
-    metadata: {
-      name: 'bluecompute-mysql',
-      labels: {
-        app: 'bluecompute-mysql',
-        chart: 'mysql-0.10.2',
-        release: 'bluecompute',
-        heritage: 'Tiller'
-      }
-    },
+    metadata: { name: 'bluecompute-mysql' },
     type: 'Opaque',
     data: { 'mysql-root-password': 'cGFzc3dvcmQ=', 'mysql-password': 'cGFzc3dvcmQ=' }
   })
 
   app.bluecomputeMysqlTest_ConfigMap = new solsa.core.v1.ConfigMap({
-    metadata: {
-      name: 'bluecompute-mysql-test',
-      labels: {
-        app: 'bluecompute-mysql',
-        chart: 'mysql-0.10.2',
-        heritage: 'Tiller',
-        release: 'bluecompute'
-      }
-    },
+    metadata: { name: 'bluecompute-mysql-test' },
     data: {
       'run.sh': '@test "Testing MySQL Connection" {\n' +
         '  mysql --host=bluecompute-mysql --port=3306 -u root -ppassword\n' +
@@ -49,14 +44,7 @@ module.exports = function bcInventory () {
   })
 
   app.bluecomputeInventoryData_ConfigMap = new solsa.core.v1.ConfigMap({
-    metadata: {
-      name: 'bluecompute-inventory-data',
-      labels: {
-        chart: 'bluecompute-inventory-0.1.0',
-        release: 'bluecompute',
-        implementation: 'microprofile'
-      }
-    },
+    metadata: { name: 'bluecompute-inventory-data' },
     data: {
       'mysql_data.sql': 'create database if not exists inventorydb;\n' +
         'use inventorydb;\n' +
@@ -85,69 +73,14 @@ module.exports = function bcInventory () {
   })
 
   app.bluecomputeMysql_PersistentVolumeClaim = new solsa.core.v1.PersistentVolumeClaim({
-    metadata: {
-      name: 'bluecompute-mysql',
-      labels: {
-        app: 'bluecompute-mysql',
-        chart: 'mysql-0.10.2',
-        release: 'bluecompute',
-        heritage: 'Tiller'
-      }
-    },
+    metadata: { name: 'bluecompute-mysql' },
     spec: { accessModes: ['ReadWriteOnce'], resources: { requests: { storage: '8Gi' } } }
   })
 
-  app.bluecomputeMysql_Service = new solsa.core.v1.Service({
-    metadata: {
-      name: 'bluecompute-mysql',
-      labels: {
-        app: 'bluecompute-mysql',
-        chart: 'mysql-0.10.2',
-        release: 'bluecompute',
-        heritage: 'Tiller'
-      }
-    },
-    spec: {
-      type: 'ClusterIP',
-      ports: [{ name: 'mysql', port: 3306, targetPort: 'mysql' }],
-      selector: { app: 'bluecompute-mysql' }
-    }
-  })
-
-  app.bluecomputeInventory_Service = new solsa.core.v1.Service({
-    metadata: {
-      annotations: { bluecompute: 'true' },
-      name: 'bluecompute-inventory',
-      labels: {
-        chart: 'bluecompute-inventory-0.0.1',
-        release: 'bluecompute',
-        implementation: 'microprofile'
-      }
-    },
-    spec: {
-      type: 'ClusterIP',
-      ports: [ { name: 'http', port: 9080 }, { name: 'https', port: 9443 } ],
-      selector: {
-        app: 'bluecompute-inventory-selector',
-        release: 'bluecompute',
-        implementation: 'microprofile'
-      }
-    }
-  })
-
   app.bluecomputeMysql_Deployment = new solsa.extensions.v1beta1.Deployment({
-    metadata: {
-      name: 'bluecompute-mysql',
-      labels: {
-        app: 'bluecompute-mysql',
-        chart: 'mysql-0.10.2',
-        release: 'bluecompute',
-        heritage: 'Tiller'
-      }
-    },
+    metadata: { name: 'bluecompute-mysql' },
     spec: {
       template: {
-        metadata: { labels: { app: 'bluecompute-mysql' } },
         spec: {
           initContainers: [
             {
@@ -205,34 +138,21 @@ module.exports = function bcInventory () {
       }
     }
   })
+  app.bluecomputeMysql_Service = app.bluecomputeMysql_Deployment.getService()
 
   app.bluecomputeInventory_Deployment = new solsa.extensions.v1beta1.Deployment({
-    metadata: {
-      name: 'bluecompute-inventory',
-      labels: {
-        chart: 'bluecompute-inventory-0.0.1',
-        release: 'bluecompute',
-        implementation: 'microprofile'
-      }
-    },
+    metadata: { name: 'bluecompute-inventory' },
     spec: {
       replicas: 1,
       revisionHistoryLimit: 1,
       template: {
-        metadata: {
-          labels: {
-            app: 'bluecompute-inventory-selector',
-            version: 'current',
-            release: 'bluecompute',
-            implementation: 'microprofile'
-          }
-        },
         spec: {
           containers: [
             {
               name: 'inventory',
               image: 'ibmcase/inventory-mp:v2.0.0',
               imagePullPolicy: 'IfNotPresent',
+              ports: [ { name: 'http', containerPort: 9080 }, { name: 'https', containerPort: 9443 } ],
               readinessProbe: {
                 httpGet: { path: '/', port: 9080 },
                 initialDelaySeconds: 60,
@@ -261,26 +181,12 @@ module.exports = function bcInventory () {
       }
     }
   })
+  app.bluecomputeInventory_Service = app.bluecomputeInventory_Deployment.getService()
 
   app.bluecomputeInventoryJob = new solsa.batch.v1.Job({
-    metadata: {
-      name: 'bluecompute-inventory-job',
-      labels: {
-        chart: 'bluecompute-inventory-0.0.1',
-        release: 'bluecompute',
-        implementation: 'microprofile'
-      }
-    },
+    metadata: { name: 'bluecompute-inventory-job' },
     spec: {
       template: {
-        metadata: {
-          name: 'bluecompute-inventory-job',
-          labels: {
-            chart: 'bluecompute-inventory-0.0.1',
-            release: 'bluecompute',
-            implementation: 'microprofile'
-          }
-        },
         spec: {
           restartPolicy: 'Never',
           initContainers: [

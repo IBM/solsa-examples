@@ -1,84 +1,45 @@
+/*
+ * Copyright 2019 IBM Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* eslint-disable no-template-curly-in-string */
+// @ts-check
 const solsa = require('solsa')
 
 module.exports = function bcAuth () {
   const app = new solsa.Bundle()
 
-  app.bluecomputeAuth_Service = new solsa.core.v1.Service({
-    metadata: {
-      name: 'bluecompute-auth',
-      labels: {
-        app: 'auth',
-        implementation: 'microprofile',
-        tier: 'backend',
-        version: 'v1',
-        'app.kubernetes.io/name': 'bluecompute-auth',
-        'app.kubernetes.io/managed-by': 'Tiller',
-        'app.kubernetes.io/instance': 'bluecompute',
-        heritage: 'Tiller',
-        release: 'bluecompute',
-        chart: 'auth-0.1.0'
-      }
-    },
-    spec: {
-      type: 'ClusterIP',
-      ports: [ { name: 'http', port: 9080 }, { name: 'https', port: 9443 } ],
-      selector: {
-        app: 'auth',
-        implementation: 'microprofile',
-        tier: 'backend',
-        version: 'v1',
-        'app.kubernetes.io/name': 'bluecompute-auth',
-        'helm.sh/chart': 'auth-0.1.0',
-        'app.kubernetes.io/managed-by': 'Tiller',
-        'app.kubernetes.io/instance': 'bluecompute',
-        heritage: 'Tiller',
-        release: 'bluecompute',
-        chart: 'auth-0.1.0'
-      }
-    }
-  })
-
   app.bluecomputeAuth_Deployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
       name: 'bluecompute-auth',
       labels: {
-        app: 'auth',
         implementation: 'microprofile',
         tier: 'backend',
-        version: 'v1',
-        'app.kubernetes.io/name': 'bluecompute-auth',
-        'app.kubernetes.io/managed-by': 'Tiller',
-        'app.kubernetes.io/instance': 'bluecompute',
-        heritage: 'Tiller',
-        release: 'bluecompute',
-        chart: 'auth-0.1.0'
+        version: 'v1'
       }
     },
     spec: {
       replicas: 1,
       template: {
-        metadata: {
-          labels: {
-            app: 'auth',
-            implementation: 'microprofile',
-            tier: 'backend',
-            version: 'v1',
-            'app.kubernetes.io/name': 'bluecompute-auth',
-            'helm.sh/chart': 'auth-0.1.0',
-            'app.kubernetes.io/managed-by': 'Tiller',
-            'app.kubernetes.io/instance': 'bluecompute',
-            heritage: 'Tiller',
-            release: 'bluecompute',
-            chart: 'auth-0.1.0'
-          }
-        },
         spec: {
           containers: [
             {
               name: 'auth',
               image: 'ibmcase/auth-mp:v3.0.0',
               imagePullPolicy: 'Always',
+              ports: [ { name: 'http', containerPort: 9080 }, { name: 'https', containerPort: 9443 } ],
               readinessProbe: {
                 httpGet: { path: '/', port: 9443, scheme: 'HTTPS' },
                 initialDelaySeconds: 60,
@@ -102,5 +63,7 @@ module.exports = function bcAuth () {
       }
     }
   })
+  app.bluecomputeAuth_Service = app.bluecomputeAuth_Deployment.getService()
+
   return app
 }

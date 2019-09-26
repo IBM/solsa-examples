@@ -1,21 +1,29 @@
+/*
+ * Copyright 2019 IBM Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* eslint-disable no-template-curly-in-string */
+// @ts-check
+
 const solsa = require('solsa')
 
 module.exports = function bcConfig () {
   const app = new solsa.Bundle()
 
   app.bluecomputePrometheus_ClusterRole = new solsa.rbac.v1beta1.ClusterRole({
-    metadata: {
-      labels: {
-        app: 'bluecompute-prometheus',
-        chart: 'ibm-icpmonitoring-1.1.0',
-        component: 'prometheus',
-        release: 'bluecompute',
-        heritage: 'Tiller'
-      },
-      name: 'bluecompute-prometheus',
-      namespace: 'bluecompute'
-    },
+    metadata: { name: 'bluecompute-prometheus' },
     rules: [
       {
         apiGroups: [ '' ],
@@ -27,14 +35,7 @@ module.exports = function bcConfig () {
   })
 
   app.bluecomputeClusterRole = new solsa.rbac.v1beta1.ClusterRole({
-    metadata: {
-      name: 'bluecompute-cluster-role',
-      labels: {
-        chart: 'bluecompute-bluecompute-0.0.6',
-        release: 'bluecompute',
-        implementation: 'microprofile'
-      }
-    },
+    metadata: { name: 'bluecompute-cluster-role' },
     rules: [
       {
         apiGroups: [ 'extensions' ],
