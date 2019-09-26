@@ -1,6 +1,6 @@
 {
   "name": "kafka-producer",
   "dependencies": {
-    "kafkajs": "^1.8.0"
+    "kafkajs": "^1.10.0"
   }
 }
