@@ -16,5 +16,8 @@
       "name": "Dave Grove",
       "email": "groved@us.ibm.com"
     }
-  ]
+  ],
+  "dependencies": {
+    "solsa": "^0.1.4"
+  }
 }
