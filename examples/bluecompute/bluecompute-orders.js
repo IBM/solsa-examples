@@ -92,7 +92,7 @@ module.exports = function bcOrders () {
     spec: {
       type: 'ClusterIP',
       ports: [ { name: 'mysql', port: 3307, targetPort: 'mysql' } ],
-      selector: { app: 'mariadb', component: 'master', release: 'bluecompute' }
+      selector: { app: 'mariadb', component: 'master' }
     }
   })
 

@@ -25,15 +25,10 @@ module.exports = function bcWeb () {
   app.bluecomputeWebConfig_ConfigMap = new solsa.core.v1.ConfigMap({
     metadata: {
       labels: {
-        app: 'bluecompute',
         micro: 'web-bff',
-        tier: 'frontend',
-        implementation: 'microprofile',
-        release: 'bluecompute',
-        chart: 'web-0.1.0'
+        tier: 'frontend'
       },
-      name: 'bluecompute-web-config',
-      namespace: 'bluecompute'
+      name: 'bluecompute-web-config'
     },
     data: {
       checks: '# Check the main website, including text content\r\n' +
@@ -126,56 +121,17 @@ module.exports = function bcWeb () {
     }
   })
 
-  app.bluecomputeWeb_Service = new solsa.core.v1.Service({
-    metadata: {
-      name: 'bluecompute-web',
-      namespace: 'bluecompute',
-      labels: {
-        app: 'bluecompute',
-        micro: 'web-bff',
-        tier: 'frontend',
-        implementation: 'microprofile',
-        release: 'bluecompute',
-        chart: 'web-0.1.0'
-      }
-    },
-    spec: {
-      type: 'ClusterIP',
-      ports: [ { name: 'http', protocol: 'TCP', port: 80, targetPort: 8000 } ],
-      selector: {
-        app: 'bluecompute',
-        micro: 'web-bff',
-        tier: 'frontend',
-        release: 'bluecompute',
-        implementation: 'microprofile'
-      }
-    }
-  })
-
   app.bluecomputeWeb_Deployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
       name: 'bluecompute-web',
       labels: {
-        app: 'bluecompute',
         micro: 'web-bff',
-        tier: 'frontend',
-        implementation: 'microprofile',
-        release: 'bluecompute',
-        chart: 'web-0.1.0'
+        tier: 'frontend'
       }
     },
     spec: {
       replicas: 1,
       template: {
-        metadata: {
-          labels: {
-            app: 'bluecompute',
-            micro: 'web-bff',
-            tier: 'frontend',
-            release: 'bluecompute',
-            implementation: 'microprofile'
-          }
-        },
         spec: {
           containers: [
             {
@@ -202,5 +158,8 @@ module.exports = function bcWeb () {
       }
     }
   })
+
+  app.bluecomputeWeb_Service = app.bluecomputeWeb_Deployment.getService()
+
   return app
 }
