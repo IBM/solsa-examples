@@ -94,6 +94,7 @@ module.exports = function bcCustomer () {
       }
     }
   })
+  app.bluecomputeCustomer_Deployment.propogateLabels()
   app.bluecomputeCustomer_Service = app.bluecomputeCustomer_Deployment.getService()
 
   app.bluecomputeCloudant_Deployment = new solsa.extensions.v1beta1.Deployment({
@@ -122,6 +123,7 @@ module.exports = function bcCustomer () {
       }
     }
   })
+  app.bluecomputeCloudant_Deployment.propogateLabels()
   app.bluecomputeCloudantService = app.bluecomputeCloudant_Deployment.getService()
 
   app.bluecomputePopulate_Job = new solsa.batch.v1.Job({

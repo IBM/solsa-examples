@@ -158,7 +158,7 @@ module.exports = function bcWeb () {
       }
     }
   })
-
+  app.bluecomputeWeb_Deployment.propogateLabels()
   app.bluecomputeWeb_Service = app.bluecomputeWeb_Deployment.getService()
 
   return app

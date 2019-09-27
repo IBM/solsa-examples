@@ -138,6 +138,7 @@ module.exports = function bcInventory () {
       }
     }
   })
+  app.bluecomputeMysql_Deployment.propogateLabels()
   app.bluecomputeMysql_Service = app.bluecomputeMysql_Deployment.getService()
 
   app.bluecomputeInventory_Deployment = new solsa.extensions.v1beta1.Deployment({
@@ -181,6 +182,7 @@ module.exports = function bcInventory () {
       }
     }
   })
+  app.bluecomputeInventory_Deployment.propogateLabels()
   app.bluecomputeInventory_Service = app.bluecomputeInventory_Deployment.getService()
 
   app.bluecomputeInventoryJob = new solsa.batch.v1.Job({

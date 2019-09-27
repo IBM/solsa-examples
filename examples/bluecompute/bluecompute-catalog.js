@@ -77,6 +77,7 @@ module.exports = function bcCatalog () {
       }
     }
   })
+  app.bluecomputeCatalogElasticsearch_Deployment.propogateLabels()
   app.bluecomputeCatalogElasticsearch_Service = app.bluecomputeCatalogElasticsearch_Deployment.getService()
 
   app.bluecomputeCatalogConfig_ConfigMap = new solsa.core.v1.ConfigMap({
@@ -176,6 +177,7 @@ module.exports = function bcCatalog () {
       }
     }
   })
+  app.bluecomputeCatalog_Deployment.propogateLabels()
   app.bluecomputeCatalog_Service = app.bluecomputeCatalog_Deployment.getService()
 
   return app

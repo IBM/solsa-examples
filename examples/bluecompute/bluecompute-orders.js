@@ -163,6 +163,7 @@ module.exports = function bcOrders () {
       }
     }
   })
+  app.bluecomputeOrders_Deployment.propogateLabels()
   app.bluecomputeOrders_Service = app.bluecomputeOrders_Deployment.getService()
 
   app.bluecomputeRabbitmq_Deployment = new solsa.extensions.v1beta1.Deployment({
@@ -193,6 +194,7 @@ module.exports = function bcOrders () {
       }
     }
   })
+  app.bluecomputeRabbitmq_Deployment.propogateLabels()
   app.bluecomputeRabbitmq_Service = app.bluecomputeRabbitmq_Deployment.getService()
 
   app.bluecomputeMariadb_StatefulSet = new solsa.apps.v1beta1.StatefulSet({

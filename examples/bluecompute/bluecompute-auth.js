@@ -63,6 +63,7 @@ module.exports = function bcAuth () {
       }
     }
   })
+  app.bluecomputeAuth_Deployment.propogateLabels()
   app.bluecomputeAuth_Service = app.bluecomputeAuth_Deployment.getService()
 
   return app
