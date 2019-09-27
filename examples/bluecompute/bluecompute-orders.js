@@ -87,15 +87,6 @@ module.exports = function bcOrders () {
     }
   })
 
-  app.bluecomputeMariadb_Service = new solsa.core.v1.Service({
-    metadata: { name: 'bluecompute-mariadb' },
-    spec: {
-      type: 'ClusterIP',
-      ports: [ { name: 'mysql', port: 3307, targetPort: 'mysql' } ],
-      selector: { app: 'mariadb', component: 'master' }
-    }
-  })
-
   app.bluecomputeOrders_Deployment = new solsa.extensions.v1beta1.Deployment({
     metadata: { name: 'bluecompute-orders' },
     spec: {
@@ -145,7 +136,7 @@ module.exports = function bcOrders () {
                 },
                 {
                   name: 'jdbcURL',
-                  value: 'jdbc:mysql://bluecompute-mariadb:3307/ordersdb?useSSL=false'
+                  value: 'jdbc:mysql://bluecompute-mariadb:3306/ordersdb?useSSL=false'
                 },
                 { name: 'rabbit', value: 'bluecompute-rabbitmq' },
                 { name: 'PORT', value: '9080' },
@@ -292,6 +283,7 @@ module.exports = function bcOrders () {
       }
     }
   })
+  app.bluecomputeMariadb_Service = app.bluecomputeMariadb_StatefulSet.getService()
 
   app.bluecomputeOrdersJob = new solsa.batch.v1.Job({
     metadata: {
@@ -304,8 +296,7 @@ module.exports = function bcOrders () {
     spec: {
       template: {
         metadata: {
-          name: 'bluecompute-orders-job',
-          annotations: { 'sidecar.istio.io/inject': 'false' }
+          name: 'bluecompute-orders-job'
         },
         spec: {
           restartPolicy: 'Never',
@@ -321,7 +312,7 @@ module.exports = function bcOrders () {
               ],
               env: [
                 { name: 'MYSQL_HOST', value: 'bluecompute-mariadb' },
-                { name: 'MYSQL_PORT', value: '3307' },
+                { name: 'MYSQL_PORT', value: '3306' },
                 { name: 'MYSQL_DATABASE', value: 'ordersdb' },
                 { name: 'MYSQL_USER', value: 'root' },
                 {
@@ -345,7 +336,7 @@ module.exports = function bcOrders () {
               ],
               env: [
                 { name: 'MYSQL_HOST', value: 'bluecompute-mariadb' },
-                { name: 'MYSQL_PORT', value: '3307' },
+                { name: 'MYSQL_PORT', value: '3306' },
                 { name: 'MYSQL_DATABASE', value: 'ordersdb' },
                 { name: 'MYSQL_USER', value: 'root' },
                 {
