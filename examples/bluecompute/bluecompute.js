@@ -39,4 +39,4 @@ app.inventory = bcInventory()
 const bcWeb = require('./bluecompute-web')
 app.web = bcWeb()
 
-app.ingress = new solsa.Ingress({ name: 'bluecompute-web', port: 8000 })
+app.ingress = app.web.bluecomputeWeb_Service.getIngress({ vhost: 'bluecompute' })
