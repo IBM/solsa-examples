@@ -19,11 +19,11 @@
 
 const solsa = require('solsa')
 
-module.exports = function bcCatalog () {
+module.exports = function bcCatalog (appConfig) {
   const app = new solsa.Bundle()
 
   app.bluecomputeBindingRefarchComposeForElasticsearch_Secret = new solsa.core.v1.Secret({
-    metadata: { name: 'bluecompute-binding-refarch-compose-for-elasticsearch' },
+    metadata: { name: appConfig.getInstanceName('binding-refarch-compose-for-elasticsearch') },
     type: 'Opaque',
     data: {
       binding: 'eyJ1cmkiOiJodHRwOi8vYmx1ZWNvbXB1dGUtY2F0YWxvZy1lbGFzdGljc2VhcmNoOjkyMDAvIn0='
@@ -32,15 +32,12 @@ module.exports = function bcCatalog () {
 
   app.bluecomputeCatalogElasticsearch_Deployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
-      name: 'bluecompute-catalog-elasticsearch',
-      labels: {
-        datastore: 'elasticsearch'
-      }
+      name: appConfig.getInstanceName('catalog-elasticsearch'),
+      labels: appConfig.addCommonLabelsTo({ tier: 'backend', micro: 'catalog', datastore: 'elasticsearch' })
     },
     spec: {
       replicas: 1,
       template: {
-        metadata: { labels: { datastore: 'elasticsearch' } },
         spec: {
           volumes: [{ name: 'storage', hostPath: { path: '/var/lib/elasticsearch-catalog' } }],
           containers: [
@@ -59,7 +56,7 @@ module.exports = function bcCatalog () {
                   valueFrom: { fieldRef: { fieldPath: 'metadata.namespace' } }
                 },
                 { name: 'CLUSTER_NAME', value: 'catalog' },
-                { name: 'DISCOVERY_SERVICE', value: 'bluecompute-catalog-elasticsearch' },
+                { name: 'DISCOVERY_SERVICE', value: appConfig.getInstanceName('catalog-elasticsearch') },
                 { name: 'NODE_MASTER', value: 'true' },
                 { name: 'NODE_DATA', value: 'true' },
                 { name: 'HTTP_ENABLE', value: 'true' },
@@ -81,7 +78,7 @@ module.exports = function bcCatalog () {
   app.bluecomputeCatalogElasticsearch_Service = app.bluecomputeCatalogElasticsearch_Deployment.getService()
 
   app.bluecomputeCatalogConfig_ConfigMap = new solsa.core.v1.ConfigMap({
-    metadata: { name: 'bluecompute-catalog-config' },
+    metadata: { name: appConfig.getInstanceName('catalog-config') },
     data: {
       'jvm.options': '\n' +
         '-Dclient.InventoryServiceClient/mp-rest/url=http://bluecompute-inventory:9080/inventory/rest/inventory\n'
@@ -90,12 +87,14 @@ module.exports = function bcCatalog () {
 
   app.bluecomputeCatalog_Deployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
-      name: 'bluecompute-catalog'
+      name: appConfig.getInstanceName('catalog'),
+      labels: appConfig.addCommonLabelsTo({ tier: 'backend', micro: 'catalog' })
     },
     spec: {
       replicas: 1,
       template: {
         spec: {
+          volumes: [{ name: 'config-volume', configMap: { name: 'bluecompute-catalog-config' } }],
           containers: [
             {
               name: 'catalog',
@@ -171,8 +170,7 @@ module.exports = function bcCatalog () {
               ],
               volumeMounts: [{ name: 'config-volume', mountPath: '/opt/ibm/wlp/usr/shared' }]
             }
-          ],
-          volumes: [{ name: 'config-volume', configMap: { name: 'bluecompute-catalog-config' } }]
+          ]
         }
       }
     }

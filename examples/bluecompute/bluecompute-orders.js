@@ -19,23 +19,32 @@
 
 const solsa = require('solsa')
 
-module.exports = function bcOrders () {
+module.exports = function bcOrders (appConfig) {
   const app = new solsa.Bundle()
 
   app.bluecomputeMariadb_Secret = new solsa.core.v1.Secret({
-    metadata: { name: 'bluecompute-mariadb' },
+    metadata: {
+      name: appConfig.getInstanceName('mariadb'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend' })
+    },
     type: 'Opaque',
     data: { 'mariadb-root-password': 'cGFzc3dvcmQ=', 'mariadb-password': 'cGFzc3dvcmQ=' }
   })
 
   app.bluecomputeOrdersMariadbSecret = new solsa.core.v1.Secret({
-    metadata: { name: 'bluecompute-orders-mariadb-secret' },
+    metadata: {
+      name: appConfig.getInstanceName('orders-mariadb-secret'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend' })
+    },
     type: 'Opaque',
     data: { 'mariadb-password': 'cGFzc3dvcmQ=' }
   })
 
   app.bluecomputeMariadb_ConfigMap = new solsa.core.v1.ConfigMap({
-    metadata: { name: 'bluecompute-mariadb' },
+    metadata: {
+      name: appConfig.getInstanceName('mariadb'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend' })
+    },
     data: {
       'my.cnf': '[mysqld]\n' +
       'skip-name-resolve\n' +
@@ -63,17 +72,11 @@ module.exports = function bcOrders () {
     }
   })
 
-  app.bluecomputeMariadbTests_ConfigMap = new solsa.core.v1.ConfigMap({
-    metadata: { name: 'bluecompute-mariadb-tests' },
-    data: {
-      'run.sh': '@test "Testing MariaDB is accessible" {\n' +
-      "  mysql -h bluecompute-mariadb -uroot -p$MARIADB_ROOT_PASSWORD -e 'show databases;'\n" +
-      '}'
-    }
-  })
-
   app.bluecomputeOrdersData_ConfigMap = new solsa.core.v1.ConfigMap({
-    metadata: { name: 'bluecompute-orders-data' },
+    metadata: {
+      name: appConfig.getInstanceName('orders-data'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend' })
+    },
     data: {
       'mysql_data.sql': 'create database if not exists ordersdb;\n' +
       'use ordersdb;\n' +
@@ -88,11 +91,15 @@ module.exports = function bcOrders () {
   })
 
   app.bluecomputeOrders_Deployment = new solsa.extensions.v1beta1.Deployment({
-    metadata: { name: 'bluecompute-orders' },
+    metadata: {
+      name: appConfig.getInstanceName('orders'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend', service: 'orders' })
+    },
     spec: {
       replicas: 1,
       template: {
         spec: {
+          volumes: [ { name: 'keystorevol', secret: { secretName: 'keystoresecret' } } ],
           containers: [
             {
               name: 'orders',
@@ -148,8 +155,7 @@ module.exports = function bcOrders () {
               resources: { requests: { cpu: '150m', memory: '64Mi' } },
               volumeMounts: [ { name: 'keystorevol', mountPath: '/etc/keystorevol', readOnly: true } ]
             }
-          ],
-          volumes: [ { name: 'keystorevol', secret: { secretName: 'keystoresecret' } } ]
+          ]
         }
       }
     }
@@ -159,12 +165,8 @@ module.exports = function bcOrders () {
 
   app.bluecomputeRabbitmq_Deployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
-      name: 'bluecompute-rabbitmq',
-      labels: {
-        app: 'orders',
-        implementation: 'microprofile',
-        tier: 'backend'
-      }
+      name: appConfig.getInstanceName('rabbitmq'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend', service: 'orders' })
     },
     spec: {
       replicas: 1,
@@ -190,25 +192,14 @@ module.exports = function bcOrders () {
 
   app.bluecomputeMariadb_StatefulSet = new solsa.apps.v1beta1.StatefulSet({
     metadata: {
-      name: 'bluecompute-mariadb',
-      labels: {
-        app: 'mariadb',
-        component: 'master'
-      }
+      name: appConfig.getInstanceName('mariadb'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend', service: 'mariadb', component: 'master' })
     },
     spec: {
-      selector: { matchLabels: { component: 'master', app: 'mariadb' } },
       serviceName: 'bluecompute-mariadb',
       replicas: 1,
       updateStrategy: { type: 'RollingUpdate' },
       template: {
-        metadata: {
-          annotations: { 'sidecar.istio.io/inject': 'false' },
-          labels: {
-            app: 'mariadb',
-            component: 'master'
-          }
-        },
         spec: {
           securityContext: { fsGroup: 1001, runAsUser: 1001 },
           affinity: {
@@ -224,6 +215,10 @@ module.exports = function bcOrders () {
               ]
             }
           },
+          volumes: [
+            { name: 'config', configMap: { name: 'bluecompute-mariadb' } },
+            { name: 'data', emptyDir: {} }
+          ],
           containers: [
             {
               name: 'mariadb',
@@ -274,10 +269,6 @@ module.exports = function bcOrders () {
                 }
               ]
             }
-          ],
-          volumes: [
-            { name: 'config', configMap: { name: 'bluecompute-mariadb' } },
-            { name: 'data', emptyDir: {} }
           ]
         }
       }
@@ -287,11 +278,8 @@ module.exports = function bcOrders () {
 
   app.bluecomputeOrdersJob = new solsa.batch.v1.Job({
     metadata: {
-      name: 'bluecompute-orders-job',
-      labels: {
-        app: 'orders',
-        tier: 'backend'
-      }
+      name: appConfig.getInstanceName('orders-job'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend' })
     },
     spec: {
       template: {
@@ -300,6 +288,7 @@ module.exports = function bcOrders () {
         },
         spec: {
           restartPolicy: 'Never',
+          volumes: [ { name: 'orders-data', configMap: { name: 'bluecompute-orders-data' } } ],
           initContainers: [
             {
               name: 'test-mariadb',
@@ -347,8 +336,7 @@ module.exports = function bcOrders () {
                 }
               ]
             }
-          ],
-          volumes: [ { name: 'orders-data', configMap: { name: 'bluecompute-orders-data' } } ]
+          ]
         }
       }
     }

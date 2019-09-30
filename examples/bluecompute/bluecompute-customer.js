@@ -19,11 +19,14 @@
 
 const solsa = require('solsa')
 
-module.exports = function bcCustomer () {
+module.exports = function bcCustomer (appConfig) {
   const app = new solsa.Bundle()
 
   app.bluecomputeCustomerConfig_ConfigMap = new solsa.core.v1.ConfigMap({
-    metadata: { name: 'bluecompute-customer-config' },
+    metadata: {
+      name: appConfig.getInstanceName('customer-config'),
+      labels: appConfig.addCommonLabelsTo({ tier: 'backend', micro: 'customer' })
+    },
     data: {
       'jvm.options': '-Dapplication.rest.client.CloudantClientService/mp-rest/url=http://bluecompute-cloudant:80\n'
     }
@@ -31,17 +34,17 @@ module.exports = function bcCustomer () {
 
   app.bluecomputeCustomer_Deployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
-      name: 'bluecompute-customer',
-      labels: {
-        micro: 'customer',
-        service: 'server',
-        tier: 'backend'
-      }
+      name: appConfig.getInstanceName('customer'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'customer', service: 'server', tier: 'backend' })
     },
     spec: {
       replicas: 1,
       template: {
         spec: {
+          volumes: [
+            { name: 'keystorevol', secret: { secretName: 'keystoresecret' } },
+            { name: 'config-volume', configMap: { name: appConfig.getInstanceName('customer-config') } }
+          ],
           containers: [
             {
               name: 'customer',
@@ -74,7 +77,7 @@ module.exports = function bcCustomer () {
                 { name: 'auth_health', value: 'https://bluecompute-auth:9443/health' },
                 { name: 'host', value: 'bluecompute-cloudant' },
                 { name: 'PORT', value: '9080' },
-                { name: 'RELEASE_NAME', value: 'bluecompute' },
+                { name: 'RELEASE_NAME', value: appConfig.appName },
                 { name: 'jwtid', value: 'myMpJwt' },
                 { name: 'zipkinHost', value: 'bluecompute-zipkin' },
                 { name: 'zipkinPort', value: '9411' }
@@ -85,10 +88,6 @@ module.exports = function bcCustomer () {
                 { name: 'config-volume', mountPath: '/opt/ibm/wlp/usr/shared' }
               ]
             }
-          ],
-          volumes: [
-            { name: 'keystorevol', secret: { secretName: 'keystoresecret' } },
-            { name: 'config-volume', configMap: { name: 'bluecompute-customer-config' } }
           ]
         }
       }
@@ -99,12 +98,8 @@ module.exports = function bcCustomer () {
 
   app.bluecomputeCloudant_Deployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
-      name: 'bluecompute-cloudant',
-      labels: {
-        micro: 'customer',
-        service: 'cloudant-db',
-        tier: 'backend'
-      }
+      name: appConfig.getInstanceName('cloudant'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'customer', service: 'cloudant-db', tier: 'backend' })
     },
     spec: {
       replicas: 1,
@@ -127,7 +122,10 @@ module.exports = function bcCustomer () {
   app.bluecomputeCloudantService = app.bluecomputeCloudant_Deployment.getService()
 
   app.bluecomputePopulate_Job = new solsa.batch.v1.Job({
-    metadata: { name: 'bluecompute-populate' },
+    metadata: {
+      name: appConfig.getInstanceName('populate'),
+      labels: appConfig.addCommonLabelsTo({})
+    },
     spec: {
       template: {
         spec: {

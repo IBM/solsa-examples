@@ -19,16 +19,13 @@
 
 const solsa = require('solsa')
 
-module.exports = function bcWeb () {
+module.exports = function bcWeb (appConfig) {
   const app = new solsa.Bundle()
 
   app.bluecomputeWebConfig_ConfigMap = new solsa.core.v1.ConfigMap({
     metadata: {
-      labels: {
-        micro: 'web-bff',
-        tier: 'frontend'
-      },
-      name: 'bluecompute-web-config'
+      name: appConfig.getInstanceName('web-config'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'web-bff', tier: 'frontend' })
     },
     data: {
       checks: '# Check the main website, including text content\r\n' +
@@ -123,25 +120,13 @@ module.exports = function bcWeb () {
 
   app.bluecomputeWeb_Deployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
-      name: 'bluecompute-web',
-      labels: {
-        micro: 'web-bff',
-        tier: 'frontend'
-      }
+      name: appConfig.getInstanceName('web'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'web-bff', tier: 'frontend' })
     },
     spec: {
       replicas: 1,
       template: {
         spec: {
-          containers: [
-            {
-              name: 'web',
-              image: 'ibmcase/bc-web-mp:v2.0.0',
-              imagePullPolicy: 'Always',
-              ports: [ { containerPort: 8000, protocol: 'TCP' } ],
-              volumeMounts: [ { name: 'config-volume', mountPath: '/StoreWebApp/config' } ]
-            }
-          ],
           volumes: [
             {
               name: 'config-volume',
@@ -152,6 +137,15 @@ module.exports = function bcWeb () {
                   { key: 'default.json', path: 'default.json' }
                 ]
               }
+            }
+          ],
+          containers: [
+            {
+              name: 'web',
+              image: 'ibmcase/bc-web-mp:v2.0.0',
+              imagePullPolicy: 'Always',
+              ports: [ { containerPort: 8000, protocol: 'TCP' } ],
+              volumeMounts: [ { name: 'config-volume', mountPath: '/StoreWebApp/config' } ]
             }
           ]
         }

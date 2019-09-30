@@ -19,32 +19,32 @@
 
 const solsa = require('solsa')
 
-module.exports = function bcInventory () {
+module.exports = function bcInventory (appConfig) {
   const app = new solsa.Bundle()
 
   app.bluecomputeInventoryMysqlSecret = new solsa.core.v1.Secret({
-    metadata: { name: 'bluecompute-inventory-mysql-secret' },
+    metadata: {
+      name: appConfig.getInstanceName('inventory-mysql-secret'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend' })
+    },
     type: 'Opaque',
     data: { 'mysql-password': 'cGFzc3dvcmQ=' }
   })
 
   app.bluecomputeMysql_Secret = new solsa.core.v1.Secret({
-    metadata: { name: 'bluecompute-mysql' },
+    metadata: {
+      name: appConfig.getInstanceName('mysql'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend' })
+    },
     type: 'Opaque',
     data: { 'mysql-root-password': 'cGFzc3dvcmQ=', 'mysql-password': 'cGFzc3dvcmQ=' }
   })
 
-  app.bluecomputeMysqlTest_ConfigMap = new solsa.core.v1.ConfigMap({
-    metadata: { name: 'bluecompute-mysql-test' },
-    data: {
-      'run.sh': '@test "Testing MySQL Connection" {\n' +
-        '  mysql --host=bluecompute-mysql --port=3306 -u root -ppassword\n' +
-        '}'
-    }
-  })
-
   app.bluecomputeInventoryData_ConfigMap = new solsa.core.v1.ConfigMap({
-    metadata: { name: 'bluecompute-inventory-data' },
+    metadata: {
+      name: appConfig.getInstanceName('inventory-data'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend' })
+    },
     data: {
       'mysql_data.sql': 'create database if not exists inventorydb;\n' +
         'use inventorydb;\n' +
@@ -73,15 +73,22 @@ module.exports = function bcInventory () {
   })
 
   app.bluecomputeMysql_PersistentVolumeClaim = new solsa.core.v1.PersistentVolumeClaim({
-    metadata: { name: 'bluecompute-mysql' },
+    metadata: {
+      name: appConfig.getInstanceName('mysql'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend' })
+    },
     spec: { accessModes: ['ReadWriteOnce'], resources: { requests: { storage: '8Gi' } } }
   })
 
   app.bluecomputeMysql_Deployment = new solsa.extensions.v1beta1.Deployment({
-    metadata: { name: 'bluecompute-mysql' },
+    metadata: {
+      name: appConfig.getInstanceName('mysql'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend', service: 'mysql' })
+    },
     spec: {
       template: {
         spec: {
+          volumes: [{ name: 'data', emptyDir: {} }],
           initContainers: [
             {
               name: 'remove-lost-found',
@@ -132,8 +139,7 @@ module.exports = function bcInventory () {
               },
               volumeMounts: [{ name: 'data', mountPath: '/var/lib/mysql' }]
             }
-          ],
-          volumes: [{ name: 'data', emptyDir: {} }]
+          ]
         }
       }
     }
@@ -142,7 +148,10 @@ module.exports = function bcInventory () {
   app.bluecomputeMysql_Service = app.bluecomputeMysql_Deployment.getService()
 
   app.bluecomputeInventory_Deployment = new solsa.extensions.v1beta1.Deployment({
-    metadata: { name: 'bluecompute-inventory' },
+    metadata: {
+      name: appConfig.getInstanceName('inventory'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend', service: 'inventory' })
+    },
     spec: {
       replicas: 1,
       revisionHistoryLimit: 1,
@@ -186,11 +195,15 @@ module.exports = function bcInventory () {
   app.bluecomputeInventory_Service = app.bluecomputeInventory_Deployment.getService()
 
   app.bluecomputeInventoryJob = new solsa.batch.v1.Job({
-    metadata: { name: 'bluecompute-inventory-job' },
+    metadata: {
+      name: appConfig.getInstanceName('inventory-job'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend' })
+    },
     spec: {
       template: {
         spec: {
           restartPolicy: 'Never',
+          volumes: [{ name: 'inventory-data', configMap: { name: 'bluecompute-inventory-data' } }],
           initContainers: [
             {
               name: 'test-mysql',
@@ -238,8 +251,7 @@ module.exports = function bcInventory () {
                 }
               ]
             }
-          ],
-          volumes: [{ name: 'inventory-data', configMap: { name: 'bluecompute-inventory-data' } }]
+          ]
         }
       }
     }

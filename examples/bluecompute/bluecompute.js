@@ -14,29 +14,35 @@
  * limitations under the License.
  */
 
+const BlueComputeApp = require('./bluecompute-config')
+const appConfig = new BlueComputeApp({
+  appName: 'bluecompute',
+  commonLabels: { app: 'bluecompute', implementation: 'microprofile' }
+})
+
 const solsa = require('solsa')
 const app = new solsa.Bundle()
 module.exports = app
 
-const bcConfig = require('./bluecompute-config')
-app.config = bcConfig()
+const bcCluster = require('./bluecompute-cluster')
+app.config = bcCluster(appConfig)
 
 const bcAuth = require('./bluecompute-auth')
-app.auth = bcAuth()
+app.auth = bcAuth(appConfig)
 
 const bcCatalog = require('./bluecompute-catalog')
-app.catalog = bcCatalog()
+app.catalog = bcCatalog(appConfig)
 
 const bcCustomer = require('./bluecompute-customer')
-app.customer = bcCustomer()
+app.customer = bcCustomer(appConfig)
 
 const bcOrders = require('./bluecompute-orders')
-app.orders = bcOrders()
+app.orders = bcOrders(appConfig)
 
 const bcInventory = require('./bluecompute-inventory')
-app.inventory = bcInventory()
+app.inventory = bcInventory(appConfig)
 
 const bcWeb = require('./bluecompute-web')
-app.web = bcWeb()
+app.web = bcWeb(appConfig)
 
-app.ingress = app.web.bluecomputeWeb_Service.getIngress({ vhost: 'bluecompute' })
+app.ingress = app.web.bluecomputeWeb_Service.getIngress({ vhost: appConfig.appName })

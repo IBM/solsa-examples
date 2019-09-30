@@ -18,22 +18,19 @@
 // @ts-check
 const solsa = require('solsa')
 
-module.exports = function bcAuth () {
+module.exports = function bcAuth (appConfig) {
   const app = new solsa.Bundle()
 
   app.bluecomputeAuth_Deployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
-      name: 'bluecompute-auth',
-      labels: {
-        implementation: 'microprofile',
-        tier: 'backend',
-        version: 'v1'
-      }
+      name: appConfig.getInstanceName('auth'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'auth', tier: 'backend' })
     },
     spec: {
       replicas: 1,
       template: {
         spec: {
+          volumes: [ { name: 'keystorevol', secret: { secretName: 'keystoresecret' } } ],
           containers: [
             {
               name: 'auth',
@@ -53,12 +50,11 @@ module.exports = function bcAuth () {
               resources: { requests: { cpu: '200m', memory: '300Mi' } },
               env: [
                 { name: 'PORT', value: '9080' },
-                { name: 'APPLICATION_NAME', value: 'bluecompute' }
+                { name: 'APPLICATION_NAME', value: appConfig.appName }
               ],
               volumeMounts: [ { name: 'keystorevol', mountPath: '/etc/keystorevol', readOnly: true } ]
             }
-          ],
-          volumes: [ { name: 'keystorevol', secret: { secretName: 'keystoresecret' } } ]
+          ]
         }
       }
     }

@@ -17,82 +17,27 @@
 /* eslint-disable no-template-curly-in-string */
 // @ts-check
 
-const solsa = require('solsa')
+class BlueComputeApp {
+  constructor ({ appName, commonLabels = {} }) {
+    this.appName = appName
+    this.commonLabels = commonLabels
+  }
 
-module.exports = function bcConfig () {
-  const app = new solsa.Bundle()
+  /**
+   * Map a logical name to the instance specific name
+   * @param {string} name The logical name of the desired resource
+   * @returns The instance-specific name for the resource
+   */
+  getInstanceName (name) {
+    return `${this.appName}-${name}`
+  }
 
-  app.bluecomputePrometheus_ClusterRole = new solsa.rbac.v1beta1.ClusterRole({
-    metadata: { name: 'bluecompute-prometheus' },
-    rules: [
-      {
-        apiGroups: [ '' ],
-        resources: [ 'nodes', 'nodes/proxy', 'services', 'endpoints', 'pods' ],
-        verbs: [ 'get', 'list', 'watch' ]
-      },
-      { nonResourceURLs: [ '/metrics' ], verbs: [ 'get' ] }
-    ]
-  })
-
-  app.bluecomputeClusterRole = new solsa.rbac.v1beta1.ClusterRole({
-    metadata: { name: 'bluecompute-cluster-role' },
-    rules: [
-      {
-        apiGroups: [ 'extensions' ],
-        resources: [ 'podsecuritypolicies' ],
-        resourceNames: [ 'bluecompute-pod-security-policy' ],
-        verbs: [ 'use' ]
-      }
-    ]
-  })
-
-  app.bluecomputePrometheus_ClusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
-    metadata: { name: 'bluecompute-prometheus' },
-    roleRef: {
-      apiGroup: 'rbac.authorization.k8s.io',
-      kind: 'ClusterRole',
-      name: 'bluecompute-prometheus'
-    },
-    subjects: [ { kind: 'ServiceAccount', name: 'default', namespace: 'bluecompute' } ]
-  })
-
-  app.bluecomputeFabric8Rbac_ClusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
-    metadata: { name: 'bluecompute-fabric8-rbac' },
-    subjects: [ { kind: 'ServiceAccount', name: 'default', namespace: 'bluecompute' } ],
-    roleRef: { kind: 'ClusterRole', name: 'cluster-admin', apiGroup: 'rbac.authorization.k8s.io' }
-  })
-
-  app.bluecomputeClusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
-    metadata: { name: 'bluecompute-cluster-role-binding' },
-    subjects: [ { kind: 'ServiceAccount', name: 'default', namespace: 'bluecompute' } ],
-    roleRef: {
-      apiGroup: 'rbac.authorization.k8s.io',
-      kind: 'ClusterRole',
-      name: 'bluecompute-cluster-role'
-    }
-  })
-
-  app.bluecomputeKeystoreJob = new solsa.batch.v1.Job({
-    metadata: { name: 'bluecompute-keystore-job' },
-    spec: {
-      template: {
-        metadata: { name: 'bluecompute-keystore-job' },
-        spec: {
-          containers: [
-            {
-              name: 'keystore',
-              image: 'ibmcase/keygen-mp:v3.0.0',
-              imagePullPolicy: 'Always',
-              resources: { requests: { cpu: '200m', memory: '300Mi' } },
-              command: [ 'sh', './bc_certs/keygen.sh' ],
-              args: [ 'bluecompute' ]
-            }
-          ],
-          restartPolicy: 'Never'
-        }
-      }
-    }
-  })
-
-  return app
+  /**
+   * add this.commonLabels to the argument label dictionary and return it
+   */
+  addCommonLabelsTo (labels) {
+    return Object.assign(labels, this.commonLabels)
+  }
 }
+
+module.exports = BlueComputeApp
