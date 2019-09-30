@@ -22,7 +22,7 @@ const solsa = require('solsa')
 module.exports = function bcCatalog (appConfig) {
   const app = new solsa.Bundle()
 
-  app.bluecomputeBindingRefarchComposeForElasticsearch_Secret = new solsa.core.v1.Secret({
+  app.bindingRefarchComposeForElasticsearch_Secret = new solsa.core.v1.Secret({
     metadata: { name: appConfig.getInstanceName('binding-refarch-compose-for-elasticsearch') },
     type: 'Opaque',
     data: {
@@ -30,7 +30,7 @@ module.exports = function bcCatalog (appConfig) {
     }
   })
 
-  app.bluecomputeCatalogElasticsearch_Deployment = new solsa.extensions.v1beta1.Deployment({
+  app.catalogElasticsearch_Deployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('catalog-elasticsearch'),
       labels: appConfig.addCommonLabelsTo({ tier: 'backend', micro: 'catalog', datastore: 'elasticsearch' })
@@ -74,10 +74,10 @@ module.exports = function bcCatalog (appConfig) {
       }
     }
   })
-  app.bluecomputeCatalogElasticsearch_Deployment.propogateLabels()
-  app.bluecomputeCatalogElasticsearch_Service = app.bluecomputeCatalogElasticsearch_Deployment.getService()
+  app.catalogElasticsearch_Deployment.propogateLabels()
+  app.catalogElasticsearch_Service = app.catalogElasticsearch_Deployment.getService()
 
-  app.bluecomputeCatalogConfig_ConfigMap = new solsa.core.v1.ConfigMap({
+  app.catalogConfig_ConfigMap = new solsa.core.v1.ConfigMap({
     metadata: { name: appConfig.getInstanceName('catalog-config') },
     data: {
       'jvm.options': '\n' +
@@ -85,7 +85,7 @@ module.exports = function bcCatalog (appConfig) {
     }
   })
 
-  app.bluecomputeCatalog_Deployment = new solsa.extensions.v1beta1.Deployment({
+  app.catalog_Deployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('catalog'),
       labels: appConfig.addCommonLabelsTo({ tier: 'backend', micro: 'catalog' })
@@ -175,8 +175,8 @@ module.exports = function bcCatalog (appConfig) {
       }
     }
   })
-  app.bluecomputeCatalog_Deployment.propogateLabels()
-  app.bluecomputeCatalog_Service = app.bluecomputeCatalog_Deployment.getService()
+  app.catalog_Deployment.propogateLabels()
+  app.catalog_Service = app.catalog_Deployment.getService()
 
   return app
 }

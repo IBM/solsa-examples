@@ -22,7 +22,7 @@ const solsa = require('solsa')
 module.exports = function bcConfig (appConfig) {
   const app = new solsa.Bundle()
 
-  app.bluecomputePrometheus_ClusterRole = new solsa.rbac.v1beta1.ClusterRole({
+  app.prometheus_ClusterRole = new solsa.rbac.v1beta1.ClusterRole({
     metadata: {
       name: 'bluecompute-prometheus',
       labels: appConfig.addCommonLabelsTo({})
@@ -37,7 +37,7 @@ module.exports = function bcConfig (appConfig) {
     ]
   })
 
-  app.bluecomputeClusterRole = new solsa.rbac.v1beta1.ClusterRole({
+  app.clusterRole = new solsa.rbac.v1beta1.ClusterRole({
     metadata: { name: 'bluecompute-cluster-role' },
     rules: [
       {
@@ -49,7 +49,7 @@ module.exports = function bcConfig (appConfig) {
     ]
   })
 
-  app.bluecomputePrometheus_ClusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
+  app.prometheus_ClusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
     metadata: { name: 'bluecompute-prometheus' },
     roleRef: {
       apiGroup: 'rbac.authorization.k8s.io',
@@ -59,13 +59,7 @@ module.exports = function bcConfig (appConfig) {
     subjects: [ { kind: 'ServiceAccount', name: 'default', namespace: 'bluecompute' } ]
   })
 
-  app.bluecomputeFabric8Rbac_ClusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
-    metadata: { name: 'bluecompute-fabric8-rbac' },
-    subjects: [ { kind: 'ServiceAccount', name: 'default', namespace: 'bluecompute' } ],
-    roleRef: { kind: 'ClusterRole', name: 'cluster-admin', apiGroup: 'rbac.authorization.k8s.io' }
-  })
-
-  app.bluecomputeClusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
+  app.clusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
     metadata: { name: 'bluecompute-cluster-role-binding' },
     subjects: [ { kind: 'ServiceAccount', name: 'default', namespace: 'bluecompute' } ],
     roleRef: {
@@ -75,7 +69,7 @@ module.exports = function bcConfig (appConfig) {
     }
   })
 
-  app.bluecomputeKeystoreJob = new solsa.batch.v1.Job({
+  app.keystoreJob = new solsa.batch.v1.Job({
     metadata: { name: 'bluecompute-keystore-job' },
     spec: {
       template: {

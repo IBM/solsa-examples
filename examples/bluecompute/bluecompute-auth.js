@@ -21,7 +21,7 @@ const solsa = require('solsa')
 module.exports = function bcAuth (appConfig) {
   const app = new solsa.Bundle()
 
-  app.bluecomputeAuth_Deployment = new solsa.extensions.v1beta1.Deployment({
+  app.auth_Deployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('auth'),
       labels: appConfig.addCommonLabelsTo({ micro: 'auth', tier: 'backend' })
@@ -59,8 +59,8 @@ module.exports = function bcAuth (appConfig) {
       }
     }
   })
-  app.bluecomputeAuth_Deployment.propogateLabels()
-  app.bluecomputeAuth_Service = app.bluecomputeAuth_Deployment.getService()
+  app.auth_Deployment.propogateLabels()
+  app.auth_Service = app.auth_Deployment.getService()
 
   return app
 }

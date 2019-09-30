@@ -22,7 +22,7 @@ const solsa = require('solsa')
 module.exports = function bcOrders (appConfig) {
   const app = new solsa.Bundle()
 
-  app.bluecomputeMariadb_Secret = new solsa.core.v1.Secret({
+  app.mariadb_Secret = new solsa.core.v1.Secret({
     metadata: {
       name: appConfig.getInstanceName('mariadb'),
       labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend' })
@@ -31,7 +31,7 @@ module.exports = function bcOrders (appConfig) {
     data: { 'mariadb-root-password': 'cGFzc3dvcmQ=', 'mariadb-password': 'cGFzc3dvcmQ=' }
   })
 
-  app.bluecomputeOrdersMariadbSecret = new solsa.core.v1.Secret({
+  app.ordersMariadbSecret = new solsa.core.v1.Secret({
     metadata: {
       name: appConfig.getInstanceName('orders-mariadb-secret'),
       labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend' })
@@ -40,7 +40,7 @@ module.exports = function bcOrders (appConfig) {
     data: { 'mariadb-password': 'cGFzc3dvcmQ=' }
   })
 
-  app.bluecomputeMariadb_ConfigMap = new solsa.core.v1.ConfigMap({
+  app.mariadb_ConfigMap = new solsa.core.v1.ConfigMap({
     metadata: {
       name: appConfig.getInstanceName('mariadb'),
       labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend' })
@@ -72,7 +72,7 @@ module.exports = function bcOrders (appConfig) {
     }
   })
 
-  app.bluecomputeOrdersData_ConfigMap = new solsa.core.v1.ConfigMap({
+  app.ordersData_ConfigMap = new solsa.core.v1.ConfigMap({
     metadata: {
       name: appConfig.getInstanceName('orders-data'),
       labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend' })
@@ -90,7 +90,7 @@ module.exports = function bcOrders (appConfig) {
     }
   })
 
-  app.bluecomputeOrders_Deployment = new solsa.extensions.v1beta1.Deployment({
+  app.orders_Deployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('orders'),
       labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend', service: 'orders' })
@@ -160,10 +160,10 @@ module.exports = function bcOrders (appConfig) {
       }
     }
   })
-  app.bluecomputeOrders_Deployment.propogateLabels()
-  app.bluecomputeOrders_Service = app.bluecomputeOrders_Deployment.getService()
+  app.orders_Deployment.propogateLabels()
+  app.orders_Service = app.orders_Deployment.getService()
 
-  app.bluecomputeRabbitmq_Deployment = new solsa.extensions.v1beta1.Deployment({
+  app.rabbitmq_Deployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('rabbitmq'),
       labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend', service: 'orders' })
@@ -187,10 +187,10 @@ module.exports = function bcOrders (appConfig) {
       }
     }
   })
-  app.bluecomputeRabbitmq_Deployment.propogateLabels()
-  app.bluecomputeRabbitmq_Service = app.bluecomputeRabbitmq_Deployment.getService()
+  app.rabbitmq_Deployment.propogateLabels()
+  app.rabbitmq_Service = app.rabbitmq_Deployment.getService()
 
-  app.bluecomputeMariadb_StatefulSet = new solsa.apps.v1beta1.StatefulSet({
+  app.mariadb_StatefulSet = new solsa.apps.v1beta1.StatefulSet({
     metadata: {
       name: appConfig.getInstanceName('mariadb'),
       labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend', service: 'mariadb', component: 'master' })
@@ -274,9 +274,9 @@ module.exports = function bcOrders (appConfig) {
       }
     }
   })
-  app.bluecomputeMariadb_Service = app.bluecomputeMariadb_StatefulSet.getService()
+  app.mariadb_Service = app.mariadb_StatefulSet.getService()
 
-  app.bluecomputeOrdersJob = new solsa.batch.v1.Job({
+  app.ordersJob = new solsa.batch.v1.Job({
     metadata: {
       name: appConfig.getInstanceName('orders-job'),
       labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend' })

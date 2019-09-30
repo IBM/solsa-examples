@@ -45,4 +45,4 @@ app.inventory = bcInventory(appConfig)
 const bcWeb = require('./bluecompute-web')
 app.web = bcWeb(appConfig)
 
-app.ingress = app.web.bluecomputeWeb_Service.getIngress({ vhost: appConfig.appName })
+app.ingress = app.web.web_Service.getIngress({ vhost: appConfig.appName })

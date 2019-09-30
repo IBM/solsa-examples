@@ -22,7 +22,7 @@ const solsa = require('solsa')
 module.exports = function bcWeb (appConfig) {
   const app = new solsa.Bundle()
 
-  app.bluecomputeWebConfig_ConfigMap = new solsa.core.v1.ConfigMap({
+  app.webConfig_ConfigMap = new solsa.core.v1.ConfigMap({
     metadata: {
       name: appConfig.getInstanceName('web-config'),
       labels: appConfig.addCommonLabelsTo({ micro: 'web-bff', tier: 'frontend' })
@@ -118,7 +118,7 @@ module.exports = function bcWeb (appConfig) {
     }
   })
 
-  app.bluecomputeWeb_Deployment = new solsa.extensions.v1beta1.Deployment({
+  app.web_Deployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('web'),
       labels: appConfig.addCommonLabelsTo({ micro: 'web-bff', tier: 'frontend' })
@@ -152,8 +152,8 @@ module.exports = function bcWeb (appConfig) {
       }
     }
   })
-  app.bluecomputeWeb_Deployment.propogateLabels()
-  app.bluecomputeWeb_Service = app.bluecomputeWeb_Deployment.getService()
+  app.web_Deployment.propogateLabels()
+  app.web_Service = app.web_Deployment.getService()
 
   return app
 }

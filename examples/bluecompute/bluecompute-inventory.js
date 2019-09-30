@@ -22,7 +22,7 @@ const solsa = require('solsa')
 module.exports = function bcInventory (appConfig) {
   const app = new solsa.Bundle()
 
-  app.bluecomputeInventoryMysqlSecret = new solsa.core.v1.Secret({
+  app.inventoryMysqlSecret = new solsa.core.v1.Secret({
     metadata: {
       name: appConfig.getInstanceName('inventory-mysql-secret'),
       labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend' })
@@ -31,7 +31,7 @@ module.exports = function bcInventory (appConfig) {
     data: { 'mysql-password': 'cGFzc3dvcmQ=' }
   })
 
-  app.bluecomputeMysql_Secret = new solsa.core.v1.Secret({
+  app.mysql_Secret = new solsa.core.v1.Secret({
     metadata: {
       name: appConfig.getInstanceName('mysql'),
       labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend' })
@@ -40,7 +40,7 @@ module.exports = function bcInventory (appConfig) {
     data: { 'mysql-root-password': 'cGFzc3dvcmQ=', 'mysql-password': 'cGFzc3dvcmQ=' }
   })
 
-  app.bluecomputeInventoryData_ConfigMap = new solsa.core.v1.ConfigMap({
+  app.inventoryData_ConfigMap = new solsa.core.v1.ConfigMap({
     metadata: {
       name: appConfig.getInstanceName('inventory-data'),
       labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend' })
@@ -72,7 +72,7 @@ module.exports = function bcInventory (appConfig) {
     }
   })
 
-  app.bluecomputeMysql_PersistentVolumeClaim = new solsa.core.v1.PersistentVolumeClaim({
+  app.mysql_PersistentVolumeClaim = new solsa.core.v1.PersistentVolumeClaim({
     metadata: {
       name: appConfig.getInstanceName('mysql'),
       labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend' })
@@ -80,7 +80,7 @@ module.exports = function bcInventory (appConfig) {
     spec: { accessModes: ['ReadWriteOnce'], resources: { requests: { storage: '8Gi' } } }
   })
 
-  app.bluecomputeMysql_Deployment = new solsa.extensions.v1beta1.Deployment({
+  app.mysql_Deployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('mysql'),
       labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend', service: 'mysql' })
@@ -144,10 +144,10 @@ module.exports = function bcInventory (appConfig) {
       }
     }
   })
-  app.bluecomputeMysql_Deployment.propogateLabels()
-  app.bluecomputeMysql_Service = app.bluecomputeMysql_Deployment.getService()
+  app.mysql_Deployment.propogateLabels()
+  app.mysql_Service = app.mysql_Deployment.getService()
 
-  app.bluecomputeInventory_Deployment = new solsa.extensions.v1beta1.Deployment({
+  app.inventory_Deployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('inventory'),
       labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend', service: 'inventory' })
@@ -191,10 +191,10 @@ module.exports = function bcInventory (appConfig) {
       }
     }
   })
-  app.bluecomputeInventory_Deployment.propogateLabels()
-  app.bluecomputeInventory_Service = app.bluecomputeInventory_Deployment.getService()
+  app.inventory_Deployment.propogateLabels()
+  app.inventory_Service = app.inventory_Deployment.getService()
 
-  app.bluecomputeInventoryJob = new solsa.batch.v1.Job({
+  app.inventoryJob = new solsa.batch.v1.Job({
     metadata: {
       name: appConfig.getInstanceName('inventory-job'),
       labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend' })

@@ -22,7 +22,7 @@ const solsa = require('solsa')
 module.exports = function bcCustomer (appConfig) {
   const app = new solsa.Bundle()
 
-  app.bluecomputeCustomerConfig_ConfigMap = new solsa.core.v1.ConfigMap({
+  app.customerConfig_ConfigMap = new solsa.core.v1.ConfigMap({
     metadata: {
       name: appConfig.getInstanceName('customer-config'),
       labels: appConfig.addCommonLabelsTo({ tier: 'backend', micro: 'customer' })
@@ -32,7 +32,7 @@ module.exports = function bcCustomer (appConfig) {
     }
   })
 
-  app.bluecomputeCustomer_Deployment = new solsa.extensions.v1beta1.Deployment({
+  app.customer_Deployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('customer'),
       labels: appConfig.addCommonLabelsTo({ micro: 'customer', service: 'server', tier: 'backend' })
@@ -93,10 +93,10 @@ module.exports = function bcCustomer (appConfig) {
       }
     }
   })
-  app.bluecomputeCustomer_Deployment.propogateLabels()
-  app.bluecomputeCustomer_Service = app.bluecomputeCustomer_Deployment.getService()
+  app.customer_Deployment.propogateLabels()
+  app.customer_Service = app.customer_Deployment.getService()
 
-  app.bluecomputeCloudant_Deployment = new solsa.extensions.v1beta1.Deployment({
+  app.cloudant_Deployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('cloudant'),
       labels: appConfig.addCommonLabelsTo({ micro: 'customer', service: 'cloudant-db', tier: 'backend' })
@@ -118,13 +118,13 @@ module.exports = function bcCustomer (appConfig) {
       }
     }
   })
-  app.bluecomputeCloudant_Deployment.propogateLabels()
-  app.bluecomputeCloudantService = app.bluecomputeCloudant_Deployment.getService()
+  app.cloudant_Deployment.propogateLabels()
+  app.cloudantService = app.cloudant_Deployment.getService()
 
-  app.bluecomputePopulate_Job = new solsa.batch.v1.Job({
+  app.populateCloudant_Job = new solsa.batch.v1.Job({
     metadata: {
       name: appConfig.getInstanceName('populate'),
-      labels: appConfig.addCommonLabelsTo({})
+      labels: appConfig.addCommonLabelsTo({ micro: 'customer', tier: 'backend' })
     },
     spec: {
       template: {
