@@ -27,29 +27,31 @@ module.exports = function bcAuth (appConfig) {
       labels: appConfig.addCommonLabelsTo({ micro: 'auth', tier: 'backend' })
     },
     spec: {
-      replicas: 1,
+      replicas: appConfig.values.auth.replicaCount,
       template: {
         spec: {
           volumes: [ { name: 'keystorevol', secret: { secretName: 'keystoresecret' } } ],
           containers: [
             {
               name: 'auth',
-              image: 'ibmcase/auth-mp:v3.0.0',
-              imagePullPolicy: 'Always',
-              ports: [ { name: 'http', containerPort: 9080 }, { name: 'https', containerPort: 9443 } ],
+              image: `${appConfig.values.auth.image.repository}:${appConfig.values.auth.image.tag}`,
+              ports: [
+                { name: 'http', containerPort: appConfig.values.auth.ports.http },
+                { name: 'https', containerPort: appConfig.values.auth.ports.https }
+              ],
               readinessProbe: {
-                httpGet: { path: '/', port: 9443, scheme: 'HTTPS' },
+                httpGet: { path: '/', port: appConfig.values.auth.ports.https, scheme: 'HTTPS' },
                 initialDelaySeconds: 60,
                 timeoutSeconds: 60
               },
               livenessProbe: {
-                httpGet: { path: '/health', port: 9443, scheme: 'HTTPS' },
+                httpGet: { path: '/health', port: appConfig.values.auth.ports.https, scheme: 'HTTPS' },
                 initialDelaySeconds: 60,
                 timeoutSeconds: 60
               },
-              resources: { requests: { cpu: '200m', memory: '300Mi' } },
+              resources: appConfig.values.auth.resources,
               env: [
-                { name: 'PORT', value: '9080' },
+                { name: 'PORT', value: `${appConfig.values.auth.ports.http}` },
                 { name: 'APPLICATION_NAME', value: appConfig.appName }
               ],
               volumeMounts: [ { name: 'keystorevol', mountPath: '/etc/keystorevol', readOnly: true } ]

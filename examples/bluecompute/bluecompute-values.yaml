@@ -1,0 +1,211 @@
+services:
+  auth:
+    replicaCount: 1
+    image:
+      repository: ibmcase/auth-mp
+      tag: v3.0.0
+    ports:
+      http: 9080
+      https: 9443
+    resources:
+      requests:
+        cpu: 200m
+        memory: 300Mi
+  
+  catalog:
+    replicaCount: 1
+    image:
+      repository: ibmcase/catalog-mp
+      tag: v3.0.0
+    service:
+      servicePort: 9080
+      servicePortHttps: 9443
+      zipkinPort: 9411
+      zipkinName: zipkin
+    volumes:
+      mountPath: /opt/ibm/wlp/usr/shared
+    resources:
+      requests:
+        cpu: 200m
+        memory: 300Mi
+  
+  ibmcase-elasticsearch:
+    replicaCount: 1
+    image:
+      repository: quay.io/pires/docker-elasticsearch-kubernetes
+      tag: 1.7.1-4
+    service:
+      name: catalog-elasticsearch
+    resources:
+      limits:
+        memory: 700Mi
+      requests:
+        memory: 350Mi
+    secretName: binding-refarch-compose-for-elasticsearch
+  
+  customer:
+    replicaCount: 1
+    image:
+      repository: ibmcase/customer-mp
+      tag: v4.0.0
+      resources:
+        requests:
+          cpu: 200m
+          memory: 300Mi
+    service:
+      name: customer
+      cloudantservicename: cloudant-service
+      servicePort: 9080
+      servicePortHttps: 9443
+      auth: auth
+      zipkinHost: zipkin
+      zipkinPort: 9411
+    volumes:
+      mountPath: /opt/ibm/wlp/usr/shared
+    jwt:
+      id: myMpJwt
+    cloudant:
+      user: admin
+      password: pass
+      protocol: http
+      host: localhost
+      port: 80
+      database: customers
+      image: ibmcase/populate
+    persistence:
+      enabled: false
+      accessMode: ReadWriteOnce
+  
+  inventory:
+    replicaCount: 1
+    image:
+      repository: ibmcase/inventory-mp
+      tag: v2.0.0
+      resources:
+        requests:
+          cpu: 200m
+          memory: 300Mi
+    service:
+      name: inventory
+      servicePort: 9080
+      servicePortHttps: 9443
+      sqlport: 3306
+      dbname: inventorydb
+      rabbitmq: rabbitmq
+      zipkinPort: 9411
+      zipkinName: zipkin
+  
+  mysql:
+    image: "mysql"
+    imageTag: "5.7.14"
+    mysqlRootPassword: password
+    mysqlUser: dbuser
+    mysqlPassword: password
+    mysqlDatabase: inventorydb
+    service:
+      port: 3306
+    persistence:
+      enabled: false
+      size: 8Gi
+      storageClass:
+      accessMode: ReadWriteOnce
+      existingClaim:
+      subPath:
+      annotations: {}
+  
+  orders:
+    replicaCount: 1
+    image:
+      repository: ibmcase/orders-mp
+      tag: v4.0.0
+      resources:
+        requests:
+          cpu: 200m
+          memory: 300Mi
+    service:
+      name: orders
+      servicePort: 9080
+      servicePortHttps: 9443
+      rabbitmq: rabbitmq
+      ordersdb: mariadb
+      inventory: inventory
+      auth: auth
+      zipkinHost: zipkin
+      zipkinPort: 9411
+    sql:
+      user: root
+      password: password
+      port: 3307
+    jwt:
+      id: myMpJwt
+    rabbitmq:
+      mainPort: 5672
+      managePort: 15672
+  
+  mariadb:
+    image:
+      registry: docker.io
+      repository: bitnami/mariadb
+      tag: 10.1.36-debian-9
+    service:
+      port: 3307
+    rootUser:
+      password: password
+    db:
+      user: dbuser
+      password: password
+      name: ordersdb
+    replication:
+      enabled: false
+    master:
+      persistence:
+        enabled: false
+        existingClaim:
+        mountPath: ""
+        annotations: {}
+        storageClass:
+        accessMode: ReadWriteOnce
+        size: 8Gi
+    slave:
+      replicas: 1
+      persistence:
+        enabled: false
+        annotations: {}
+        storageClass:
+        accessMode: ReadWriteOnce
+        size: 8Gi
+  
+  web:
+    replicaCount: 1
+    image:
+      repository: ibmcase/bc-web-mp
+      tag: v2.0.0
+    service:
+      name: bluecompute-web
+      externalPort: 80
+      internalPort: 8000
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+    region:
+    clusterName:
+    services:
+      auth:
+        host:
+        port:
+      catalog:
+        host:
+        port:
+      customer:
+        host:
+        port:
+      orders:
+        host:
+        port:
+      reviews:
+        host:
+        port:

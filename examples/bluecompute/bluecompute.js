@@ -17,7 +17,8 @@
 const BlueComputeApp = require('./bluecompute-config')
 const appConfig = new BlueComputeApp({
   appName: 'bluecompute',
-  commonLabels: { app: 'bluecompute', implementation: 'microprofile' }
+  commonLabels: { app: 'bluecompute', implementation: 'microprofile' },
+  valuesFile: 'bluecompute-values.yaml'
 })
 
 const solsa = require('solsa')
