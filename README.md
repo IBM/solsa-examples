@@ -29,3 +29,9 @@ solutions](examples).
    ```shell
    git clone https://github.com/IBM/solsa-examples.git
    ```
+
+3. Install dependencies:
+   ```shell
+   cd solsa-examples
+   npm install --prod
+   ```

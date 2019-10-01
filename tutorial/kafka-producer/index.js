@@ -19,7 +19,7 @@ const { Kafka } = require('kafkajs')
 const kafka = new Kafka({
   clientId: 'guest',
   brokers: JSON.parse(process.env.BROKERS),
-  ssl: true,
+  ssl: {},
   sasl: {
     mechanism: 'plain',
     username: process.env.USER,
