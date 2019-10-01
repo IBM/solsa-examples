@@ -18,6 +18,6 @@
     }
   ],
   "dependencies": {
-    "solsa": "^0.1.4"
+    "solsa": "^0.2.1"
   }
 }
