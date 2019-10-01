@@ -1,0 +1,71 @@
+{
+  "Application": {
+    "cluster_name": "",
+    "region": ""
+  },
+  "Auth-Server": {
+    "client_id":"bluecomputeweb",
+    "client_secret":"bluecomputewebs3cret"
+  },
+  "APIs": {
+    "protocol": "http",
+    "protocols": "https",
+    "catalog": {
+      "service_name": "bluecompute-catalog:9080/catalog",
+      "base_path": "/rest",
+      "require": [
+      ]
+    },
+    "order": {
+      "service_name": "bluecompute-orders:9443/orders",
+      "base_path": "/rest",
+      "require": [
+        "oauth"
+      ]
+    },
+    "review": {
+      "base_path": "/api",
+      "require": [
+        "oauth"
+      ]
+    },
+    "customerService": {
+      "service_name": "bluecompute-customer:9443/customer",
+      "base_path": "/rest",
+      "paths": {
+        "customer": "/customer"
+      },
+      "require": [
+          "oauth"
+      ],
+      "redirect_url": "http://localhost"
+    },
+    "customer": {
+        "service_name": "bluecompute-auth:9443/oidc/endpoint",
+        "base_path": "/OP",
+        "paths": {
+          "userinfo": "/userinfo"
+        },
+        "require": [
+          "oauth"
+        ],
+        "redirect_url": "http://localhost"
+    },
+    "oauth20": {
+      "protocol": "https",
+      "service_name": "bluecompute-auth:9443/oidc/endpoint",
+      "base_path": "/OP",
+      "paths": {
+        "authz": "/authorize",
+        "token": "/token"
+      },
+      "grant_types": [
+        "password"
+      ],
+      "scopes": [
+        "bluecompute"
+      ],
+      "redirect_url": "http://localhost"
+    }
+  }
+}

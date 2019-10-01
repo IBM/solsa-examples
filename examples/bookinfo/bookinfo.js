@@ -28,7 +28,7 @@ module.exports = function bookinfo () {
     RATINGS_HOSTNAME: bundle.ratings.name,
     REVIEWS_HOSTNAME: bundle.reviews.name
   }
-  bundle.entry = new bundle.productpage.Ingress()
+  bundle.entry = bundle.productpage.getIngress({ vhost: 'bookinfo' })
 
   return bundle
 }

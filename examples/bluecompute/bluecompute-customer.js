@@ -1,185 +1,77 @@
+/*
+ * Copyright 2019 IBM Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* eslint-disable no-template-curly-in-string */
+// @ts-check
+
 const solsa = require('solsa')
 
-module.exports = function bcCustomer () {
+module.exports = function bcCustomer (appConfig) {
   const app = new solsa.Bundle()
 
-  app.bluecomputeCustomerConfig_ConfigMap = new solsa.core.v1.ConfigMap({
-    metadata: { name: 'bluecompute-customer-config' },
-    data: {
-      'jvm.options': '-Dapplication.rest.client.CloudantClientService/mp-rest/url=http://bluecompute-cloudant-service:80\n'
-    }
-  })
-
-  app.bluecomputeCustomer_Service = new solsa.core.v1.Service({
+  // Cloudant database used by catalog microservice
+  app.cloudantBinding_Secret = new solsa.core.v1.Secret({
     metadata: {
-      name: 'bluecompute-customer',
-      labels: {
-        chart: 'bluecompute-customer-0.0.1',
-        release: 'bluecompute',
-        implementation: 'microprofile'
-      }
+      name: appConfig.getInstanceName('cloudant-secret'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'customer', tier: 'backend' })
+    },
+    type: 'Opaque',
+    data: { 'password': solsa.base64Encode(appConfig.values.cloudant.rootPassword) }
+  })
+  app.cloudant_Deployment = new solsa.extensions.v1beta1.Deployment({
+    metadata: {
+      name: appConfig.getInstanceName('cloudant'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'customer', service: 'cloudant-db', tier: 'backend' })
     },
     spec: {
-      type: 'NodePort',
-      ports: [ { name: 'http', port: 9080 }, { name: 'https', port: 9443 } ],
-      selector: {
-        app: 'bluecompute',
-        micro: 'customer',
-        service: 'server',
-        release: 'bluecompute',
-        implementation: 'microprofile'
-      }
-    }
-  })
-  app.bluecomputeCloudantService = new solsa.core.v1.Service({
-    metadata: {
-      name: 'bluecompute-cloudant-service',
-      labels: { chart: 'customer-0.0.1', release: 'bluecompute', implementation: 'microprofile' }
-    },
-    spec: {
-      type: 'NodePort',
-      ports: [ { port: 80, nodePort: 31222 } ],
-      selector: {
-        micro: 'customer',
-        service: 'cloudant-db',
-        release: 'bluecompute',
-        implementation: 'microprofile'
-      }
-    }
-  })
-
-  app.bluecomputeCustomer_Deployment = new solsa.extensions.v1beta1.Deployment({
-    metadata: {
-      name: 'bluecompute-customer',
-      labels: {
-        app: 'bluecompute',
-        micro: 'customer',
-        service: 'server',
-        tier: 'backend',
-        release: 'bluecompute',
-        implementation: 'microprofile',
-        chart: 'customer-0.0.1'
-      }
-    },
-    spec: {
-      replicas: 1,
+      replicas: appConfig.values.cloudant.replicaCount,
       template: {
-        metadata: {
-          labels: {
-            app: 'bluecompute',
-            micro: 'customer',
-            service: 'server',
-            tier: 'backend',
-            release: 'bluecompute',
-            implementation: 'microprofile'
-          }
-        },
-        spec: {
-          containers: [
-            {
-              name: 'customer',
-              image: 'ibmcase/customer-mp:v4.0.0',
-              imagePullPolicy: 'IfNotPresent',
-              readinessProbe: {
-                httpGet: { path: '/', port: 9443, scheme: 'HTTPS' },
-                initialDelaySeconds: 60,
-                timeoutSeconds: 60
-              },
-              livenessProbe: {
-                httpGet: { path: '/health', port: 9443, scheme: 'HTTPS' },
-                initialDelaySeconds: 1500,
-                timeoutSeconds: 500
-              },
-              env: [
-                {
-                  name: 'jwksUri',
-                  value: 'https://bluecompute-auth:9443/oidc/endpoint/OP/jwk'
-                },
-                {
-                  name: 'jwksIssuer',
-                  value: 'https://bluecompute-auth:9443/oidc/endpoint/OP'
-                },
-                {
-                  name: 'administratorRealm',
-                  value: 'user:https://bluecompute-auth:9443/oidc/endpoint/OP/user'
-                },
-                { name: 'auth_health', value: 'https://bluecompute-auth:9443/health' },
-                { name: 'host', value: 'bluecompute-cloudant-service' },
-                { name: 'PORT', value: '9080' },
-                { name: 'RELEASE_NAME', value: 'bluecompute' },
-                { name: 'jwtid', value: 'myMpJwt' },
-                { name: 'zipkinHost', value: 'bluecompute-zipkin' },
-                { name: 'zipkinPort', value: '9411' }
-              ],
-              resources: { requests: { cpu: '200m', memory: '300Mi' } },
-              volumeMounts: [
-                { name: 'keystorevol', mountPath: '/etc/keystorevol', readOnly: true },
-                { name: 'config-volume', mountPath: '/opt/ibm/wlp/usr/shared' }
-              ]
-            }
-          ],
-          volumes: [
-            { name: 'keystorevol', secret: { secretName: 'keystoresecret' } },
-            { name: 'config-volume', configMap: { name: 'bluecompute-customer-config' } }
-          ]
-        }
-      }
-    }
-  })
-
-  app.bluecomputeCloudant_Deployment = new solsa.extensions.v1beta1.Deployment({
-    metadata: {
-      name: 'bluecompute-cloudant',
-      labels: {
-        app: 'bluecompute',
-        micro: 'customer',
-        service: 'cloudant-db',
-        tier: 'backend',
-        release: 'bluecompute',
-        implementation: 'microprofile',
-        chart: 'customer-0.0.1'
-      }
-    },
-    spec: {
-      replicas: 1,
-      template: {
-        metadata: {
-          labels: {
-            app: 'bluecompute',
-            micro: 'customer',
-            service: 'cloudant-db',
-            tier: 'backend',
-            release: 'bluecompute',
-            implementation: 'microprofile'
-          }
-        },
         spec: {
           containers: [
             {
               name: 'cloudant',
-              image: 'ibmcom/cloudant-developer',
-              imagePullPolicy: 'Always',
-              ports: [ { containerPort: 80 } ],
-              env: [ { name: 'CLOUDANT_ROOT_PASSWORD', value: 'pass' } ]
+              image: `${appConfig.values.cloudant.image.repository}:${appConfig.values.cloudant.image.tag}`,
+              ports: [ { containerPort: appConfig.values.cloudant.ports.port } ],
+              env: [{
+                name: 'CLOUDANT_ROOT_PASSWORD',
+                valueFrom: { secretKeyRef: { name: app.cloudantBinding_Secret.metadata.name, key: 'password' } }
+              }
+              ]
             }
           ]
         }
       }
     }
   })
+  app.cloudant_Deployment.propogateLabels()
+  app.cloudantService = app.cloudant_Deployment.getService()
 
-  app.bluecomputePopulate_Job = new solsa.batch.v1.Job({
-    metadata: { name: 'bluecompute-populate' },
+  app.populateCloudant_Job = new solsa.batch.v1.Job({
+    metadata: {
+      name: appConfig.getInstanceName('populate-cloudant'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'customer', tier: 'backend' })
+    },
     spec: {
       template: {
         spec: {
           containers: [
             {
               name: 'populate-db',
-              image: 'ibmcase/populate',
-              imagePullPolicy: 'IfNotPresent',
-              args: [ 'bluecompute-cloudant-service', '80' ]
+              image: `${appConfig.values.customer.cloudantInitJob.image.repository}:${appConfig.values.customer.cloudantInitJob.image.tag}`,
+              args: [ app.cloudantService.metadata.name, `${appConfig.values.cloudant.ports.port}` ]
             }
           ],
           restartPolicy: 'Never'
@@ -187,6 +79,75 @@ module.exports = function bcCustomer () {
       }
     }
   })
+
+  const cloudantHostAndPort = `${app.cloudantService.metadata.name}:${appConfig.values.cloudant.ports.port}`
+  app.customer_ConfigMap = new solsa.core.v1.ConfigMap({
+    metadata: {
+      name: appConfig.getInstanceName('customer-config'),
+      labels: appConfig.addCommonLabelsTo({ tier: 'backend', micro: 'customer' })
+    },
+    data: {
+      'jvm.options': `-Dapplication.rest.client.CloudantClientService/mp-rest/url=http://${cloudantHostAndPort}\n`
+    }
+  })
+
+  const authHostAndPort = `${appConfig.getInstanceName('auth')}:${appConfig.values.auth.ports.https}`
+  app.customer_Deployment = new solsa.extensions.v1beta1.Deployment({
+    metadata: {
+      name: appConfig.getInstanceName('customer'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'customer', service: 'server', tier: 'backend' })
+    },
+    spec: {
+      replicas: appConfig.values.customer.replicaCount,
+      template: {
+        spec: {
+          volumes: [
+            { name: 'keystorevol', secret: { secretName: 'keystoresecret' } },
+            { name: 'config-volume', configMap: { name: app.customer_ConfigMap.metadata.name } }
+          ],
+          containers: [
+            {
+              name: 'customer',
+              image: `${appConfig.values.customer.image.repository}:${appConfig.values.customer.image.tag}`,
+              ports: [
+                { name: 'http', containerPort: appConfig.values.customer.ports.http },
+                { name: 'https', containerPort: appConfig.values.customer.ports.https }
+              ],
+              readinessProbe: {
+                httpGet: { path: '/', port: appConfig.values.customer.ports.https, scheme: 'HTTPS' },
+                initialDelaySeconds: 60,
+                timeoutSeconds: 60
+              },
+              livenessProbe: {
+                httpGet: { path: '/health', port: appConfig.values.customer.ports.https, scheme: 'HTTPS' },
+                initialDelaySeconds: 1500,
+                timeoutSeconds: 500
+              },
+              env: [
+                { name: 'jwksUri', value: `https://${authHostAndPort}/oidc/endpoint/OP/jwk` },
+                { name: 'jwksIssuer', value: `https://${authHostAndPort}/oidc/endpoint/OP` },
+                { name: 'administratorRealm', value: `user:https://${authHostAndPort}/oidc/endpoint/OP/user` },
+                { name: 'auth_health', value: `https://${authHostAndPort}/health` },
+                { name: 'host', value: `${app.cloudantService.metadata.name}` },
+                { name: 'PORT', value: `${appConfig.values.customer.ports.http}` },
+                { name: 'RELEASE_NAME', value: appConfig.appName },
+                { name: 'jwtid', value: appConfig.values.customer.jwt.id },
+                { name: 'zipkinHost', value: appConfig.getInstanceName('zipkin') },
+                { name: 'zipkinPort', value: `${appConfig.values.zipkin.ports.zipkin}` }
+              ],
+              resources: appConfig.values.customer.resources,
+              volumeMounts: [
+                { name: 'keystorevol', mountPath: '/etc/keystorevol', readOnly: true },
+                { name: 'config-volume', mountPath: appConfig.values.customer.volumes.mountPath }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  })
+  app.customer_Deployment.propogateLabels()
+  app.customer_Service = app.customer_Deployment.getService()
 
   return app
 }

@@ -41,7 +41,7 @@ module.exports = bundle
 bundle.kafka = new solsa.EventStreams({ name: 'kafka', plan: 'standard', serviceClassType: 'CF' })
 
 // Event Streams Topic
-bundle.topic = new bundle.kafka.Topic({ name: 'topic', topicName: 'MyTopic' })
+bundle.topic = bundle.kafka.getTopic({ name: 'topic', topicName: 'MyTopic' })
 
 // Producer (containerized service) interfacing directly with Event Streams
 bundle.producer = new solsa.ContainerizedService({ name: 'producer', image: 'kafka-producer', build: path.join(__dirname, '..', '..', 'tutorial', 'kafka-producer') })
@@ -49,14 +49,14 @@ bundle.producer.env = {
   BROKERS: bundle.kafka.getSecret('kafka_brokers_sasl'),
   USER: bundle.kafka.getSecret('user'),
   PASSWORD: bundle.kafka.getSecret('password'),
-  TOPIC: bundle.topic.topicName
+  TOPIC: bundle.topic.spec.topicName
 }
 
 // Consumer (Knative service)
 bundle.sink = new solsa.KnativeService({ name: 'sink', image: 'gcr.io/knative-releases/github.com/knative/eventing-sources/cmd/event_display' })
 
 // Knative event source to connect the topic to the consumer
-bundle.source = new bundle.topic.Source({ name: 'source', sink: bundle.sink })
+bundle.source = bundle.topic.getSource({ name: 'source', sink: bundle.sink })
 ```
 Refer to the [tutorial](../../tutorial#example-event-streams) for detailed
 explanations of the various components.

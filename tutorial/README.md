@@ -91,17 +91,18 @@ SolSA synthesized both a Kubernetes `Deployment` and a `Service` for our
 as the number of replicas, labels, selectors, environment variables, and a
 readiness probe.
 
-Note that in addition to the YAML output, you will also see the following warnings
-messages from `sosla`
+Note that in addition to the YAML output, you will also see the following
+warnings messages from `sosla`
 ```shell
 Warning: Unable to load solsa configuration file "/.../.solsa.yaml"
 Warning: Generating YAML without clutser or context specific layers:
            Unable to generate Ingress
            Unable to generate image name rewriting directives
 ```
-These warnings can be safely ignored for now.  We will cover (a) defining a `sosla.yaml`
-configuration file and (b) how `sosla` figures out which of your Kubernetes
-clusters it should be targeting [later in this tutorial](#example-ingress).
+These warnings can be safely ignored for now.  We will cover (a) defining a
+`sosla.yaml` configuration file and (b) how `sosla` figures out which of your
+Kubernetes clusters it should be targeting [later in this
+tutorial](#example-ingress).
 
 While SolSA makes it possible to directly configure resources such as Kubernetes
 deployments or services, SolSA encourages developers to use higher-level
@@ -192,18 +193,14 @@ spec:
 ```
 We can see the `TARGET` environment variable has been included as requested.
 
-A `Bundle` is collection of resources. To add resources to a `Bundle`, we simply
-add fields to the `Bundle` object. Any SolSA solution must export an instance of
-the `Bundle` class or its subclasses. The `Bundle` class is the root of the
-SolSA class hiearchy. The `ContainerizedService` class in particular is a
-subclass of `Bundle`, hence it can be exported directly as shown in the previous
-example. By using a `Bundle` however, we will be able to configure multiple
-resources with a single source file as illustrated in the next example.
+A SolSA solution is either a `Resource` or a `Bundle`. A `ContainerizedService`
+is an example of `Resource`. A `Bundle` is a collection of solutions. Bundles
+can contain resources as well as nested bundles. To add elements to a `Bundle`,
+we simply add fields to the `Bundle` object.
 
-The `solsa` CLI enumerates the fields of the exported bundle and synthesizes
-YAML for all the components. The CLI ignores fields that are not instances of
-the `Bundle` class. Since bundles can be nested, the CLI implements a recursive
-traversal.
+A SolSA source file must export a solution. The `solsa` CLI synthesizes YAML for
+this solution by, if necessary, implementing a recursive traversal of the
+bundles in the solution.
 
 ## Example: Ingress
 
@@ -215,42 +212,45 @@ const bundle = new solsa.Bundle()
 module.exports = bundle
 
 bundle.service = new solsa.ContainerizedService({ name: 'hello-john', image: 'docker.io/ibmcom/kn-helloworld', port: 8080, env: { TARGET: 'John' } })
-bundle.ingress = new bundle.service.Ingress()
+bundle.ingress = bundle.service.getIngress()
 ```
 Compared to the previous example, we add an instance of the `Ingress` class to
 the bundle.
 
-An `Ingress` instance, like many SolSA bundles, can be constructed by invoking
-either `new solsa.Ingress(...)` or `new myBundle.Ingress(...)` where `myBundle`
-is an existing SolSA bundle. In the latter, SolSA automatically derives
-parameters for the new bundle from parameters of the existing bundle, such as
-the port of the ingress from the port of the containerized service.
+An `Ingress` instance, like many SolSA resources, can be constructed by invoking
+either `new solsa.Ingress(...)` or `resource.getIngress(...)` where `resource`
+is an existing SolSA resource from which an ingress can be derived. In the
+latter, SolSA automatically derives parameters for the new resource from
+parameters of the existing resource, such as the port of the ingress from the
+port of the containerized service.
 
 To synthesize YAML for an ingress, SolSA needs to know about the cluster this
 ingress is intended for. This information must be provided as part of a SolSA
 configuration file. By default, the `sosla` CLI looks for a configuration file
 named `.solsa.yaml`  in the user's homedir. A different path can be specified
-using either the `--config` flag or the `SOLSA_CONFIG` environment variable.
-The content and format of the configuration file is specified in
+using either the `--config` flag or the `SOLSA_CONFIG` environment variable. The
+content and format of the configuration file is specified in
 [solsa/docs/SolSAConfig.md](https://github.com/IBM/solsa/tree/master/docs/SolSAConfig.md).
 
-If you are following along in this tutorial and deploying each example on
-your own cluster, you should pause here, consult
+If you are following along in this tutorial and deploying each example on your
+own cluster, you should pause here, consult
 [SolSAConfig.md](https://github.com/IBM/solsa/tree/master/docs/SolSAConfig.md)
-and define a `$HOME/.solsa.yaml` that defines the Ingress characteristics
-of your cluster before continuing.
+and define a `$HOME/.solsa.yaml` that defines the ingress characteristics of
+your cluster before continuing.
 
-By default the `solsa` CLI targets the cluster for the current Kubernetes context
-Under the covers, `sosla` just invokes `kubectl config current-context` to get this information.
-Therefore any scheme you have for managing your Kubernetes environments that works for `kubectl`
-will also just work for `sosla`.  However, you can also explictly tell `sosla` to target
-a different context using  the `--context` flag, or a different cluster with the `--cluster` flag.
+By default the `solsa` CLI targets the cluster for the current Kubernetes
+context Under the covers, `sosla` just invokes `kubectl config current-context`
+to get this information. Therefore any scheme you have for managing your
+Kubernetes environments that works for `kubectl` will also just work for
+`sosla`.  However, you can also explictly tell `sosla` to target a different
+context using  the `--context` flag, or a different cluster with the `--cluster`
+flag.
 
 ### Generated Ingress on Kubernetes
 
 For instance, if we use cluster `mycluster` with the configuration file from
-https://github.com/IBM/solsa/blob/master/docs/SolSAConfig.md#example, SolSA synthesizes the
-ingress:
+https://github.com/IBM/solsa/blob/master/docs/SolSAConfig.md#example, SolSA
+synthesizes the ingress:
 ```yaml
 apiVersion: extensions/v1beta1
 kind: Ingress
@@ -291,8 +291,8 @@ solsa yaml ingress.js | kubectl delete -f -
 The exact same SolSA-level ingress specification will generate Routes when
 targeting an OpenShift cluster. For instance, if we use cluster `myrhoscluster`
 with the configuration file from
-https://github.com/IBM/solsa/blob/master/docs/SolSAConfig.md#example, SolSA synthesizes the
-route:
+https://github.com/IBM/solsa/blob/master/docs/SolSAConfig.md#example, SolSA
+synthesizes the route:
 ```yaml
 apiVersion: route.openshift.io/v1
 kind: Route
@@ -320,7 +320,7 @@ After a few seconds, we can query the deployed service using command:
 curl https://$(oc get route hello-john -o jsonpath={.spec.host})
 ```
 
-When deploying a SolSA bundle that includes an ingress to OpenShift, you must
+When deploying a SolSA solution that includes an ingress to OpenShift, you must
 use the `oc` CLI instead of `kubectl`. Some additional OpenShift specific
 processing is required to actually create a Route from its YAML specification;
 this is handled by the `oc` CLI.
@@ -335,7 +335,7 @@ const bundle = new solsa.Bundle()
 module.exports = bundle
 
 bundle.service = new solsa.KnativeService({ name: 'hello-knative', image: 'docker.io/ibmcom/kn-helloworld', env: { TARGET: 'Knative' } })
-bundle.ingress = new bundle.service.Ingress()
+bundle.ingress = bundle.service.getIngress()
 ```
 The formula is essentially the same. We replace the `ContainerizedService` class
 with the `KnativeService` class. Here we don't need to specify the port, as
@@ -345,7 +345,8 @@ environment variable to show a different output.
 The ingress definition is again a one-liner. But is is handled very differently
 under the hood. On IKS (IBM Cloud Kubernetes Service), Knative services are
 exposed by default, so no YAML is needed to have an ingress. But, if no ingress
-is requested by the solution, a label is added to the generated YAML to disable the default IKS behavior:
+is requested by the solution, a label is added to the generated YAML to disable
+the default IKS behavior:
 ```yaml
   labels:
     serving.knative.dev/visibility: cluster-local
@@ -373,7 +374,9 @@ To deploy this example, we run:
 ```shell
 solsa yaml knative.js | kubectl apply -f -
 ```
-After a few seconds (wait until `kubectl get service.serving.knative.dev hello-knative` reports that hello-knative is `Ready`), we can query the deployed service using command:
+After a few seconds (wait until `kubectl get service.serving.knative.dev
+hello-knative` reports that hello-knative is `Ready`), we can query the deployed
+service using command:
 ```shell
 curl $(kubectl get ksvc/hello-knative -o jsonpath={.status.url})
 ```
@@ -394,7 +397,7 @@ bundle.details = new solsa.ContainerizedService({ name: 'details', image: 'istio
 bundle.ratings = new solsa.ContainerizedService({ name: 'ratings', image: 'istio/examples-bookinfo-ratings-v1:1.11.0', port: 9080 })
 bundle.reviews = new solsa.ContainerizedService({ name: 'reviews', image: 'istio/examples-bookinfo-reviews-v1:1.11.0', port: 9080 })
 bundle.productpage = new solsa.ContainerizedService({ name: 'productpage', image: 'istio/examples-bookinfo-productpage-v1:1.11.0', port: 9080 })
-bundle.ingress = new bundle.productpage.Ingress()
+bundle.ingress = bundle.productpage.getIngress()
 ```
 After deployment, the url for the bookinfo application can be obtained as
 follows:
@@ -439,7 +442,7 @@ In [kakfa.js](kafka.js), we configure an Event Streams instance and create a
 topic on this instance.
 ```javascript
 bundle.kafka = new solsa.EventStreams({ name: 'kafka', plan: 'standard', serviceClassType: 'CF' })
-bundle.topic = new bundle.kafka.Topic({ name: 'topic', topicName: 'MyTopic' })
+bundle.topic = bundle.kafka.getTopic({ name: 'topic', topicName: 'MyTopic' })
 ```
 As in the previous example, the credentials for the Event Streams instance are
 stored as Kubernetes secrets.
@@ -481,7 +484,7 @@ producer code as a Kubernetes service on our cluster. In
 [producer.js](producer.js), we do exactly that.
 ```javascript
 bundle.kafka = new solsa.EventStreams({ name: 'kafka', plan: 'standard', serviceClassType: 'CF' }).useExisting()
-bundle.topic = new bundle.kafka.Topic({ name: 'topic', topicName: 'MyTopic' }).useExisting()
+bundle.topic = bundle.kafka.getTopic({ name: 'topic', topicName: 'MyTopic' }).useExisting()
 
 bundle.producer = new solsa.ContainerizedService({ name: 'producer', image: 'kafka-producer', build: path.join(__dirname, 'kafka-producer') })
 
@@ -489,7 +492,7 @@ bundle.producer.env = {
   BROKERS: bundle.kafka.getSecret('kafka_brokers_sasl'),
   USER: bundle.kafka.getSecret('user'),
   PASSWORD: bundle.kafka.getSecret('password'),
-  TOPIC: bundle.topic.topicName
+  TOPIC: bundle.topic.spec.topicName
 }
 ```
 This code first declares the Event Streams instance and topic. This time however
@@ -593,7 +596,8 @@ latest: digest: sha256:4417bba9fef771627b93caace375c580dedb3797fb38a1728b6940067
 ```
 The latter assumes that the SolSA configuration file maps the image name
 (`kafka-producer`) to a container registry. See
-[solsa/docs/SolSAConfig.md](https://github.com/IBM/solsa/tree/master/docs/SolSAConfig.md) for details.
+[solsa/docs/SolSAConfig.md](https://github.com/IBM/solsa/tree/master/docs/SolSAConfig.md)
+for details.
 
 Assuming, the Event Streams instance and topic from the previous example are
 still deployed, we can deploy our producer using command:
@@ -618,10 +622,10 @@ In [consumer.js](consumer.js), we use a Knative service to process the messages
 on an Event Streams topic.
 ```javascript
 bundle.kafka = new solsa.EventStreams({ name: 'kafka', plan: 'standard', serviceClassType: 'CF' }).useExisting()
-bundle.topic = new bundle.kafka.Topic({ name: 'topic', topicName: 'MyTopic' }).useExisting()
+bundle.topic = bundle.kafka.getTopic({ name: 'topic', topicName: 'MyTopic' }).useExisting()
 
 bundle.sink = new solsa.KnativeService({ name: 'sink', image: 'gcr.io/knative-releases/github.com/knative/eventing-sources/cmd/event_display' })
-bundle.source = new bundle.topic.Source({ name: 'source', sink: bundle.sink })
+bundle.source = bundle.topic.getSource({ name: 'source', sink: bundle.sink })
 ```
 The code first declares the same Event Streams instance and topic as before,
 then a Knative service, and finally a Kafka Knative event source that binds the

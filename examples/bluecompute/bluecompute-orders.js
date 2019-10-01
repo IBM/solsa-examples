@@ -1,48 +1,52 @@
+/*
+ * Copyright 2019 IBM Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* eslint-disable no-template-curly-in-string */
+// @ts-check
+
 const solsa = require('solsa')
 
-module.exports = function bcOrders () {
+module.exports = function bcOrders (appConfig) {
   const app = new solsa.Bundle()
 
-  app.bluecomputeMariadb_Secret = new solsa.core.v1.Secret({
+  app.mariadb_Secret = new solsa.core.v1.Secret({
     metadata: {
-      name: 'bluecompute-mariadb',
-      labels: { app: 'mariadb', chart: 'mariadb-5.2.2', release: 'bluecompute', heritage: 'Tiller' }
+      name: appConfig.getInstanceName('mariadb'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend' })
     },
     type: 'Opaque',
-    data: { 'mariadb-root-password': 'cGFzc3dvcmQ=', 'mariadb-password': 'cGFzc3dvcmQ=' }
+    data: {
+      'mariadb-root-password': solsa.base64Encode(appConfig.values.mariadb.rootUser.password),
+      'mariadb-password': solsa.base64Encode(appConfig.values.mariadb.db.password)
+    }
   })
 
-  app.bluecomputeOrdersMariadbSecret = new solsa.core.v1.Secret({
+  app.ordersMariadbSecret = new solsa.core.v1.Secret({
     metadata: {
-      name: 'bluecompute-orders-mariadb-secret',
-      labels: {
-        app: 'orders',
-        implementation: 'microprofile',
-        tier: 'backend',
-        version: 'v1',
-        'app.kubernetes.io/name': 'bluecompute-orders',
-        'app.kubernetes.io/managed-by': 'Tiller',
-        'app.kubernetes.io/instance': 'bluecompute',
-        heritage: 'Tiller',
-        release: 'bluecompute',
-        chart: 'orders-0.1.0'
-      }
+      name: appConfig.getInstanceName('orders-mariadb-secret'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend' })
     },
     type: 'Opaque',
-    data: { 'mariadb-password': 'cGFzc3dvcmQ=' }
+    data: { 'mariadb-password': solsa.base64Encode(appConfig.values.mariadb.db.password) }
   })
 
-  app.bluecomputeMariadb_ConfigMap = new solsa.core.v1.ConfigMap({
+  app.mariadb_ConfigMap = new solsa.core.v1.ConfigMap({
     metadata: {
-      name: 'bluecompute-mariadb',
-      labels: {
-        app: 'mariadb',
-        component: 'master',
-        chart: 'mariadb-5.2.2',
-        release: 'bluecompute',
-        heritage: 'Tiller'
-      }
+      name: appConfig.getInstanceName('mariadb'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend' })
     },
     data: {
       'my.cnf': '[mysqld]\n' +
@@ -71,23 +75,10 @@ module.exports = function bcOrders () {
     }
   })
 
-  app.bluecomputeMariadbTests_ConfigMap = new solsa.core.v1.ConfigMap({
-    metadata: { name: 'bluecompute-mariadb-tests' },
-    data: {
-      'run.sh': '@test "Testing MariaDB is accessible" {\n' +
-      "  mysql -h bluecompute-mariadb -uroot -p$MARIADB_ROOT_PASSWORD -e 'show databases;'\n" +
-      '}'
-    }
-  })
-
-  app.bluecomputeOrdersData_ConfigMap = new solsa.core.v1.ConfigMap({
+  app.ordersData_ConfigMap = new solsa.core.v1.ConfigMap({
     metadata: {
-      name: 'bluecompute-orders-data',
-      labels: {
-        chart: 'bluecompute-orders-0.1.0',
-        release: 'bluecompute',
-        implementation: 'microprofile'
-      }
+      name: appConfig.getInstanceName('orders-data'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend' })
     },
     data: {
       'mysql_data.sql': 'create database if not exists ordersdb;\n' +
@@ -102,139 +93,22 @@ module.exports = function bcOrders () {
     }
   })
 
-  app.bluecomputeMariadb_Service = new solsa.core.v1.Service({
+  app.orders_Deployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
-      name: 'bluecompute-mariadb',
-      labels: {
-        app: 'mariadb',
-        component: 'master',
-        chart: 'mariadb-5.2.2',
-        release: 'bluecompute',
-        heritage: 'Tiller'
-      }
-    },
-    spec: {
-      type: 'ClusterIP',
-      ports: [ { name: 'mysql', port: 3307, targetPort: 'mysql' } ],
-      selector: { app: 'mariadb', component: 'master', release: 'bluecompute' }
-    }
-  })
-
-  app.bluecomputeOrders_Service = new solsa.core.v1.Service({
-    metadata: {
-      name: 'bluecompute-orders',
-      labels: {
-        app: 'orders',
-        implementation: 'microprofile',
-        tier: 'backend',
-        version: 'v1',
-        'app.kubernetes.io/name': 'bluecompute-orders',
-        'app.kubernetes.io/managed-by': 'Tiller',
-        'app.kubernetes.io/instance': 'bluecompute',
-        heritage: 'Tiller',
-        release: 'bluecompute',
-        chart: 'orders-0.1.0'
-      }
-    },
-    spec: {
-      type: 'NodePort',
-      ports: [ { name: 'http', port: 9080 }, { name: 'https', port: 9443 } ],
-      selector: {
-        app: 'orders',
-        implementation: 'microprofile',
-        tier: 'backend',
-        version: 'v1',
-        'app.kubernetes.io/name': 'bluecompute-orders',
-        'app.kubernetes.io/managed-by': 'Tiller',
-        'app.kubernetes.io/instance': 'bluecompute',
-        heritage: 'Tiller',
-        release: 'bluecompute',
-        'helm.sh/chart': 'orders-0.1.0',
-        chart: 'orders-0.1.0'
-      }
-    }
-  })
-
-  app.bluecomputeRabbitmq_Service = new solsa.core.v1.Service({
-    metadata: {
-      name: 'bluecompute-rabbitmq',
-      labels: {
-        app: 'orders',
-        implementation: 'microprofile',
-        tier: 'backend',
-        version: 'v1',
-        'app.kubernetes.io/name': 'bluecompute-rabbitmq',
-        'app.kubernetes.io/managed-by': 'Tiller',
-        'app.kubernetes.io/instance': 'bluecompute',
-        heritage: 'Tiller',
-        release: 'bluecompute',
-        chart: 'orders-0.1.0'
-      }
-    },
-    spec: {
-      type: 'NodePort',
-      ports: [
-        { name: 'main', port: 5672 },
-        { name: 'management', port: 15672 },
-        { name: 'epmd', port: 4369 },
-        { name: 'dist', port: 25672 }
-      ],
-      selector: {
-        app: 'orders',
-        implementation: 'microprofile',
-        tier: 'backend',
-        version: 'v1',
-        'app.kubernetes.io/name': 'bluecompute-rabbitmq',
-        'app.kubernetes.io/managed-by': 'Tiller',
-        'app.kubernetes.io/instance': 'bluecompute',
-        heritage: 'Tiller',
-        release: 'bluecompute',
-        'helm.sh/chart': 'orders-0.1.0',
-        chart: 'orders-0.1.0'
-      }
-    }
-  })
-
-  app.bluecomputeOrders_Deployment = new solsa.extensions.v1beta1.Deployment({
-    metadata: {
-      name: 'bluecompute-orders',
-      labels: {
-        app: 'orders',
-        implementation: 'microprofile',
-        tier: 'backend',
-        version: 'v1',
-        'app.kubernetes.io/name': 'bluecompute-orders',
-        'app.kubernetes.io/managed-by': 'Tiller',
-        'app.kubernetes.io/instance': 'bluecompute',
-        heritage: 'Tiller',
-        release: 'bluecompute',
-        chart: 'orders-0.1.0'
-      }
+      name: appConfig.getInstanceName('orders'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend', service: 'orders' })
     },
     spec: {
       replicas: 1,
       template: {
-        metadata: {
-          labels: {
-            app: 'orders',
-            implementation: 'microprofile',
-            tier: 'backend',
-            version: 'v1',
-            'app.kubernetes.io/name': 'bluecompute-orders',
-            'app.kubernetes.io/managed-by': 'Tiller',
-            'app.kubernetes.io/instance': 'bluecompute',
-            heritage: 'Tiller',
-            release: 'bluecompute',
-            'helm.sh/chart': 'orders-0.1.0',
-            chart: 'orders-0.1.0'
-          }
-        },
         spec: {
+          volumes: [ { name: 'keystorevol', secret: { secretName: 'keystoresecret' } } ],
           containers: [
             {
               name: 'orders',
               image: 'ibmcase/orders-mp:v4.0.0',
               imagePullPolicy: 'IfNotPresent',
+              ports: [ { name: 'http', containerPort: 9080 }, { name: 'https', containerPort: 9443 } ],
               readinessProbe: {
                 httpGet: { path: '/', port: 9443, scheme: 'HTTPS' },
                 initialDelaySeconds: 30
@@ -272,7 +146,7 @@ module.exports = function bcOrders () {
                 },
                 {
                   name: 'jdbcURL',
-                  value: 'jdbc:mysql://bluecompute-mariadb:3307/ordersdb?useSSL=false'
+                  value: 'jdbc:mysql://bluecompute-mariadb:3306/ordersdb?useSSL=false'
                 },
                 { name: 'rabbit', value: 'bluecompute-rabbitmq' },
                 { name: 'PORT', value: '9080' },
@@ -284,80 +158,51 @@ module.exports = function bcOrders () {
               resources: { requests: { cpu: '150m', memory: '64Mi' } },
               volumeMounts: [ { name: 'keystorevol', mountPath: '/etc/keystorevol', readOnly: true } ]
             }
-          ],
-          volumes: [ { name: 'keystorevol', secret: { secretName: 'keystoresecret' } } ]
+          ]
         }
       }
     }
   })
+  app.orders_Deployment.propogateLabels()
+  app.orders_Service = app.orders_Deployment.getService()
 
-  app.bluecomputeRabbitmq_Deployment = new solsa.extensions.v1beta1.Deployment({
+  app.rabbitmq_Deployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
-      name: 'bluecompute-rabbitmq',
-      labels: {
-        app: 'orders',
-        implementation: 'microprofile',
-        tier: 'backend',
-        version: 'v1',
-        'app.kubernetes.io/name': 'bluecompute-rabbitmq',
-        'app.kubernetes.io/managed-by': 'Tiller',
-        'app.kubernetes.io/instance': 'bluecompute',
-        heritage: 'Tiller',
-        release: 'bluecompute',
-        chart: 'orders-0.1.0'
-      }
+      name: appConfig.getInstanceName('rabbitmq'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend', service: 'orders' })
     },
     spec: {
       replicas: 1,
       template: {
-        metadata: {
-          labels: {
-            app: 'orders',
-            implementation: 'microprofile',
-            tier: 'backend',
-            version: 'v1',
-            'app.kubernetes.io/name': 'bluecompute-rabbitmq',
-            'app.kubernetes.io/managed-by': 'Tiller',
-            'app.kubernetes.io/instance': 'bluecompute',
-            heritage: 'Tiller',
-            release: 'bluecompute',
-            'helm.sh/chart': 'orders-0.1.0',
-            chart: 'orders-0.1.0'
-          }
-        },
         spec: {
-          containers: [ { name: 'rabbitmq', image: 'rabbitmq', imagePullPolicy: 'Always' } ]
+          containers: [{
+            name: 'rabbitmq',
+            image: 'rabbitmq',
+            imagePullPolicy: 'Always',
+            ports: [
+              { name: 'main', containerPort: 5672 },
+              { name: 'management', containerPort: 15672 },
+              { name: 'epmd', containerPort: 4369 },
+              { name: 'dist', containerPort: 25672 }
+            ]
+          }]
         }
       }
     }
   })
+  app.rabbitmq_Deployment.propogateLabels()
+  app.rabbitmq_Service = app.rabbitmq_Deployment.getService()
 
-  app.bluecomputeMariadb_StatefulSet = new solsa.apps.v1beta1.StatefulSet({
+  app.mariadb_StatefulSet = new solsa.apps.v1beta1.StatefulSet({
     metadata: {
-      name: 'bluecompute-mariadb',
-      labels: {
-        app: 'mariadb',
-        chart: 'mariadb-5.2.2',
-        component: 'master',
-        release: 'bluecompute',
-        heritage: 'Tiller'
-      }
+      name: appConfig.getInstanceName('mariadb'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend', service: 'mariadb', component: 'master' })
     },
     spec: {
-      selector: { matchLabels: { release: 'bluecompute', component: 'master', app: 'mariadb' } },
       serviceName: 'bluecompute-mariadb',
       replicas: 1,
       updateStrategy: { type: 'RollingUpdate' },
       template: {
-        metadata: {
-          annotations: { 'sidecar.istio.io/inject': 'false' },
-          labels: {
-            app: 'mariadb',
-            component: 'master',
-            release: 'bluecompute',
-            chart: 'mariadb-5.2.2'
-          }
-        },
         spec: {
           securityContext: { fsGroup: 1001, runAsUser: 1001 },
           affinity: {
@@ -367,12 +212,16 @@ module.exports = function bcOrders () {
                   weight: 1,
                   podAffinityTerm: {
                     topologyKey: 'kubernetes.io/hostname',
-                    labelSelector: { matchLabels: { app: 'mariadb', release: 'bluecompute' } }
+                    labelSelector: { matchLabels: { app: 'mariadb' } }
                   }
                 }
               ]
             }
           },
+          volumes: [
+            { name: 'config', configMap: { name: 'bluecompute-mariadb' } },
+            { name: 'data', emptyDir: {} }
+          ],
           containers: [
             {
               name: 'mariadb',
@@ -423,53 +272,26 @@ module.exports = function bcOrders () {
                 }
               ]
             }
-          ],
-          volumes: [
-            { name: 'config', configMap: { name: 'bluecompute-mariadb' } },
-            { name: 'data', emptyDir: {} }
           ]
         }
       }
     }
   })
+  app.mariadb_Service = app.mariadb_StatefulSet.getService()
 
-  app.bluecomputeOrdersJob = new solsa.batch.v1.Job({
+  app.ordersJob = new solsa.batch.v1.Job({
     metadata: {
-      name: 'bluecompute-orders-job',
-      labels: {
-        app: 'orders',
-        implementation: 'microprofile',
-        tier: 'backend',
-        version: 'v1',
-        'app.kubernetes.io/name': 'bluecompute-orders',
-        'app.kubernetes.io/managed-by': 'Tiller',
-        'app.kubernetes.io/instance': 'bluecompute',
-        heritage: 'Tiller',
-        release: 'bluecompute',
-        chart: 'orders-0.1.0'
-      }
+      name: appConfig.getInstanceName('orders-job'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend' })
     },
     spec: {
       template: {
         metadata: {
-          name: 'bluecompute-orders-job',
-          labels: {
-            app: 'orders',
-            implementation: 'microprofile',
-            tier: 'backend',
-            version: 'v1',
-            'app.kubernetes.io/name': 'bluecompute-orders',
-            'app.kubernetes.io/managed-by': 'Tiller',
-            'app.kubernetes.io/instance': 'bluecompute',
-            heritage: 'Tiller',
-            release: 'bluecompute',
-            'helm.sh/chart': 'orders-0.1.0',
-            chart: 'orders-0.1.0'
-          },
-          annotations: { 'sidecar.istio.io/inject': 'false' }
+          name: 'bluecompute-orders-job'
         },
         spec: {
           restartPolicy: 'Never',
+          volumes: [ { name: 'orders-data', configMap: { name: 'bluecompute-orders-data' } } ],
           initContainers: [
             {
               name: 'test-mariadb',
@@ -482,7 +304,7 @@ module.exports = function bcOrders () {
               ],
               env: [
                 { name: 'MYSQL_HOST', value: 'bluecompute-mariadb' },
-                { name: 'MYSQL_PORT', value: '3307' },
+                { name: 'MYSQL_PORT', value: '3306' },
                 { name: 'MYSQL_DATABASE', value: 'ordersdb' },
                 { name: 'MYSQL_USER', value: 'root' },
                 {
@@ -506,7 +328,7 @@ module.exports = function bcOrders () {
               ],
               env: [
                 { name: 'MYSQL_HOST', value: 'bluecompute-mariadb' },
-                { name: 'MYSQL_PORT', value: '3307' },
+                { name: 'MYSQL_PORT', value: '3306' },
                 { name: 'MYSQL_DATABASE', value: 'ordersdb' },
                 { name: 'MYSQL_USER', value: 'root' },
                 {
@@ -517,8 +339,7 @@ module.exports = function bcOrders () {
                 }
               ]
             }
-          ],
-          volumes: [ { name: 'orders-data', configMap: { name: 'bluecompute-orders-data' } } ]
+          ]
         }
       }
     }

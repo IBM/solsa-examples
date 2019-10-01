@@ -1,106 +1,68 @@
+/*
+ * Copyright 2019 IBM Corporation
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* eslint-disable no-template-curly-in-string */
+// @ts-check
 const solsa = require('solsa')
 
-module.exports = function bcAuth () {
+module.exports = function bcAuth (appConfig) {
   const app = new solsa.Bundle()
 
-  app.bluecomputeAuth_Service = new solsa.core.v1.Service({
+  app.auth_Deployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
-      name: 'bluecompute-auth',
-      labels: {
-        app: 'auth',
-        implementation: 'microprofile',
-        tier: 'backend',
-        version: 'v1',
-        'app.kubernetes.io/name': 'bluecompute-auth',
-        'app.kubernetes.io/managed-by': 'Tiller',
-        'app.kubernetes.io/instance': 'bluecompute',
-        heritage: 'Tiller',
-        release: 'bluecompute',
-        chart: 'auth-0.1.0'
-      }
+      name: appConfig.getInstanceName('auth'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'auth', tier: 'backend' })
     },
     spec: {
-      type: 'NodePort',
-      ports: [ { name: 'http', port: 9080 }, { name: 'https', port: 9443 } ],
-      selector: {
-        app: 'auth',
-        implementation: 'microprofile',
-        tier: 'backend',
-        version: 'v1',
-        'app.kubernetes.io/name': 'bluecompute-auth',
-        'helm.sh/chart': 'auth-0.1.0',
-        'app.kubernetes.io/managed-by': 'Tiller',
-        'app.kubernetes.io/instance': 'bluecompute',
-        heritage: 'Tiller',
-        release: 'bluecompute',
-        chart: 'auth-0.1.0'
-      }
-    }
-  })
-
-  app.bluecomputeAuth_Deployment = new solsa.extensions.v1beta1.Deployment({
-    metadata: {
-      name: 'bluecompute-auth',
-      labels: {
-        app: 'auth',
-        implementation: 'microprofile',
-        tier: 'backend',
-        version: 'v1',
-        'app.kubernetes.io/name': 'bluecompute-auth',
-        'app.kubernetes.io/managed-by': 'Tiller',
-        'app.kubernetes.io/instance': 'bluecompute',
-        heritage: 'Tiller',
-        release: 'bluecompute',
-        chart: 'auth-0.1.0'
-      }
-    },
-    spec: {
-      replicas: 1,
+      replicas: appConfig.values.auth.replicaCount,
       template: {
-        metadata: {
-          labels: {
-            app: 'auth',
-            implementation: 'microprofile',
-            tier: 'backend',
-            version: 'v1',
-            'app.kubernetes.io/name': 'bluecompute-auth',
-            'helm.sh/chart': 'auth-0.1.0',
-            'app.kubernetes.io/managed-by': 'Tiller',
-            'app.kubernetes.io/instance': 'bluecompute',
-            heritage: 'Tiller',
-            release: 'bluecompute',
-            chart: 'auth-0.1.0'
-          }
-        },
         spec: {
+          volumes: [ { name: 'keystorevol', secret: { secretName: 'keystoresecret' } } ],
           containers: [
             {
               name: 'auth',
-              image: 'ibmcase/auth-mp:v3.0.0',
-              imagePullPolicy: 'Always',
+              image: `${appConfig.values.auth.image.repository}:${appConfig.values.auth.image.tag}`,
+              ports: [
+                { name: 'http', containerPort: appConfig.values.auth.ports.http },
+                { name: 'https', containerPort: appConfig.values.auth.ports.https }
+              ],
               readinessProbe: {
-                httpGet: { path: '/', port: 9443, scheme: 'HTTPS' },
+                httpGet: { path: '/', port: appConfig.values.auth.ports.https, scheme: 'HTTPS' },
                 initialDelaySeconds: 60,
                 timeoutSeconds: 60
               },
               livenessProbe: {
-                httpGet: { path: '/health', port: 9443, scheme: 'HTTPS' },
+                httpGet: { path: '/health', port: appConfig.values.auth.ports.https, scheme: 'HTTPS' },
                 initialDelaySeconds: 60,
                 timeoutSeconds: 60
               },
-              resources: { requests: { cpu: '200m', memory: '300Mi' } },
+              resources: appConfig.values.auth.resources,
               env: [
-                { name: 'PORT', value: '9080' },
-                { name: 'APPLICATION_NAME', value: 'bluecompute' }
+                { name: 'PORT', value: `${appConfig.values.auth.ports.http}` },
+                { name: 'APPLICATION_NAME', value: appConfig.appName }
               ],
               volumeMounts: [ { name: 'keystorevol', mountPath: '/etc/keystorevol', readOnly: true } ]
             }
-          ],
-          volumes: [ { name: 'keystorevol', secret: { secretName: 'keystoresecret' } } ]
+          ]
         }
       }
     }
   })
+  app.auth_Deployment.propogateLabels()
+  app.auth_Service = app.auth_Deployment.getService()
+
   return app
 }

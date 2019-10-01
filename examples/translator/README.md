@@ -45,7 +45,7 @@ module.exports = function translator ({ name, language }) {
 
   bundle.translator.env = { LANGUAGE: { value: language }, WATSON_URL: bundle.watson.getSecret('url'), WATSON_APIKEY: bundle.watson.getSecret('apikey') }
 
-  bundle.ingress = new bundle.translator.Ingress()
+  bundle.ingress = bundle.translator.getIngress()
 
   return bundle
 }
