@@ -89,7 +89,16 @@ services:
       sqlport: 3306
       dbname: inventorydb
       rabbitmq: rabbitmq
-  
+
+  keystore:
+    image:
+      repository: ibmcase/keygen-mp
+      tag: v3.0.0
+    resources:
+      requests:
+        cpu: 200m
+        memory: 300Mi
+
   mysql:
     image: "mysql"
     imageTag: "5.7.14"

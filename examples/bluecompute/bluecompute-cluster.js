@@ -19,12 +19,88 @@
 
 const solsa = require('solsa')
 
-module.exports = function bcConfig (appConfig) {
+module.exports = function bcClusterConfig (appConfig) {
   const app = new solsa.Bundle()
+
+  // Initialization Job to create keystore secret
+  app.keystoreJob = new solsa.batch.v1.Job({
+    metadata: {
+      name: appConfig.getInstanceName('keystore-job'),
+      labels: appConfig.addCommonLabelsTo({})
+    },
+    spec: {
+      template: {
+        spec: {
+          containers: [
+            {
+              name: 'keystore',
+              image: `${appConfig.values.keystore.image.repository}:${appConfig.values.keystore.image.tag}`,
+              resources: appConfig.values.keystore.resources,
+              command: [ 'sh', './bc_certs/keygen.sh' ],
+              args: [ appConfig.namespace ]
+            }
+          ],
+          restartPolicy: 'Never'
+        }
+      }
+    }
+  })
+  app.keystoreJob.propogateLabels()
+
+  /*
+   * Add needed capabilities to default ServiceAccount in the deployment namespace
+   */
+  app.podSecurityPolicy = new solsa.extensions.v1beta1.PodSecurityPolicy({
+    metadata: {
+      name: appConfig.getInstanceName('pod-security-policy'),
+      labels: appConfig.addCommonLabelsTo({})
+    },
+    spec: {
+      allowedCapabilities: [ 'IPC_LOCK' ],
+      fsGroup: { rule: 'RunAsAny' },
+      hostPorts: [ { max: 65535, min: 1 } ],
+      privileged: true,
+      runAsUser: { rule: 'RunAsAny' },
+      seLinux: { rule: 'RunAsAny' },
+      supplementalGroups: { rule: 'RunAsAny' },
+      volumes: [ '*' ]
+    }
+  })
+  app.clusterRole = new solsa.rbac.v1beta1.ClusterRole({
+    metadata: {
+      name: appConfig.getInstanceName('cluster-role'),
+      labels: appConfig.addCommonLabelsTo({})
+    },
+    rules: [
+      {
+        apiGroups: [ 'extensions' ],
+        resources: [ 'podsecuritypolicies' ],
+        resourceNames: [ app.podSecurityPolicy.metadata.name ],
+        verbs: [ 'use' ]
+      },
+      {
+        apiGroups: [ '' ],
+        resources: [ 'secrets' ],
+        verbs: ['create']
+      }
+    ]
+  })
+  app.clusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
+    metadata: {
+      name: appConfig.getInstanceName('cluster-role-binding'),
+      labels: appConfig.addCommonLabelsTo({})
+    },
+    subjects: [ { kind: 'ServiceAccount', name: 'default', namespace: appConfig.namespace } ],
+    roleRef: {
+      apiGroup: 'rbac.authorization.k8s.io',
+      kind: 'ClusterRole',
+      name: app.clusterRole.metadata.name
+    }
+  })
 
   app.prometheus_ClusterRole = new solsa.rbac.v1beta1.ClusterRole({
     metadata: {
-      name: 'bluecompute-prometheus',
+      name: appConfig.getInstanceName('prometheus'),
       labels: appConfig.addCommonLabelsTo({})
     },
     rules: [
@@ -36,59 +112,17 @@ module.exports = function bcConfig (appConfig) {
       { nonResourceURLs: [ '/metrics' ], verbs: [ 'get' ] }
     ]
   })
-
-  app.clusterRole = new solsa.rbac.v1beta1.ClusterRole({
-    metadata: { name: 'bluecompute-cluster-role' },
-    rules: [
-      {
-        apiGroups: [ 'extensions' ],
-        resources: [ 'podsecuritypolicies' ],
-        resourceNames: [ 'bluecompute-pod-security-policy' ],
-        verbs: [ 'use' ]
-      }
-    ]
-  })
-
   app.prometheus_ClusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
-    metadata: { name: 'bluecompute-prometheus' },
-    roleRef: {
-      apiGroup: 'rbac.authorization.k8s.io',
-      kind: 'ClusterRole',
-      name: 'bluecompute-prometheus'
+    metadata: {
+      name: appConfig.getInstanceName('prometheus'),
+      labels: appConfig.addCommonLabelsTo({})
     },
-    subjects: [ { kind: 'ServiceAccount', name: 'default', namespace: 'bluecompute' } ]
-  })
-
-  app.clusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
-    metadata: { name: 'bluecompute-cluster-role-binding' },
-    subjects: [ { kind: 'ServiceAccount', name: 'default', namespace: 'bluecompute' } ],
     roleRef: {
       apiGroup: 'rbac.authorization.k8s.io',
       kind: 'ClusterRole',
-      name: 'bluecompute-cluster-role'
-    }
-  })
-
-  app.keystoreJob = new solsa.batch.v1.Job({
-    metadata: { name: 'bluecompute-keystore-job' },
-    spec: {
-      template: {
-        metadata: { name: 'bluecompute-keystore-job' },
-        spec: {
-          containers: [
-            {
-              name: 'keystore',
-              image: 'ibmcase/keygen-mp:v3.0.0',
-              imagePullPolicy: 'Always',
-              resources: { requests: { cpu: '200m', memory: '300Mi' } },
-              command: [ 'sh', './bc_certs/keygen.sh' ],
-              args: [ 'bluecompute' ]
-            }
-          ],
-          restartPolicy: 'Never'
-        }
-      }
-    }
+      name: app.prometheus_ClusterRole.metadata.name
+    },
+    subjects: [ { kind: 'ServiceAccount', name: 'default', namespace: appConfig.namespace } ]
   })
 
   return app

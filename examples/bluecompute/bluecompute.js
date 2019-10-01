@@ -25,8 +25,8 @@ const solsa = require('solsa')
 const app = new solsa.Bundle()
 module.exports = app
 
-const bcCluster = require('./bluecompute-cluster')
-app.config = bcCluster(appConfig)
+const bcClusterConfig = require('./bluecompute-cluster')
+app.config = bcClusterConfig(appConfig)
 
 const bcAuth = require('./bluecompute-auth')
 app.auth = bcAuth(appConfig)
