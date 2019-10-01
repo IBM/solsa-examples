@@ -26,7 +26,7 @@ module.exports = function bcCatalog (appConfig) {
     metadata: { name: appConfig.getInstanceName('elasticsearch-binding') },
     type: 'Opaque',
     data: {
-      binding: solsa.base64Encode(`http://${appConfig.getInstanceName('catalog-elasticsearch')}:9200/`)
+      binding: solsa.base64Encode(`http://${appConfig.getInstanceName('catalog-elasticsearch')}:${appConfig.values.elasticsearch.ports.http}/`)
     }
   })
 

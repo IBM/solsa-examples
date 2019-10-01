@@ -105,8 +105,6 @@ services:
       mysqlUser: dbuser
       mysqlPassword: password
       mysqlDatabase: inventorydb
-    service:
-      port: 3306
     persistence:
       size: 8Gi
       accessMode: ReadWriteOnce
@@ -115,43 +113,12 @@ services:
         cpu: 100m
         memory: 256Mi
   
-  orders:
-    replicaCount: 1
-    image:
-      repository: ibmcase/orders-mp
-      tag: v4.0.0
-    ports:
-      http: 9080
-      https: 9443
-    resources:
-      requests:
-        cpu: 200m
-        memory: 300Mi
-    service:
-      name: orders
-      servicePort: 9080
-      servicePortHttps: 9443
-      rabbitmq: rabbitmq
-      ordersdb: mariadb
-      inventory: inventory
-      auth: auth
-    sql:
-      user: root
-      password: password
-      port: 3307
-    jwt:
-      id: myMpJwt
-    rabbitmq:
-      mainPort: 5672
-      managePort: 15672
-  
   mariadb:
     image:
-      registry: docker.io
-      repository: bitnami/mariadb
-      tag: 10.1.36-debian-9
-    service:
-      port: 3307
+      repository: docker.io/bitnami/mariadb
+      tag: 10.1.36
+    ports:
+      mysql: 3306
     rootUser:
       password: password
     db:
@@ -162,22 +129,40 @@ services:
       enabled: false
     master:
       persistence:
-        enabled: false
-        existingClaim:
-        mountPath: ""
-        annotations: {}
-        storageClass:
         accessMode: ReadWriteOnce
         size: 8Gi
     slave:
       replicas: 1
       persistence:
-        enabled: false
-        annotations: {}
-        storageClass:
         accessMode: ReadWriteOnce
         size: 8Gi
-  
+
+  orders:
+    replicaCount: 1
+    image:
+      repository: ibmcase/orders-mp
+      tag: v4.0.0
+    ports:
+      http: 9080
+      https: 9443
+    resources:
+      requests:
+        cpu: 150m
+        memory: 64Mi
+    jwt:
+      id: myMpJwt
+
+  rabbitmq:
+    replicaCount: 1
+    image:
+      repository: rabbitmq
+      tag: latest
+    ports:
+      main: 5672
+      management: 15672
+      epmd: 4369
+      dist: 25672
+
   web:
     replicaCount: 1
     image:
@@ -185,10 +170,6 @@ services:
       tag: v2.0.0
     ports:
       http: 8000
-    service:
-      name: bluecompute-web
-      externalPort: 80
-      internalPort: 8000
     resources:
       limits:
         cpu: 100m

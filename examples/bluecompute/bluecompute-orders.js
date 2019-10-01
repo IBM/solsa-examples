@@ -53,7 +53,7 @@ module.exports = function bcOrders (appConfig) {
       'skip-name-resolve\n' +
       'explicit_defaults_for_timestamp\n' +
       'basedir=/opt/bitnami/mariadb\n' +
-      'port=3306\n' +
+      `port=${appConfig.values.mariadb.ports.mysql}\n` +
       'socket=/opt/bitnami/mariadb/tmp/mysql.sock\n' +
       'tmpdir=/opt/bitnami/mariadb/tmp\n' +
       'max_allowed_packet=16M\n' +
@@ -64,12 +64,12 @@ module.exports = function bcOrders (appConfig) {
       'collation-server=utf8_general_ci\n' +
       '\n' +
       '[client]\n' +
-      'port=3306\n' +
+      `port=${appConfig.values.mariadb.ports.mysql}\n` +
       'socket=/opt/bitnami/mariadb/tmp/mysql.sock\n' +
       'default-character-set=UTF8\n' +
       '\n' +
       '[manager]\n' +
-      'port=3306\n' +
+      `port=${appConfig.values.mariadb.ports.mysql}\n` +
       'socket=/opt/bitnami/mariadb/tmp/mysql.sock\n' +
       'pid-file=/opt/bitnami/mariadb/tmp/mysqld.pid'
     }
@@ -81,8 +81,8 @@ module.exports = function bcOrders (appConfig) {
       labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend' })
     },
     data: {
-      'mysql_data.sql': 'create database if not exists ordersdb;\n' +
-      'use ordersdb;\n' +
+      'mysql_data.sql': `create database if not exists ${appConfig.values.mariadb.db.name};\n` +
+      `use ${appConfig.values.mariadb.db.name};\n` +
       'create table if not exists orders (\n' +
       '   orderId varchar(64) not null primary key,\n' +
       '   itemId int not null,\n' +
@@ -93,97 +93,23 @@ module.exports = function bcOrders (appConfig) {
     }
   })
 
-  app.orders_Deployment = new solsa.extensions.v1beta1.Deployment({
-    metadata: {
-      name: appConfig.getInstanceName('orders'),
-      labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend', service: 'orders' })
-    },
-    spec: {
-      replicas: 1,
-      template: {
-        spec: {
-          volumes: [ { name: 'keystorevol', secret: { secretName: 'keystoresecret' } } ],
-          containers: [
-            {
-              name: 'orders',
-              image: 'ibmcase/orders-mp:v4.0.0',
-              imagePullPolicy: 'IfNotPresent',
-              ports: [ { name: 'http', containerPort: 9080 }, { name: 'https', containerPort: 9443 } ],
-              readinessProbe: {
-                httpGet: { path: '/', port: 9443, scheme: 'HTTPS' },
-                initialDelaySeconds: 30
-              },
-              livenessProbe: {
-                httpGet: { path: '/health', port: 9443, scheme: 'HTTPS' },
-                initialDelaySeconds: 1500,
-                timeoutSeconds: 500
-              },
-              env: [
-                { name: 'auth_health', value: 'https://bluecompute-auth:9443/health' },
-                {
-                  name: 'inventory_url',
-                  value: 'http://bluecompute-inventory:9080/inventory/rest/inventory/stock'
-                },
-                {
-                  name: 'inventory_health',
-                  value: 'http://bluecompute-inventory:9080/health'
-                },
-                {
-                  name: 'jwksUri',
-                  value: 'https://bluecompute-auth:9443/oidc/endpoint/OP/jwk'
-                },
-                {
-                  name: 'jwksIssuer',
-                  value: 'https://bluecompute-auth:9443/oidc/endpoint/OP'
-                },
-                {
-                  name: 'jwksUser',
-                  value: 'user:https://bluecompute-auth:9443/oidc/endpoint/OP/user'
-                },
-                {
-                  name: 'administratorRealm',
-                  value: 'user:https://bluecompute-auth:9443/oidc/endpoint/OP/user'
-                },
-                {
-                  name: 'jdbcURL',
-                  value: 'jdbc:mysql://bluecompute-mariadb:3306/ordersdb?useSSL=false'
-                },
-                { name: 'rabbit', value: 'bluecompute-rabbitmq' },
-                { name: 'PORT', value: '9080' },
-                { name: 'RELEASE_NAME', value: 'bluecompute' },
-                { name: 'jwtid', value: 'myMpJwt' },
-                { name: 'zipkinHost', value: 'bluecompute-zipkin' },
-                { name: 'zipkinPort', value: '9411' }
-              ],
-              resources: { requests: { cpu: '150m', memory: '64Mi' } },
-              volumeMounts: [ { name: 'keystorevol', mountPath: '/etc/keystorevol', readOnly: true } ]
-            }
-          ]
-        }
-      }
-    }
-  })
-  app.orders_Deployment.propogateLabels()
-  app.orders_Service = app.orders_Deployment.getService()
-
   app.rabbitmq_Deployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('rabbitmq'),
       labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend', service: 'orders' })
     },
     spec: {
-      replicas: 1,
+      replicas: appConfig.values.rabbitmq.replicaCount,
       template: {
         spec: {
           containers: [{
             name: 'rabbitmq',
-            image: 'rabbitmq',
-            imagePullPolicy: 'Always',
+            image: `${appConfig.values.rabbitmq.image.repository}:${appConfig.values.rabbitmq.image.tag}`,
             ports: [
-              { name: 'main', containerPort: 5672 },
-              { name: 'management', containerPort: 15672 },
-              { name: 'epmd', containerPort: 4369 },
-              { name: 'dist', containerPort: 25672 }
+              { name: 'main', containerPort: appConfig.values.rabbitmq.ports.main },
+              { name: 'management', containerPort: appConfig.values.rabbitmq.ports.management },
+              { name: 'epmd', containerPort: appConfig.values.rabbitmq.ports.epmd },
+              { name: 'dist', containerPort: appConfig.values.rabbitmq.ports.dist }
             ]
           }]
         }
@@ -199,8 +125,8 @@ module.exports = function bcOrders (appConfig) {
       labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend', service: 'mariadb', component: 'master' })
     },
     spec: {
-      serviceName: 'bluecompute-mariadb',
-      replicas: 1,
+      serviceName: appConfig.getInstanceName('mariadb'),
+      replicas: appConfig.values.mariadb.replicaCount,
       updateStrategy: { type: 'RollingUpdate' },
       template: {
         spec: {
@@ -212,36 +138,35 @@ module.exports = function bcOrders (appConfig) {
                   weight: 1,
                   podAffinityTerm: {
                     topologyKey: 'kubernetes.io/hostname',
-                    labelSelector: { matchLabels: { app: 'mariadb' } }
+                    labelSelector: { matchLabels: { service: 'mariadb' } }
                   }
                 }
               ]
             }
           },
           volumes: [
-            { name: 'config', configMap: { name: 'bluecompute-mariadb' } },
+            { name: 'config', configMap: { name: app.mariadb_ConfigMap.metadata.name } },
             { name: 'data', emptyDir: {} }
           ],
           containers: [
             {
               name: 'mariadb',
-              image: 'docker.io/bitnami/mariadb:10.1.36',
-              imagePullPolicy: 'IfNotPresent',
+              image: `${appConfig.values.mariadb.image.repository}:${appConfig.values.mariadb.image.tag}`,
               env: [
                 {
                   name: 'MARIADB_ROOT_PASSWORD',
                   valueFrom: {
-                    secretKeyRef: { name: 'bluecompute-mariadb', key: 'mariadb-root-password' }
+                    secretKeyRef: { name: app.mariadb_Secret.metadata.name, key: 'mariadb-root-password' }
                   }
                 },
-                { name: 'MARIADB_USER', value: 'dbuser' },
+                { name: 'MARIADB_USER', value: `${appConfig.values.mariadb.db.user}` },
                 {
                   name: 'MARIADB_PASSWORD',
-                  valueFrom: { secretKeyRef: { name: 'bluecompute-mariadb', key: 'mariadb-password' } }
+                  valueFrom: { secretKeyRef: { name: app.mariadb_Secret.metadata.name, key: 'mariadb-password' } }
                 },
-                { name: 'MARIADB_DATABASE', value: 'ordersdb' }
+                { name: 'MARIADB_DATABASE', value: `${appConfig.values.mariadb.db.name}` }
               ],
-              ports: [ { name: 'mysql', containerPort: 3306 } ],
+              ports: [ { name: 'mysql', containerPort: appConfig.values.mariadb.ports.mysql } ],
               livenessProbe: {
                 exec: {
                   command: [ 'sh', '-c', 'exec mysqladmin status -uroot -p$MARIADB_ROOT_PASSWORD' ]
@@ -279,6 +204,94 @@ module.exports = function bcOrders (appConfig) {
   })
   app.mariadb_Service = app.mariadb_StatefulSet.getService()
 
+  const authHostAndPort = `${appConfig.getInstanceName('auth')}:${appConfig.values.auth.ports.https}`
+  const inventoryHostAndPort = `${appConfig.getInstanceName('inventory')}:${appConfig.values.inventory.ports.http}`
+  app.orders_Deployment = new solsa.extensions.v1beta1.Deployment({
+    metadata: {
+      name: appConfig.getInstanceName('orders'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend', service: 'orders' })
+    },
+    spec: {
+      replicas: appConfig.values.orders.replicaCount,
+      template: {
+        spec: {
+          volumes: [ { name: 'keystorevol', secret: { secretName: 'keystoresecret' } } ],
+          containers: [
+            {
+              name: 'orders',
+              image: `${appConfig.values.orders.image.repository}:${appConfig.values.orders.image.tag}`,
+              ports: [
+                { name: 'http', containerPort: appConfig.values.orders.ports.http },
+                { name: 'https', containerPort: appConfig.values.orders.ports.https } ],
+              readinessProbe: {
+                httpGet: { path: '/', port: appConfig.values.orders.ports.https, scheme: 'HTTPS' },
+                initialDelaySeconds: 30
+              },
+              livenessProbe: {
+                httpGet: { path: '/health', port: appConfig.values.orders.ports.https, scheme: 'HTTPS' },
+                initialDelaySeconds: 1500,
+                timeoutSeconds: 500
+              },
+              env: [
+                { name: 'auth_health', value: `https://${authHostAndPort}/health` },
+                {
+                  name: 'inventory_url',
+                  value: `http://${inventoryHostAndPort}/inventory/rest/inventory/stock`
+                },
+                {
+                  name: 'inventory_health',
+                  value: `http://${inventoryHostAndPort}/health`
+                },
+                {
+                  name: 'jwksUri',
+                  value: `https://${authHostAndPort}/oidc/endpoint/OP/jwk`
+                },
+                {
+                  name: 'jwksIssuer',
+                  value: `https://${authHostAndPort}/oidc/endpoint/OP`
+                },
+                {
+                  name: 'jwksUser',
+                  value: `user:https://${authHostAndPort}/oidc/endpoint/OP/user`
+                },
+                {
+                  name: 'administratorRealm',
+                  value: `user:https://${authHostAndPort}/oidc/endpoint/OP/user`
+                },
+                {
+                  name: 'jdbcURL',
+                  value: `jdbc:mysql://${app.mariadb_Service.metadata.name}:${appConfig.values.mariadb.ports.mysql}/${appConfig.values.mariadb.db.name}?useSSL=false`
+                },
+                { name: 'rabbit', value: `${app.rabbitmq_Service.metadata.name}` },
+                { name: 'PORT', value: `${appConfig.values.orders.ports.http}` },
+                { name: 'RELEASE_NAME', value: `${appConfig.appName}` },
+                { name: 'jwtid', value: `${appConfig.values.orders.jwt.id}` },
+                { name: 'zipkinHost', value: `${appConfig.getInstanceName('zipkin')}` },
+                { name: 'zipkinPort', value: `${appConfig.values.zipkin.ports.zipkin}` }
+              ],
+              resources: appConfig.values.orders.resources,
+              volumeMounts: [ { name: 'keystorevol', mountPath: '/etc/keystorevol', readOnly: true } ]
+            }
+          ]
+        }
+      }
+    }
+  })
+  app.orders_Deployment.propogateLabels()
+  app.orders_Service = app.orders_Deployment.getService()
+
+  const jobEnv = [
+    { name: 'MYSQL_HOST', value: app.mariadb_Service.metadata.name },
+    { name: 'MYSQL_PORT', value: `${appConfig.values.mariadb.ports.mysql}` },
+    { name: 'MYSQL_DATABASE', value: `${appConfig.values.mariadb.db.name}` },
+    { name: 'MYSQL_USER', value: 'root' },
+    {
+      name: 'MYSQL_PASSWORD',
+      valueFrom: {
+        secretKeyRef: { name: app.ordersMariadbSecret.metadata.name, key: 'mariadb-password' }
+      }
+    }
+  ]
   app.ordersJob = new solsa.batch.v1.Job({
     metadata: {
       name: appConfig.getInstanceName('orders-job'),
@@ -286,58 +299,31 @@ module.exports = function bcOrders (appConfig) {
     },
     spec: {
       template: {
-        metadata: {
-          name: 'bluecompute-orders-job'
-        },
         spec: {
           restartPolicy: 'Never',
-          volumes: [ { name: 'orders-data', configMap: { name: 'bluecompute-orders-data' } } ],
+          volumes: [ { name: 'orders-data', configMap: { name: app.ordersData_ConfigMap.metadata.name } } ],
           initContainers: [
             {
-              name: 'test-mariadb',
-              image: 'mysql:5.7.14',
-              imagePullPolicy: 'IfNotPresent',
+              name: 'wait-for-mariadb',
+              image: `${appConfig.values.mysql.image.repository}:${appConfig.values.mysql.image.tag}`,
               command: [
                 '/bin/bash',
                 '-c',
                 'until mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT} -u${MYSQL_USER} -p${MYSQL_PASSWORD} -e status; do echo waiting for mariadb; sleep 1; done'
               ],
-              env: [
-                { name: 'MYSQL_HOST', value: 'bluecompute-mariadb' },
-                { name: 'MYSQL_PORT', value: '3306' },
-                { name: 'MYSQL_DATABASE', value: 'ordersdb' },
-                { name: 'MYSQL_USER', value: 'root' },
-                {
-                  name: 'MYSQL_PASSWORD',
-                  valueFrom: {
-                    secretKeyRef: { name: 'bluecompute-orders-mariadb-secret', key: 'mariadb-password' }
-                  }
-                }
-              ]
+              env: jobEnv
             }
           ],
           containers: [
             {
-              name: 'populate-mysql',
-              image: 'mysql:5.7.14',
-              imagePullPolicy: 'IfNotPresent',
+              name: 'populate-mariadb',
+              image: `${appConfig.values.mysql.image.repository}:${appConfig.values.mysql.image.tag}`,
               volumeMounts: [ { mountPath: '/orders-data', name: 'orders-data', readOnly: false } ],
               command: [ '/bin/bash', '-c' ],
               args: [
-                'cp /orders-data/mysql_data.sql .; sed -i "s/ordersdb/${MYSQL_DATABASE}/g" mysql_data.sql; until mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT} -u${MYSQL_USER} -p${MYSQL_PASSWORD} <mysql_data.sql; do echo "waiting for mysql"; sleep 1; done; echo "Loaded data into database";'
+                'cp /orders-data/mysql_data.sql .; sed -i "s/' + `${appConfig.values.mariadb.db.name}` + '/${MYSQL_DATABASE}/g" mysql_data.sql; until mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT} -u${MYSQL_USER} -p${MYSQL_PASSWORD} <mysql_data.sql; do echo "waiting for mysql"; sleep 1; done; echo "Loaded data into database";'
               ],
-              env: [
-                { name: 'MYSQL_HOST', value: 'bluecompute-mariadb' },
-                { name: 'MYSQL_PORT', value: '3306' },
-                { name: 'MYSQL_DATABASE', value: 'ordersdb' },
-                { name: 'MYSQL_USER', value: 'root' },
-                {
-                  name: 'MYSQL_PASSWORD',
-                  valueFrom: {
-                    secretKeyRef: { name: 'bluecompute-orders-mariadb-secret', key: 'mariadb-password' }
-                  }
-                }
-              ]
+              env: jobEnv
             }
           ]
         }
