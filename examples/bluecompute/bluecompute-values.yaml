@@ -41,36 +41,36 @@ services:
       requests:
         memory: 350Mi
   
+  cloudant:
+    replicaCount: 1
+    image:
+      repository: ibmcom/cloudant-developer
+      tag: 2.0.1
+    rootPassword: pass
+    ports:
+      port: 80
+
   customer:
     replicaCount: 1
     image:
       repository: ibmcase/customer-mp
       tag: v4.0.0
-    resources:
-      requests:
-        cpu: 200m
-        memory: 300Mi
-    service:
-      name: customer
-      cloudantservicename: cloudant-service
-      servicePort: 9080
-      servicePortHttps: 9443
-      auth: auth
+    ports:
+      http: 9080
+      https: 9443
     volumes:
       mountPath: /opt/ibm/wlp/usr/shared
     jwt:
       id: myMpJwt
-    cloudant:
-      user: admin
-      password: pass
-      protocol: http
-      host: localhost
-      port: 80
+    cloudantInitJob:
       database: customers
-      image: ibmcase/populate
-    persistence:
-      enabled: false
-      accessMode: ReadWriteOnce
+      image:
+        repository: ibmcase/populate
+        tag: latest
+    resources:
+      requests:
+        cpu: 200m
+        memory: 300Mi
   
   inventory:
     replicaCount: 1
@@ -122,6 +122,9 @@ services:
     image:
       repository: ibmcase/orders-mp
       tag: v4.0.0
+    ports:
+      http: 9080
+      https: 9443
     resources:
       requests:
         cpu: 200m
@@ -182,6 +185,8 @@ services:
     image:
       repository: ibmcase/bc-web-mp
       tag: v2.0.0
+    ports:
+      http: 8000
     service:
       name: bluecompute-web
       externalPort: 80
@@ -193,24 +198,6 @@ services:
       requests:
         cpu: 100m
         memory: 128Mi
-    region:
-    clusterName:
-    services:
-      auth:
-        host:
-        port:
-      catalog:
-        host:
-        port:
-      customer:
-        host:
-        port:
-      orders:
-        host:
-        port:
-      reviews:
-        host:
-        port:
 
   zipkin:
     ports:

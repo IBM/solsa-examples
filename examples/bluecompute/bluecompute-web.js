@@ -22,7 +22,49 @@ const solsa = require('solsa')
 module.exports = function bcWeb (appConfig) {
   const app = new solsa.Bundle()
 
-  app.webConfig_ConfigMap = new solsa.core.v1.ConfigMap({
+  const authHostAndPort = `${appConfig.getInstanceName('auth')}:${appConfig.values.auth.ports.https}`
+  const catalogHostAndPort = `${appConfig.getInstanceName('catalog')}:${appConfig.values.catalog.ports.http}`
+  const customerHostAndPort = `${appConfig.getInstanceName('customer')}:${appConfig.values.customer.ports.https}`
+  const ordersHostAndPort = `${appConfig.getInstanceName('orders')}:${appConfig.values.orders.ports.https}`
+  const webConfigJSON = {
+    Application: { cluster_name: '', region: '' },
+    'Auth-Server': { client_id: 'bluecomputeweb', client_secret: 'bluecomputewebs3cret' },
+    APIs: {
+      protocol: 'http',
+      protocols: 'https',
+      catalog: { service_name: `${catalogHostAndPort}/catalog`, base_path: '/rest', require: [] },
+      order: {
+        service_name: `${ordersHostAndPort}/orders`,
+        base_path: '/rest',
+        require: [ 'oauth' ]
+      },
+      review: { base_path: '/api', require: [ 'oauth' ] },
+      customerService: {
+        service_name: `${customerHostAndPort}/customer`,
+        base_path: '/rest',
+        paths: { customer: '/customer' },
+        require: [ 'oauth' ],
+        redirect_url: 'http://localhost'
+      },
+      customer: {
+        service_name: `${authHostAndPort}/oidc/endpoint`,
+        base_path: '/OP',
+        paths: { userinfo: '/userinfo' },
+        require: [ 'oauth' ],
+        redirect_url: 'http://localhost'
+      },
+      oauth20: {
+        protocol: 'https',
+        service_name: `${authHostAndPort}/oidc/endpoint`,
+        base_path: '/OP',
+        paths: { authz: '/authorize', token: '/token' },
+        grant_types: [ 'password' ],
+        scopes: [ 'bluecompute' ],
+        redirect_url: 'http://localhost'
+      }
+    }
+  }
+  app.web_ConfigMap = new solsa.core.v1.ConfigMap({
     metadata: {
       name: appConfig.getInstanceName('web-config'),
       labels: appConfig.addCommonLabelsTo({ micro: 'web-bff', tier: 'frontend' })
@@ -44,77 +86,7 @@ module.exports = function bcWeb (appConfig) {
       '# Check HTTP access, and for text content\r\n' +
       '# http://localhost:8000\tBlueCompute Store!\r\n' +
       '# http://localhost:8000/inventory/\tDayton Meat Chopper\r\n',
-      'default.json': '{\n' +
-      '  "Application": {\n' +
-      '    "cluster_name": "",\n' +
-      '    "region": ""\n' +
-      '  },\n' +
-      '  "Auth-Server": {\n' +
-      '    "client_id":"bluecomputeweb",\n' +
-      '    "client_secret":"bluecomputewebs3cret"\n' +
-      '  },\n' +
-      '  "APIs": {\n' +
-      '    "protocol": "http",\n' +
-      '    "protocols": "https",\n' +
-      '    "catalog": {\n' +
-      '      "service_name": "bluecompute-catalog:9080/catalog",\n' +
-      '      "base_path": "/rest",\n' +
-      '      "require": [\n' +
-      '      ]\n' +
-      '    },\n' +
-      '    "order": {\n' +
-      '      "service_name": "bluecompute-orders:9443/orders",\n' +
-      '      "base_path": "/rest",\n' +
-      '      "require": [\n' +
-      '        "oauth"\n' +
-      '      ]\n' +
-      '    },\n' +
-      '    "review": {\n' +
-      '      "base_path": "/api",\n' +
-      '      "require": [\n' +
-      '        "oauth"\n' +
-      '      ]\n' +
-      '    },\n' +
-      '    "customerService": {\n' +
-      '      "service_name": "bluecompute-customer:9443/customer",\n' +
-      '      "base_path": "/rest",\n' +
-      '      "paths": {\n' +
-      '        "customer": "/customer"\n' +
-      '      },\n' +
-      '      "require": [\n' +
-      '          "oauth"\n' +
-      '      ],\n' +
-      '      "redirect_url": "http://localhost"\n' +
-      '    },\n' +
-      '    "customer": {\n' +
-      '        "service_name": "bluecompute-auth:9443/oidc/endpoint",\n' +
-      '        "base_path": "/OP",\n' +
-      '        "paths": {\n' +
-      '          "userinfo": "/userinfo"\n' +
-      '        },\n' +
-      '        "require": [\n' +
-      '          "oauth"\n' +
-      '        ],\n' +
-      '        "redirect_url": "http://localhost"\n' +
-      '    },\n' +
-      '    "oauth20": {\n' +
-      '      "protocol": "https",\n' +
-      '      "service_name": "bluecompute-auth:9443/oidc/endpoint",\n' +
-      '      "base_path": "/OP",\n' +
-      '      "paths": {\n' +
-      '        "authz": "/authorize",\n' +
-      '        "token": "/token"\n' +
-      '      },\n' +
-      '      "grant_types": [\n' +
-      '        "password"\n' +
-      '      ],\n' +
-      '      "scopes": [\n' +
-      '        "bluecompute"\n' +
-      '      ],\n' +
-      '      "redirect_url": "http://localhost"\n' +
-      '    }\n' +
-      '  }\n' +
-      '}\n'
+      'default.json': JSON.stringify(webConfigJSON)
     }
   })
 
@@ -124,14 +96,14 @@ module.exports = function bcWeb (appConfig) {
       labels: appConfig.addCommonLabelsTo({ micro: 'web-bff', tier: 'frontend' })
     },
     spec: {
-      replicas: 1,
+      replicas: appConfig.values.web.replicaCount,
       template: {
         spec: {
           volumes: [
             {
               name: 'config-volume',
               configMap: {
-                name: 'bluecompute-web-config',
+                name: app.web_ConfigMap.metadata.name,
                 items: [
                   { key: 'checks', path: 'checks' },
                   { key: 'default.json', path: 'default.json' }
@@ -142,9 +114,8 @@ module.exports = function bcWeb (appConfig) {
           containers: [
             {
               name: 'web',
-              image: 'ibmcase/bc-web-mp:v2.0.0',
-              imagePullPolicy: 'Always',
-              ports: [ { containerPort: 8000, protocol: 'TCP' } ],
+              image: `${appConfig.values.web.image.repository}:${appConfig.values.web.image.tag}`,
+              ports: [ { containerPort: appConfig.values.web.ports.http } ],
               volumeMounts: [ { name: 'config-volume', mountPath: '/StoreWebApp/config' } ]
             }
           ]
