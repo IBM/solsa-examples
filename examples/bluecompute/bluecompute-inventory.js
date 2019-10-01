@@ -28,7 +28,7 @@ module.exports = function bcInventory (appConfig) {
       labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend' })
     },
     type: 'Opaque',
-    data: { 'mysql-password': 'cGFzc3dvcmQ=' }
+    data: { 'mysql-password': solsa.base64Encode(appConfig.values.mysql.mysqlPassword) }
   })
 
   app.mysql_Secret = new solsa.core.v1.Secret({
@@ -37,7 +37,10 @@ module.exports = function bcInventory (appConfig) {
       labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend' })
     },
     type: 'Opaque',
-    data: { 'mysql-root-password': 'cGFzc3dvcmQ=', 'mysql-password': 'cGFzc3dvcmQ=' }
+    data: {
+      'mysql-root-password': solsa.base64Encode(appConfig.values.mysql.mysqlRootPassword),
+      'mysql-password': solsa.base64Encode(appConfig.values.mysql.mysqlPassword)
+    }
   })
 
   app.inventoryData_ConfigMap = new solsa.core.v1.ConfigMap({

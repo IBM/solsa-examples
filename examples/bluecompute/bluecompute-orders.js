@@ -28,7 +28,10 @@ module.exports = function bcOrders (appConfig) {
       labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend' })
     },
     type: 'Opaque',
-    data: { 'mariadb-root-password': 'cGFzc3dvcmQ=', 'mariadb-password': 'cGFzc3dvcmQ=' }
+    data: {
+      'mariadb-root-password': solsa.base64Encode(appConfig.values.mariadb.rootUser.password),
+      'mariadb-password': solsa.base64Encode(appConfig.values.mariadb.db.password)
+    }
   })
 
   app.ordersMariadbSecret = new solsa.core.v1.Secret({
@@ -37,7 +40,7 @@ module.exports = function bcOrders (appConfig) {
       labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend' })
     },
     type: 'Opaque',
-    data: { 'mariadb-password': 'cGFzc3dvcmQ=' }
+    data: { 'mariadb-password': solsa.base64Encode(appConfig.values.mariadb.db.password) }
   })
 
   app.mariadb_ConfigMap = new solsa.core.v1.ConfigMap({

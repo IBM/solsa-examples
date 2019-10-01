@@ -22,11 +22,12 @@ const solsa = require('solsa')
 module.exports = function bcCatalog (appConfig) {
   const app = new solsa.Bundle()
 
+  const esBinding = { 'uri': `http://${appConfig.getInstanceName('catalog-elasticsearch')}:9200/` }
   app.bindingRefarchComposeForElasticsearch_Secret = new solsa.core.v1.Secret({
     metadata: { name: appConfig.getInstanceName('binding-refarch-compose-for-elasticsearch') },
     type: 'Opaque',
     data: {
-      binding: 'eyJ1cmkiOiJodHRwOi8vYmx1ZWNvbXB1dGUtY2F0YWxvZy1lbGFzdGljc2VhcmNoOjkyMDAvIn0='
+      binding: solsa.base64Encode(JSON.stringify(esBinding))
     }
   })
 
