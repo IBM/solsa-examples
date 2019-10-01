@@ -19,7 +19,7 @@ const bundle = new solsa.Bundle()
 module.exports = bundle
 
 bundle.kafka = new solsa.EventStreams({ name: 'kafka', plan: 'standard', serviceClassType: 'CF' }).useExisting()
-bundle.topic = new bundle.kafka.Topic({ name: 'topic', topicName: 'MyTopic' }).useExisting()
+bundle.topic = bundle.kafka.getTopic({ name: 'topic', topicName: 'MyTopic' }).useExisting()
 
 bundle.sink = new solsa.KnativeService({ name: 'sink', image: 'gcr.io/knative-releases/github.com/knative/eventing-sources/cmd/event_display' })
-bundle.source = new bundle.topic.Source({ name: 'source', sink: bundle.sink })
+bundle.source = bundle.topic.getSource({ name: 'source', sink: bundle.sink })
