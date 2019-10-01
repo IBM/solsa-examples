@@ -28,7 +28,7 @@ module.exports = function bcInventory (appConfig) {
       labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend' })
     },
     type: 'Opaque',
-    data: { 'mysql-password': solsa.base64Encode(appConfig.values.mysql.mysqlPassword) }
+    data: { 'mysql-password': solsa.base64Encode(appConfig.values.mysql.db.mysqlPassword) }
   })
 
   app.mysql_Secret = new solsa.core.v1.Secret({
@@ -38,8 +38,8 @@ module.exports = function bcInventory (appConfig) {
     },
     type: 'Opaque',
     data: {
-      'mysql-root-password': solsa.base64Encode(appConfig.values.mysql.mysqlRootPassword),
-      'mysql-password': solsa.base64Encode(appConfig.values.mysql.mysqlPassword)
+      'mysql-root-password': solsa.base64Encode(appConfig.values.mysql.db.mysqlRootPassword),
+      'mysql-password': solsa.base64Encode(appConfig.values.mysql.db.mysqlPassword)
     }
   })
 
@@ -49,8 +49,8 @@ module.exports = function bcInventory (appConfig) {
       labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend' })
     },
     data: {
-      'mysql_data.sql': 'create database if not exists inventorydb;\n' +
-        'use inventorydb;\n' +
+      'mysql_data.sql': `create database if not exists ${appConfig.values.mysql.db.mysqlDatabase};\n` +
+        `use ${appConfig.values.mysql.db.mysqlDatabase};\n` +
         'create table if not exists items (\n' +
         '  id int not null auto_increment primary key,\n' +
         '  stock int not null,\n' +
@@ -80,7 +80,10 @@ module.exports = function bcInventory (appConfig) {
       name: appConfig.getInstanceName('mysql'),
       labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend' })
     },
-    spec: { accessModes: ['ReadWriteOnce'], resources: { requests: { storage: '8Gi' } } }
+    spec: {
+      accessModes: [ `${appConfig.values.mysql.persistence.accessMode}` ],
+      resources: { requests: { storage: `${appConfig.values.mysql.persistence.size}` } }
+    }
   })
 
   app.mysql_Deployment = new solsa.extensions.v1beta1.Deployment({
@@ -103,23 +106,22 @@ module.exports = function bcInventory (appConfig) {
           ],
           containers: [
             {
-              name: 'bluecompute-mysql',
-              image: 'mysql:5.7.14',
-              imagePullPolicy: 'IfNotPresent',
-              resources: { requests: { cpu: '100m', memory: '256Mi' } },
+              name: 'mysql',
+              image: `${appConfig.values.mysql.image.repository}:${appConfig.values.mysql.image.tag}`,
+              resources: appConfig.values.mysql.resources,
               env: [
                 {
                   name: 'MYSQL_ROOT_PASSWORD',
-                  valueFrom: { secretKeyRef: { name: 'bluecompute-mysql', key: 'mysql-root-password' } }
+                  valueFrom: { secretKeyRef: { name: app.mysql_Secret.metadata.name, key: 'mysql-root-password' } }
                 },
                 {
                   name: 'MYSQL_PASSWORD',
-                  valueFrom: { secretKeyRef: { name: 'bluecompute-mysql', key: 'mysql-password' } }
+                  valueFrom: { secretKeyRef: { name: app.mysql_Secret.metadata.name, key: 'mysql-password' } }
                 },
-                { name: 'MYSQL_USER', value: 'dbuser' },
-                { name: 'MYSQL_DATABASE', value: 'inventorydb' }
+                { name: 'MYSQL_USER', value: `${appConfig.values.mysql.db.mysqlUser}` },
+                { name: 'MYSQL_DATABASE', value: `${appConfig.values.mysql.db.mysqlDatabase}` }
               ],
-              ports: [{ name: 'mysql', containerPort: 3306 }],
+              ports: [{ name: 'mysql', containerPort: appConfig.values.mysql.ports.sql }],
               livenessProbe: {
                 exec: {
                   command: ['sh', '-c', 'mysqladmin ping -u root -p${MYSQL_ROOT_PASSWORD}']
@@ -156,37 +158,38 @@ module.exports = function bcInventory (appConfig) {
       labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend', service: 'inventory' })
     },
     spec: {
-      replicas: 1,
-      revisionHistoryLimit: 1,
+      replicas: appConfig.values.inventory.replicaCount,
       template: {
         spec: {
           containers: [
             {
               name: 'inventory',
-              image: 'ibmcase/inventory-mp:v2.0.0',
-              imagePullPolicy: 'IfNotPresent',
-              ports: [ { name: 'http', containerPort: 9080 }, { name: 'https', containerPort: 9443 } ],
+              image: `${appConfig.values.inventory.image.repository}:${appConfig.values.inventory.image.tag}`,
+              ports: [
+                { name: 'http', containerPort: appConfig.values.inventory.ports.http },
+                { name: 'https', containerPort: appConfig.values.inventory.ports.https }
+              ],
               readinessProbe: {
-                httpGet: { path: '/', port: 9080 },
+                httpGet: { path: '/', port: appConfig.values.inventory.ports.http },
                 initialDelaySeconds: 60,
                 timeoutSeconds: 60
               },
               livenessProbe: {
-                httpGet: { path: '/health', port: 9080 },
+                httpGet: { path: '/health', port: appConfig.values.inventory.ports.http },
                 initialDelaySeconds: 1500,
                 timeoutSeconds: 500
               },
-              resources: { requests: { cpu: '200m', memory: '300Mi' } },
+              resources: appConfig.values.inventory.resources,
               env: [
                 {
                   name: 'jdbcURL',
-                  value: 'jdbc:mysql://bluecompute-mysql:3306/inventorydb?useSSL=false'
+                  value: `jdbc:mysql://${app.mysql_Service.metadata.name}:${appConfig.values.mysql.ports.sql}/${appConfig.values.mysql.db.mysqlDatabase}?useSSL=false`
                 },
-                { name: 'rabbit', value: 'bluecompute-rabbitmq' },
-                { name: 'PORT', value: '9080' },
-                { name: 'APPLICATION_NAME', value: 'bluecompute' },
-                { name: 'zipkinHost', value: 'bluecompute-zipkin' },
-                { name: 'zipkinPort', value: '9411' }
+                { name: 'rabbit', value: `${appConfig.getInstanceName('rabbitmq')}` },
+                { name: 'PORT', value: `${appConfig.values.inventory.ports.http}` },
+                { name: 'APPLICATION_NAME', value: appConfig.appName },
+                { name: 'zipkinHost', value: `${appConfig.getInstanceName('zipkin')}` },
+                { name: 'zipkinPort', value: `${appConfig.values.zipkin.ports.zipkin}` }
               ]
             }
           ]
@@ -197,6 +200,18 @@ module.exports = function bcInventory (appConfig) {
   app.inventory_Deployment.propogateLabels()
   app.inventory_Service = app.inventory_Deployment.getService()
 
+  const jobEnv = [
+    { name: 'MYSQL_HOST', value: app.mysql_Service.metadata.name },
+    { name: 'MYSQL_PORT', value: `${appConfig.values.mysql.ports.sql}` },
+    { name: 'MYSQL_DATABASE', value: `${appConfig.values.mysql.db.mysqlDatabase}` },
+    { name: 'MYSQL_USER', value: 'root' },
+    {
+      name: 'MYSQL_PASSWORD',
+      valueFrom: {
+        secretKeyRef: { name: app.inventoryMysqlSecret.metadata.name, key: 'mysql-password' }
+      }
+    }
+  ]
   app.inventoryJob = new solsa.batch.v1.Job({
     metadata: {
       name: appConfig.getInstanceName('inventory-job'),
@@ -206,53 +221,29 @@ module.exports = function bcInventory (appConfig) {
       template: {
         spec: {
           restartPolicy: 'Never',
-          volumes: [{ name: 'inventory-data', configMap: { name: 'bluecompute-inventory-data' } }],
+          volumes: [{ name: 'inventory-data', configMap: { name: app.inventoryData_ConfigMap.metadata.name } }],
           initContainers: [
             {
-              name: 'test-mysql',
-              image: 'mysql:5.7.14',
-              imagePullPolicy: 'Always',
+              name: 'wait-for-mysql',
+              image: `${appConfig.values.mysql.image.repository}:${appConfig.values.mysql.image.tag}`,
               command: [
                 '/bin/bash',
                 '-c',
                 'until mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT} -u${MYSQL_USER} -p${MYSQL_PASSWORD} -e status; do echo waiting for mysql; sleep 1; done'
               ],
-              env: [
-                { name: 'MYSQL_HOST', value: 'bluecompute-mysql' },
-                { name: 'MYSQL_PORT', value: '3306' },
-                { name: 'MYSQL_DATABASE', value: 'inventorydb' },
-                { name: 'MYSQL_USER', value: 'root' },
-                {
-                  name: 'MYSQL_PASSWORD',
-                  valueFrom: {
-                    secretKeyRef: { name: 'bluecompute-inventory-mysql-secret', key: 'mysql-password' }
-                  }
-                }
-              ]
+              env: jobEnv
             }
           ],
           containers: [
             {
               name: 'populate-mysql',
-              image: 'mysql:5.7.14',
-              imagePullPolicy: 'Always',
+              image: `${appConfig.values.mysql.image.repository}:${appConfig.values.mysql.image.tag}`,
               volumeMounts: [{ mountPath: '/inventory-data', name: 'inventory-data', readOnly: false }],
               command: ['/bin/bash', '-c'],
               args: [
-                'cp /inventory-data/mysql_data.sql .; sed -i "s/inventorydb/${MYSQL_DATABASE}/g" mysql_data.sql; until mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT} -u${MYSQL_USER} -p${MYSQL_PASSWORD} <mysql_data.sql; do echo "waiting for mysql"; sleep 1; done; echo "Loaded data into database";'
+                'cp /inventory-data/mysql_data.sql .; sed -i "s/' + `${appConfig.values.mysql.db.mysqlDatabase}` + '/${MYSQL_DATABASE}/g" mysql_data.sql; until mysql -h ${MYSQL_HOST} -P ${MYSQL_PORT} -u${MYSQL_USER} -p${MYSQL_PASSWORD} <mysql_data.sql; do echo "waiting for mysql"; sleep 1; done; echo "Loaded data into database";'
               ],
-              env: [
-                { name: 'MYSQL_HOST', value: 'bluecompute-mysql' },
-                { name: 'MYSQL_PORT', value: '3306' },
-                { name: 'MYSQL_DATABASE', value: 'inventorydb' },
-                { name: 'MYSQL_USER', value: 'root' },
-                {
-                  name: 'MYSQL_PASSWORD',
-                  valueFrom: {
-                    secretKeyRef: { name: 'bluecompute-inventory-mysql-secret', key: 'mysql-password' }
-                  }
-                }
-              ]
+              env: jobEnv
             }
           ]
         }

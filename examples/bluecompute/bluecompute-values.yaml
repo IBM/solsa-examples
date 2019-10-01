@@ -46,9 +46,9 @@ services:
     image:
       repository: ibmcom/cloudant-developer
       tag: 2.0.1
-    rootPassword: pass
     ports:
       port: 80
+    rootPassword: pass
 
   customer:
     replicaCount: 1
@@ -84,11 +84,6 @@ services:
     ports:
       http: 9080
       https: 9443
-      sql: 3306
-    service:
-      sqlport: 3306
-      dbname: inventorydb
-      rabbitmq: rabbitmq
 
   keystore:
     image:
@@ -100,22 +95,25 @@ services:
         memory: 300Mi
 
   mysql:
-    image: "mysql"
-    imageTag: "5.7.14"
-    mysqlRootPassword: password
-    mysqlUser: dbuser
-    mysqlPassword: password
-    mysqlDatabase: inventorydb
+    image:
+      repository: "mysql"
+      tag: "5.7.14"
+    ports:
+      sql: 3306
+    db:
+      mysqlRootPassword: password
+      mysqlUser: dbuser
+      mysqlPassword: password
+      mysqlDatabase: inventorydb
     service:
       port: 3306
     persistence:
-      enabled: false
       size: 8Gi
-      storageClass:
       accessMode: ReadWriteOnce
-      existingClaim:
-      subPath:
-      annotations: {}
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
   
   orders:
     replicaCount: 1
