@@ -17,11 +17,9 @@ services:
     image:
       repository: ibmcase/catalog-mp
       tag: v3.0.0
-    service:
-      servicePort: 9080
-      servicePortHttps: 9443
-      zipkinPort: 9411
-      zipkinName: zipkin
+    ports:
+      http: 9080
+      https: 9443
     volumes:
       mountPath: /opt/ibm/wlp/usr/shared
     resources:
@@ -29,37 +27,35 @@ services:
         cpu: 200m
         memory: 300Mi
   
-  ibmcase-elasticsearch:
+  elasticsearch:
     replicaCount: 1
     image:
       repository: quay.io/pires/docker-elasticsearch-kubernetes
       tag: 1.7.1-4
-    service:
-      name: catalog-elasticsearch
+    ports:
+      http: 9200
+      transport: 9300
     resources:
       limits:
         memory: 700Mi
       requests:
         memory: 350Mi
-    secretName: binding-refarch-compose-for-elasticsearch
   
   customer:
     replicaCount: 1
     image:
       repository: ibmcase/customer-mp
       tag: v4.0.0
-      resources:
-        requests:
-          cpu: 200m
-          memory: 300Mi
+    resources:
+      requests:
+        cpu: 200m
+        memory: 300Mi
     service:
       name: customer
       cloudantservicename: cloudant-service
       servicePort: 9080
       servicePortHttps: 9443
       auth: auth
-      zipkinHost: zipkin
-      zipkinPort: 9411
     volumes:
       mountPath: /opt/ibm/wlp/usr/shared
     jwt:
@@ -81,19 +77,18 @@ services:
     image:
       repository: ibmcase/inventory-mp
       tag: v2.0.0
-      resources:
-        requests:
-          cpu: 200m
-          memory: 300Mi
+    resources:
+      requests:
+        cpu: 200m
+        memory: 300Mi
+    ports:
+      http: 9080
+      https: 9443
+      sql: 3306
     service:
-      name: inventory
-      servicePort: 9080
-      servicePortHttps: 9443
       sqlport: 3306
       dbname: inventorydb
       rabbitmq: rabbitmq
-      zipkinPort: 9411
-      zipkinName: zipkin
   
   mysql:
     image: "mysql"
@@ -118,10 +113,10 @@ services:
     image:
       repository: ibmcase/orders-mp
       tag: v4.0.0
-      resources:
-        requests:
-          cpu: 200m
-          memory: 300Mi
+    resources:
+      requests:
+        cpu: 200m
+        memory: 300Mi
     service:
       name: orders
       servicePort: 9080
@@ -130,8 +125,6 @@ services:
       ordersdb: mariadb
       inventory: inventory
       auth: auth
-      zipkinHost: zipkin
-      zipkinPort: 9411
     sql:
       user: root
       password: password
@@ -209,3 +202,7 @@ services:
       reviews:
         host:
         port:
+
+  zipkin:
+    ports:
+      zipkin: 9411

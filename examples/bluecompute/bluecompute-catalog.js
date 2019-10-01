@@ -22,12 +22,11 @@ const solsa = require('solsa')
 module.exports = function bcCatalog (appConfig) {
   const app = new solsa.Bundle()
 
-  const esBinding = { 'uri': `http://${appConfig.getInstanceName('catalog-elasticsearch')}:9200/` }
-  app.bindingRefarchComposeForElasticsearch_Secret = new solsa.core.v1.Secret({
-    metadata: { name: appConfig.getInstanceName('binding-refarch-compose-for-elasticsearch') },
+  app.elasticsearchBinding_Secret = new solsa.core.v1.Secret({
+    metadata: { name: appConfig.getInstanceName('elasticsearch-binding') },
     type: 'Opaque',
     data: {
-      binding: solsa.base64Encode(JSON.stringify(esBinding))
+      binding: solsa.base64Encode(`http://${appConfig.getInstanceName('catalog-elasticsearch')}:9200/`)
     }
   })
 
@@ -37,16 +36,19 @@ module.exports = function bcCatalog (appConfig) {
       labels: appConfig.addCommonLabelsTo({ tier: 'backend', micro: 'catalog', datastore: 'elasticsearch' })
     },
     spec: {
-      replicas: 1,
+      replicas: appConfig.values.elasticsearch.replicaCount,
       template: {
         spec: {
           volumes: [{ name: 'storage', hostPath: { path: '/var/lib/elasticsearch-catalog' } }],
           containers: [
             {
               name: 'elasticsearch',
+              image: `${appConfig.values.elasticsearch.image.repository}:${appConfig.values.elasticsearch.image.tag}`,
               securityContext: { capabilities: { add: ['IPC_LOCK'] } },
-              image: 'quay.io/pires/docker-elasticsearch-kubernetes:1.7.1-4',
-              imagePullPolicy: 'Always',
+              ports: [
+                { name: 'http', containerPort: appConfig.values.elasticsearch.ports.http, protocol: 'TCP' },
+                { name: 'transport', containerPort: appConfig.values.elasticsearch.ports.transport, protocol: 'TCP' }
+              ],
               env: [
                 {
                   name: 'KUBERNETES_CA_CERTIFICATE_FILE',
@@ -64,11 +66,7 @@ module.exports = function bcCatalog (appConfig) {
                 { name: 'ES_JAVA_OPTS', value: '-Xms256m -Xmx256m' }
               ],
               volumeMounts: [{ mountPath: '/data', name: 'storage' }],
-              resources: { limits: { memory: '700Mi' }, requests: { memory: '350Mi' } },
-              ports: [
-                { containerPort: 9200, name: 'http', protocol: 'TCP' },
-                { containerPort: 9300, name: 'transport', protocol: 'TCP' }
-              ]
+              resources: appConfig.values.elasticsearch.resources
             }
           ]
         }
@@ -78,11 +76,12 @@ module.exports = function bcCatalog (appConfig) {
   app.catalogElasticsearch_Deployment.propogateLabels()
   app.catalogElasticsearch_Service = app.catalogElasticsearch_Deployment.getService()
 
-  app.catalogConfig_ConfigMap = new solsa.core.v1.ConfigMap({
+  const invHostAndPort = `${appConfig.getInstanceName('inventory')}:${appConfig.values.inventory.ports.http}`
+  app.catalog_ConfigMap = new solsa.core.v1.ConfigMap({
     metadata: { name: appConfig.getInstanceName('catalog-config') },
     data: {
       'jvm.options': '\n' +
-        '-Dclient.InventoryServiceClient/mp-rest/url=http://bluecompute-inventory:9080/inventory/rest/inventory\n'
+        `-Dclient.InventoryServiceClient/mp-rest/url=http://${invHostAndPort}/inventory/rest/inventory\n`
     }
   })
 
@@ -92,44 +91,45 @@ module.exports = function bcCatalog (appConfig) {
       labels: appConfig.addCommonLabelsTo({ tier: 'backend', micro: 'catalog' })
     },
     spec: {
-      replicas: 1,
+      replicas: appConfig.values.catalog.replicaCount,
       template: {
         spec: {
-          volumes: [{ name: 'config-volume', configMap: { name: 'bluecompute-catalog-config' } }],
+          volumes: [{ name: 'config-volume', configMap: { name: app.catalog_ConfigMap.metadata.name } }],
           containers: [
             {
               name: 'catalog',
-              image: 'ibmcase/catalog-mp:v3.0.0',
-              imagePullPolicy: 'IfNotPresent',
-              ports: [{ name: 'http', containerPort: 9080 }, { name: 'https', containerPort: 9443 }],
+              image: `${appConfig.values.catalog.image.repository}:${appConfig.values.catalog.image.tag}`,
+              ports: [
+                { name: 'http', containerPort: appConfig.values.catalog.ports.http },
+                { name: 'https', containerPort: appConfig.values.catalog.ports.https }
+              ],
               readinessProbe: {
-                httpGet: { path: '/health', port: 9080 },
+                httpGet: { path: '/health', port: appConfig.values.catalog.ports.http },
                 initialDelaySeconds: 60,
                 periodSeconds: 20,
                 timeoutSeconds: 60,
                 failureThreshold: 6
               },
               livenessProbe: {
-                httpGet: { path: '/', port: 9080 },
+                httpGet: { path: '/', port: appConfig.values.catalog.ports.http },
                 initialDelaySeconds: 60,
                 periodSeconds: 10,
                 timeoutSeconds: 60,
                 failureThreshold: 6
               },
-              resources: { requests: { cpu: '200m', memory: '300Mi' } },
+              resources: appConfig.values.catalog.resources,
               env: [
-                {
-                  name: 'inventory_health',
-                  value: 'http://bluecompute-inventory:9080/health'
-                },
+                { name: 'inventory_health', value: `http://${invHostAndPort}/health` },
                 {
                   name: 'elasticsearch_url',
-                  value: 'http://bluecompute-catalog-elasticsearch:9200'
+                  valueFrom: {
+                    secretKeyRef: { name: app.elasticsearchBinding_Secret.metadata.name, key: 'binding' }
+                  }
                 },
-                { name: 'zipkinHost', value: 'bluecompute-zipkin' },
-                { name: 'zipkinPort', value: '9411' },
-                { name: 'PORT', value: '9080' },
-                { name: 'APPLICATION_NAME', value: 'bluecompute' },
+                { name: 'zipkinHost', value: `${appConfig.getInstanceName('zipkin')}` },
+                { name: 'zipkinPort', value: `${appConfig.values.zipkin.ports.zipkin}` },
+                { name: 'PORT', value: `${appConfig.values.catalog.ports.http}` },
+                { name: 'APPLICATION_NAME', value: `${appConfig.appName}` },
                 {
                   name: 'IBM_APM_SERVER_URL',
                   valueFrom: {
@@ -169,7 +169,7 @@ module.exports = function bcCatalog (appConfig) {
                   }
                 }
               ],
-              volumeMounts: [{ name: 'config-volume', mountPath: '/opt/ibm/wlp/usr/shared' }]
+              volumeMounts: [{ name: 'config-volume', mountPath: appConfig.values.catalog.volumes.mountPath }]
             }
           ]
         }
