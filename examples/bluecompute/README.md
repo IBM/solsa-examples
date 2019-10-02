@@ -49,6 +49,7 @@ these resources to be more productive.
 2. SolSA's Kubernetes support goes beyond just wrapping the core
 Kubernetes resources by adding several additional features that make
 defining BlueCompute even more concise and less error-prone.
+
    a. All `Service` resources are derived from the `Deployment` they
       are fronting via "one-liners" that simply invoke the
       `getService()` method added to `Deployment` by SolSA.
