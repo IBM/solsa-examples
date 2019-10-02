@@ -38,55 +38,64 @@ for this reference implementation is shown in the picture below.
 We use BlueCompute to demonstrate several aspects of SolSA.
 
 1. SolSA's TypeScript/JavaScript binding for the entire Kubernetes API
-enables the application developer to utilize all the capabilities of
+enables the application developer to access all the capabilities of
 the underlying Kubernetes platform from a familiar IDE-environment and
 programming language. The application is composed using standard
 Kubernetes building blocks such as `Deployment`, `ConfigMap`, and
-`Secret`, but rich IDE-support enabled by TypeScript enables
+`Secret`, but rich IDE-support enabled by SolSA enables
 developers less familiar with the low-level YAML specification of
-these resources to be more productive.
+these resources to be more productive via typechecking and other IDE assists.
 
 2. SolSA's Kubernetes support goes beyond just wrapping the core
-Kubernetes resources by adding several additional features that make
+Kubernetes resources by providing additional capabilities that make
 defining BlueCompute even more concise and less error-prone.
 
+FIXME SOME MORE
+   a. All `Service` resources are derived from their backing `Deployment`
+      via "one-liners" that simply invoke the
+FIME
+a. All `Service` resources are derived from the `Deployment` they
+   a. All `Service` resources are derived from the `Deployment` they
+      are fronting via "one-liners" that simply invoke the
+END FIXME      
    a. All `Service` resources are derived from their backing `Deployment`
       via "one-liners" that simply invoke the
       `getService()` method added to `Deployment` by SolSA.
 
-   b. Similarly, an `Ingress` is derived directly from the `Service`
-      it is exposing by just invoking the Service's `getIngress`
-      method. SolSA automatically handles the cluster-specific details
+   b. Similarly, an `Ingress` can be derived directly from the `Service`
+      it is exposing by invoking the Service's `getIngress`
+      method. SolSA transparently handles the cluster-specific details
       of specifying vhosts, service ports, paths, and tls
       configuration.
 
    c. Redundancy is reduced by using the `propagateLabels` method that
       SolSA adds to `Deployment` to ensure that the `Deployment` and
-      `PodSpec` metadata always matches.
+      its contained `PodSpec` always have matching metadata.
 
 3. This application also illustrates a recommended SolSA idiom for
    combining multiple sub-components into a coherent application.
    Each logical component of the application is defined in its own
-   JavaScript file that exports a single function. A
-   `BlueComputeConfig` class plays a similar role to the `values.yaml`
-   file of a Helm chart by abstracting instance-specific configuration
+   JavaScript file that exports a single function to create the component.
+   A `BlueComputeConfig` class plays a similar role to the `values.yaml`
+   file of a Helm chart by centralizing instance-specific configuration
    values (In fact, the bulk of BlueComputeConfig is simply a wrapper
    around a `bluecompute-values.yaml` file that was derived from the
    `values.yaml` files of the Helm charts originally used to deploy
    the sub-components). The top-level file, bluecompute.js,
    instantiates an instance of `BlueComputeConfig` and then invokes
-   each sub-component function to construct the overall application.
+   each sub-component function with the configuration object to
+   construct the overall application.
 
 4. SolSA includes an importer tool that is able to load YAML/json
    files and convert them to use SolSA's JavaScript bindings for
    Kubernetes.  This importer was used to reduce the effort needed to
-   convert from the original Helm Charts to the SolSA definition of
-   the application.  The `importer` subdirectory contains the
+   convert BlueCompute from its original Helm Charts to using SolSA.
+   The `importer` subdirectory contains the
    artifacts created during the import process.
 
 ## Deployment
 
-Deploy the application with `solsa yaml bluecompute.js | kubectl apply -f -`
+Deploy the application with `solsa yaml bluecompute.js | kubectl -n bluecompute apply -f -`
 
 After about a minute, you can open the URL of the created ingress
 in a web browser.
