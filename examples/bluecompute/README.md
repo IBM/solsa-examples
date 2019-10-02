@@ -50,8 +50,8 @@ these resources to be more productive.
 Kubernetes resources by adding several additional features that make
 defining BlueCompute even more concise and less error-prone.
 
-   a. All `Service` resources are derived from the `Deployment` they
-      are fronting via "one-liners" that simply invoke the
+   a. All `Service` resources are derived from their backing `Deployment`
+      via "one-liners" that simply invoke the
       `getService()` method added to `Deployment` by SolSA.
 
    b. Similarly, an `Ingress` is derived directly from the `Service`
