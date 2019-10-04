@@ -36,8 +36,14 @@ module.exports = function bcClusterConfig (appConfig) {
               name: 'keystore',
               image: `${appConfig.values.keystore.image.repository}:${appConfig.values.keystore.image.tag}`,
               resources: appConfig.values.keystore.resources,
+              env: [
+                {
+                  name: 'NAMESPACE',
+                  valueFrom: { fieldRef: { fieldPath: 'metadata.namespace' } }
+                }
+              ],
               command: [ 'sh', './bc_certs/keygen.sh' ],
-              args: [ appConfig.namespace ]
+              args: [ '$(NAMESPACE)' ]
             }
           ],
           restartPolicy: 'Never'
@@ -66,9 +72,9 @@ module.exports = function bcClusterConfig (appConfig) {
       volumes: [ '*' ]
     }
   })
-  app.clusterRole = new solsa.rbac.v1beta1.ClusterRole({
+  app.role = new solsa.rbac.v1beta1.Role({
     metadata: {
-      name: appConfig.getInstanceName('cluster-role'),
+      name: appConfig.getInstanceName('role'),
       labels: appConfig.addCommonLabelsTo({})
     },
     rules: [
@@ -85,44 +91,17 @@ module.exports = function bcClusterConfig (appConfig) {
       }
     ]
   })
-  app.clusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
+  app.roleBinding = new solsa.rbac.v1beta1.RoleBinding({
     metadata: {
-      name: appConfig.getInstanceName('cluster-role-binding'),
+      name: appConfig.getInstanceName('role-binding'),
       labels: appConfig.addCommonLabelsTo({})
     },
-    subjects: [ { kind: 'ServiceAccount', name: 'default', namespace: appConfig.namespace } ],
+    subjects: [ { kind: 'ServiceAccount', name: 'default' } ],
     roleRef: {
       apiGroup: 'rbac.authorization.k8s.io',
-      kind: 'ClusterRole',
-      name: app.clusterRole.metadata.name
+      kind: 'Role',
+      name: app.role.metadata.name
     }
-  })
-
-  app.prometheus_ClusterRole = new solsa.rbac.v1beta1.ClusterRole({
-    metadata: {
-      name: appConfig.getInstanceName('prometheus'),
-      labels: appConfig.addCommonLabelsTo({})
-    },
-    rules: [
-      {
-        apiGroups: [ '' ],
-        resources: [ 'nodes', 'nodes/proxy', 'services', 'endpoints', 'pods' ],
-        verbs: [ 'get', 'list', 'watch' ]
-      },
-      { nonResourceURLs: [ '/metrics' ], verbs: [ 'get' ] }
-    ]
-  })
-  app.prometheus_ClusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
-    metadata: {
-      name: appConfig.getInstanceName('prometheus'),
-      labels: appConfig.addCommonLabelsTo({})
-    },
-    roleRef: {
-      apiGroup: 'rbac.authorization.k8s.io',
-      kind: 'ClusterRole',
-      name: app.prometheus_ClusterRole.metadata.name
-    },
-    subjects: [ { kind: 'ServiceAccount', name: 'default', namespace: appConfig.namespace } ]
   })
 
   return app
