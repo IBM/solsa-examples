@@ -95,7 +95,7 @@ END FIXME
 
 ## Deployment
 
-Deploy the application with `solsa yaml bluecompute.js | kubectl -n bluecompute apply -f -`
+Deploy the application with `solsa yaml bluecompute.js | kubectl apply -f -`
 
 After about a minute, you can open the URL of the created ingress
 in a web browser.

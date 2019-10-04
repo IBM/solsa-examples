@@ -21,8 +21,7 @@ const yaml = require('js-yaml')
 const fs = require('fs')
 
 class BlueComputeApp {
-  constructor ({ appName, commonLabels = {}, valuesFile, namespace = appName }) {
-    this.namespace = namespace
+  constructor ({ appName, commonLabels = {}, valuesFile }) {
     this.appName = appName
     this.commonLabels = commonLabels
     this.values = yaml.safeLoad(fs.readFileSync(valuesFile).toString()).services

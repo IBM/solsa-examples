@@ -23,7 +23,10 @@ module.exports = function bcCatalog (appConfig) {
   const app = new solsa.Bundle()
 
   app.elasticsearchBinding_Secret = new solsa.core.v1.Secret({
-    metadata: { name: appConfig.getInstanceName('elasticsearch-binding') },
+    metadata: {
+      name: appConfig.getInstanceName('elasticsearch-binding'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'catalog', tier: 'backend' })
+    },
     type: 'Opaque',
     data: {
       binding: solsa.base64Encode(`http://${appConfig.getInstanceName('catalog-elasticsearch')}:${appConfig.values.elasticsearch.ports.http}/`)
@@ -78,7 +81,10 @@ module.exports = function bcCatalog (appConfig) {
 
   const invHostAndPort = `${appConfig.getInstanceName('inventory')}:${appConfig.values.inventory.ports.http}`
   app.catalog_ConfigMap = new solsa.core.v1.ConfigMap({
-    metadata: { name: appConfig.getInstanceName('catalog-config') },
+    metadata: {
+      name: appConfig.getInstanceName('catalog-config'),
+      labels: appConfig.addCommonLabelsTo({ micro: 'catalog', tier: 'backend' })
+    },
     data: {
       'jvm.options': '\n' +
         `-Dclient.InventoryServiceClient/mp-rest/url=http://${invHostAndPort}/inventory/rest/inventory\n`
