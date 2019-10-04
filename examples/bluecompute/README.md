@@ -50,14 +50,6 @@ these resources to be more productive via typechecking and other IDE assists.
 Kubernetes resources by providing additional capabilities that make
 defining BlueCompute even more concise and less error-prone.
 
-FIXME SOME MORE
-   a. All `Service` resources are derived from their backing `Deployment`
-      via "one-liners" that simply invoke the
-FIME
-a. All `Service` resources are derived from the `Deployment` they
-   a. All `Service` resources are derived from the `Deployment` they
-      are fronting via "one-liners" that simply invoke the
-END FIXME      
    a. All `Service` resources are derived from their backing `Deployment`
       via "one-liners" that simply invoke the
       `getService()` method added to `Deployment` by SolSA.

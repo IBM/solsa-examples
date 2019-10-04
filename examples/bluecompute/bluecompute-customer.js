@@ -67,6 +67,14 @@ module.exports = function bcCustomer (appConfig) {
     spec: {
       template: {
         spec: {
+          initContainers: [
+            {
+              name: 'wait-for-cloudant',
+              image: 'busybox',
+              env: [{ name: 'READINESS_URL', value: `http://${app.cloudantService.metadata.name}:${appConfig.values.cloudant.ports.port}` }],
+              command: ['sh', '-c', 'while true; do echo "checking cloudant readiness"; wget -q -O - $READINESS_URL | grep Welcome; result=$?; if [ $result -eq 0 ]; then echo "Success: Cloudant is ready!"; break; fi; echo "...not ready yet; sleeping 3 seconds before retry"; sleep 3; done;']
+            }
+          ],
           containers: [
             {
               name: 'populate-db',
