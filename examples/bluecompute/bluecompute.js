@@ -14,16 +14,18 @@
  * limitations under the License.
  */
 
+const solsa = require('solsa')
+const app = new solsa.Bundle()
+module.exports = app
+
+const path = require('path')
+
 const BlueComputeApp = require('./bluecompute-config')
 const appConfig = new BlueComputeApp({
   appName: 'bluecompute',
   commonLabels: { app: 'bluecompute', implementation: 'microprofile' },
-  valuesFile: 'bluecompute-values.yaml'
+  valuesFile: path.join(__dirname, 'bluecompute-values.yaml')
 })
-
-const solsa = require('solsa')
-const app = new solsa.Bundle()
-module.exports = app
 
 const bcClusterConfig = require('./bluecompute-cluster')
 app.config = bcClusterConfig(appConfig)
