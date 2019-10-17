@@ -17,14 +17,14 @@
 /* eslint-disable no-template-curly-in-string */
 // @ts-check
 
-const yaml = require('js-yaml')
+const solsa = require('solsa')
 const fs = require('fs')
 
 class BlueComputeApp {
   constructor ({ appName, commonLabels = {}, valuesFile }) {
     this.appName = appName
     this.commonLabels = commonLabels
-    this.values = yaml.safeLoad(fs.readFileSync(valuesFile).toString()).services
+    this.values = solsa.parseYaml(fs.readFileSync(valuesFile).toString()).services
   }
 
   /**
