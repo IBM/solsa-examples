@@ -25,7 +25,6 @@ let solsa = require('solsa')
 
 /**
  * Instantiate an instance of the kcontainer application.
- * @param name the name of the application instance
  * @param getImage a function mapping from logical image names to concrete image names
  * @returns a SolSA bundle containing the k-container instance
  */
