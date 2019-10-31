@@ -175,3 +175,15 @@ execute the commands
 sosla build instance-sp.js
 solsa push instance-sp.js
 ```
+
+### Deploying Bookinfo on OpenShift
+
+The `productpage` microservice will fail to run (it will enter into a
+CrashLoop) unless it is allowed to execute using the `USER` specified
+in its Dockerfile.  This requires you to grant the default service
+account in the target namespace the `anyuid` SCC. Do this by executing
+the following command:
+```shell
+oc adm policy add-scc-to-user anyuid -z default
+```
+
