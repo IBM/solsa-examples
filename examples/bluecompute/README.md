@@ -96,3 +96,22 @@ You can login to the application using the username `foo` and the password `bar`
 
 You should be able to browse the catalog, order items, and view your
 profile which includes your order history.
+
+### Deploying Bluecompute on OpenShift
+
+Multiple microservices will fail to run correctly unless they are
+allowed to execute using the `USER` specified in their Dockerfile.
+This requires you to grant the default service account in the target
+namespace the `anyuid` SCC. Do this by executing the following
+command:
+```shell
+oc adm policy add-scc-to-user anyuid -z default
+```
+
+The elastic search container requires the `IPC_LOCAL` capability.
+This requires you to grant the default service account in the target
+namespace the `privileged` SCC. Do this by executing the following
+command:
+```shell
+oc adm policy add-scc-to-user privileged -z default
+```
