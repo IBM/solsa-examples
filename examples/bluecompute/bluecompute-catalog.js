@@ -42,7 +42,7 @@ module.exports = function bcCatalog (appConfig) {
       replicas: appConfig.values.elasticsearch.replicaCount,
       template: {
         spec: {
-          volumes: [{ name: 'storage', hostPath: { path: '/var/lib/elasticsearch-catalog' } }],
+          volumes: [{ name: 'storage', emptyDir: {} }],
           containers: [
             {
               name: 'elasticsearch',
