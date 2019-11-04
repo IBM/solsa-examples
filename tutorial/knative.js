@@ -15,11 +15,11 @@
  */
 
 const solsa = require('solsa')
-const bundle = new solsa.Bundle()
-module.exports = bundle
 
-bundle.service = new solsa.KnativeService({ name: 'hello-knative', image: 'docker.io/ibmcom/kn-helloworld', env: { TARGET: 'Knative' } })
-bundle.ingress = bundle.service.getIngress()
+let service = new solsa.KnativeService({ name: 'hello-knative', image: 'docker.io/ibmcom/kn-helloworld', env: { TARGET: 'Knative' } })
+let ingress = service.getIngress()
+
+module.exports = new solsa.Bundle({ service, ingress })
 
 /*
 Try:

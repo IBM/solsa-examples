@@ -132,18 +132,28 @@ solsa yaml hello.js | kubectl delete -f -
 In [bundle.js](bundle.js), we introduce the SolSA `Bundle` class.
 ```javascript
 const solsa = require('solsa')
-const bundle = new solsa.Bundle()
-module.exports = bundle
 
-bundle.service = new solsa.ContainerizedService({ name: 'hello-bundle', image: 'docker.io/ibmcom/kn-helloworld', port: 8080, env: { TARGET: 'Bundle' } })
+let service = new solsa.ContainerizedService({ name: 'hello-bundle', image: 'docker.io/ibmcom/kn-helloworld', port: 8080, env: { TARGET: 'Bundle' } })
+
+module.exports = new solsa.Bundle({ service })
 ```
-In this code, we first construct an instance of the SolSA `Bundle` class and
-export this bundle, then add a `ContainerizedService` to the bundle.
+In this code, we export a SolSA `Bundle` containing a single
+`ContainerizedService`. Compared to the previous example, we add one more
+parameter to `ContainerizedService` specification. The `env` parameter
+optionally provides a list of environment variables set at container
+initialization time.
 
-Compared to the previous example, we add one more parameter to
-`ContainerizedService` specification. The `env` parameter optionally provides a
-list of environment variables set at container initialization time.
+A SolSA solution is either a `Resource` or a `Bundle`. A `ContainerizedService`
+is an example of `Resource`. A `Bundle` is a collection of solutions (resources
+or nested bundles).
 
+Solutions in a bundle may be specified at bundle constructor time and/or later.
+For instance, the export statement in `bundle.js` could be rewritten as follows:
+```javascript
+let bundle = new solsa.Bundle()     // construct empty bundle
+bundle.solutions.service = service  // add service to bundle
+module.exports = bundle             // export bundle
+```
 We synthesize YAML for this example as before:
 ```shell
 solsa yaml bundle.js
@@ -193,11 +203,6 @@ spec:
 ```
 We can see the `TARGET` environment variable has been included as requested.
 
-A SolSA solution is either a `Resource` or a `Bundle`. A `ContainerizedService`
-is an example of `Resource`. A `Bundle` is a collection of solutions. Bundles
-can contain resources as well as nested bundles. To add elements to a `Bundle`,
-we simply add fields to the `Bundle` object.
-
 A SolSA source file must export a solution. The `solsa` CLI synthesizes YAML for
 this solution by, if necessary, implementing a recursive traversal of the
 bundles in the solution.
@@ -207,12 +212,11 @@ bundles in the solution.
 In [ingress.js](ingress.js), we configure an ingress for our containerized
 service.
 ```javascript
-const solsa = require('solsa')
-const bundle = new solsa.Bundle()
-module.exports = bundle
 
-bundle.service = new solsa.ContainerizedService({ name: 'hello-john', image: 'docker.io/ibmcom/kn-helloworld', port: 8080, env: { TARGET: 'John' } })
-bundle.ingress = bundle.service.getIngress()
+let service = new solsa.ContainerizedService({ name: 'hello-john', image: 'docker.io/ibmcom/kn-helloworld', port: 8080, env: { TARGET: 'John' } })
+let ingress = service.getIngress()
+
+module.exports = new solsa.Bundle({ service, ingress })
 ```
 Compared to the previous example, we add an instance of the `Ingress` class to
 the bundle.
@@ -327,10 +331,9 @@ this is handled by the `oc` CLI.
 
 ### Ingress options for Red Hat OpenShift on IBM Cloud
 
-A Red Hat OpenShift on IBM Cloud (ROKS) cluster supports both
-Kubernetes Ingress and OpenShift Routes.  You can choose which type of
-ingress you want to generate by specifying the ingress for the cluster
-as either
+A Red Hat OpenShift on IBM Cloud (ROKS) cluster supports both Kubernetes Ingress
+and OpenShift Routes.  You can choose which type of ingress you want to generate
+by specifying the ingress for the cluster as either
 [iks](https://github.com/IBM/solsa/blob/master/docs/SolSAConfig.md#ibm-cloud-kubernetes-service-standard-cluster)
 or
 [os](https://github.com/IBM/solsa/blob/master/docs/SolSAConfig.md#openshift-cluster)
@@ -342,11 +345,11 @@ In [knative.js](knative.js), we deploy the same container image as a Knative
 service:
 ```javascript
 const solsa = require('solsa')
-const bundle = new solsa.Bundle()
-module.exports = bundle
 
-bundle.service = new solsa.KnativeService({ name: 'hello-knative', image: 'docker.io/ibmcom/kn-helloworld', env: { TARGET: 'Knative' } })
-bundle.ingress = bundle.service.getIngress()
+let service = new solsa.KnativeService({ name: 'hello-knative', image: 'docker.io/ibmcom/kn-helloworld', env: { TARGET: 'Knative' } })
+let ingress = service.getIngress()
+
+module.exports = new solsa.Bundle({ service, ingress })
 ```
 The formula is essentially the same. We replace the `ContainerizedService` class
 with the `KnativeService` class. Here we don't need to specify the port, as
@@ -404,11 +407,13 @@ solsa yaml knative.js | kubectl delete -f -
 In [bookinfo.js](bookinfo.js), we combine four containerized services to build
 one application:
 ```javascript
-bundle.details = new solsa.ContainerizedService({ name: 'details', image: 'istio/examples-bookinfo-details-v1:1.11.0', port: 9080 })
-bundle.ratings = new solsa.ContainerizedService({ name: 'ratings', image: 'istio/examples-bookinfo-ratings-v1:1.11.0', port: 9080 })
-bundle.reviews = new solsa.ContainerizedService({ name: 'reviews', image: 'istio/examples-bookinfo-reviews-v1:1.11.0', port: 9080 })
-bundle.productpage = new solsa.ContainerizedService({ name: 'productpage', image: 'istio/examples-bookinfo-productpage-v1:1.11.0', port: 9080 })
-bundle.ingress = bundle.productpage.getIngress()
+let details = new solsa.ContainerizedService({ name: 'details', image: 'istio/examples-bookinfo-details-v1:1.11.0', port: 9080 })
+let ratings = new solsa.ContainerizedService({ name: 'ratings', image: 'istio/examples-bookinfo-ratings-v1:1.11.0', port: 9080 })
+let reviews = new solsa.ContainerizedService({ name: 'reviews', image: 'istio/examples-bookinfo-reviews-v1:1.11.0', port: 9080 })
+let productpage = new solsa.ContainerizedService({ name: 'productpage', image: 'istio/examples-bookinfo-productpage-v1:1.11.0', port: 9080 })
+let ingress = productpage.getIngress()
+
+module.exports = new solsa.Bundle({ details, ratings, reviews, productpage, ingress })
 ```
 After deployment, the url for the bookinfo application can be obtained as
 follows:
@@ -421,7 +426,7 @@ kubectl get ingress productpage
 In [translator.js](translator.js), we configure an instance of the Watson
 Translator service on the IBM Cloud.
 ```javascript
-bundle.translator = new solsa.LanguageTranslator({ name: 'translator', plan: 'lite' })
+module.exports = new solsa.LanguageTranslator({ name: 'translator', plan: 'lite' })
 ```
 This example assumes that the IBM Cloud Operator has been deployed to the
 current Kubernetes cluster as discussed in
@@ -452,8 +457,10 @@ solsa yaml translator.js | kubectl delete -f -
 In [kakfa.js](kafka.js), we configure an Event Streams instance and create a
 topic on this instance.
 ```javascript
-bundle.kafka = new solsa.EventStreams({ name: 'kafka', plan: 'standard', serviceClassType: 'CF' })
-bundle.topic = bundle.kafka.getTopic({ name: 'topic', topicName: 'MyTopic' })
+let kafka = new solsa.EventStreams({ name: 'kafka', plan: 'standard', serviceClassType: 'CF' })
+let topic = kafka.getTopic({ name: 'topic', topicName: 'MyTopic' })
+
+module.exports = new solsa.Bundle({ kafka, topic })
 ```
 As in the previous example, the credentials for the Event Streams instance are
 stored as Kubernetes secrets.
@@ -494,31 +501,33 @@ an Event Streams instance. SolSA makes it easy to containerize and run this
 producer code as a Kubernetes service on our cluster. In
 [producer.js](producer.js), we do exactly that.
 ```javascript
-bundle.kafka = new solsa.EventStreams({ name: 'kafka', plan: 'standard', serviceClassType: 'CF' }).useExisting()
-bundle.topic = bundle.kafka.getTopic({ name: 'topic', topicName: 'MyTopic' }).useExisting()
+let kafka = new solsa.EventStreams({ name: 'kafka', plan: 'standard', serviceClassType: 'CF' })
+let topic = kafka.getTopic({ name: 'topic', topicName: 'MyTopic' })
 
-bundle.producer = new solsa.ContainerizedService({ name: 'producer', image: 'kafka-producer', build: path.join(__dirname, 'kafka-producer') })
+let producer = new solsa.ContainerizedService({ name: 'producer', image: 'kafka-producer', build: path.join(__dirname, 'kafka-producer') })
 
-bundle.producer.env = {
-  BROKERS: bundle.kafka.getSecret('kafka_brokers_sasl'),
-  USER: bundle.kafka.getSecret('user'),
-  PASSWORD: bundle.kafka.getSecret('password'),
-  TOPIC: bundle.topic.spec.topicName
+producer.env = {
+  BROKERS: kafka.getSecret('kafka_brokers_sasl'),
+  USER: kafka.getSecret('user'),
+  PASSWORD: kafka.getSecret('password'),
+  TOPIC: topic.spec.topicName
 }
-```
-This code first declares the Event Streams instance and topic. This time however
-we append `.useExisting()` to these declarations so that we can input the
-information we need about the instance and topic but omit them from the
-generated YAML.
 
-The `ContainerizedService` configuration is similar to previous examples, except
-for the addition of the `build` parameter. This parameter is the absolute path
-to the Node.js module we want to containerize. As illustrate here, the absolute
-path of the module may be obtained by prefixing the path relative to the current
-module with `__dirname`.
+module.exports = producer
+```
+This code first declares the Event Streams instance and topic.
+
+The `ContainerizedService` configuration for the Kafka producer service is
+similar to previous examples, except for the addition of the `build` parameter.
+This parameter is the absolute path to the Node.js module we want to
+containerize. As illustrate here, the absolute path of the module may be
+obtained by prefixing the path relative to the current module with `__dirname`.
 
 The `env` parameter of the `ContainerizedService` instance makes use of the
 `getSecret` method of the `EventStreams` SolSA class to obtain the credentials.
+
+In this example, we do not export the `kafka` or `topic` resources as we expect
+them to be already deployed by means of the previous example.
 ```shell
 solsa yaml producer.js
 ```
@@ -632,11 +641,13 @@ message sent
 In [consumer.js](consumer.js), we use a Knative service to process the messages
 on an Event Streams topic.
 ```javascript
-bundle.kafka = new solsa.EventStreams({ name: 'kafka', plan: 'standard', serviceClassType: 'CF' }).useExisting()
-bundle.topic = bundle.kafka.getTopic({ name: 'topic', topicName: 'MyTopic' }).useExisting()
+let kafka = new solsa.EventStreams({ name: 'kafka', plan: 'standard', serviceClassType: 'CF' })
+let topic = kafka.getTopic({ name: 'topic', topicName: 'MyTopic' })
 
-bundle.sink = new solsa.KnativeService({ name: 'sink', image: 'gcr.io/knative-releases/github.com/knative/eventing-sources/cmd/event_display' })
-bundle.source = bundle.topic.getSource({ name: 'source', sink: bundle.sink })
+let sink = new solsa.KnativeService({ name: 'sink', image: 'gcr.io/knative-releases/github.com/knative/eventing-sources/cmd/event_display' })
+let source = topic.getSource({ name: 'source', sink })
+
+module.exports = new solsa.Bundle({ sink, source })
 ```
 The code first declares the same Event Streams instance and topic as before,
 then a Knative service, and finally a Kafka Knative event source that binds the

@@ -16,17 +16,17 @@
 
 const path = require('path')
 const solsa = require('solsa')
-const bundle = new solsa.Bundle()
-module.exports = bundle
 
-bundle.kafka = new solsa.EventStreams({ name: 'kafka', plan: 'standard', serviceClassType: 'CF' }).useExisting()
-bundle.topic = bundle.kafka.getTopic({ name: 'topic', topicName: 'MyTopic' }).useExisting()
+let kafka = new solsa.EventStreams({ name: 'kafka', plan: 'standard', serviceClassType: 'CF' })
+let topic = kafka.getTopic({ name: 'topic', topicName: 'MyTopic' })
 
-bundle.producer = new solsa.ContainerizedService({ name: 'producer', image: 'kafka-producer', build: path.join(__dirname, 'kafka-producer') })
+let producer = new solsa.ContainerizedService({ name: 'producer', image: 'kafka-producer', build: path.join(__dirname, 'kafka-producer') })
 
-bundle.producer.env = {
-  BROKERS: bundle.kafka.getSecret('kafka_brokers_sasl'),
-  USER: bundle.kafka.getSecret('user'),
-  PASSWORD: bundle.kafka.getSecret('password'),
-  TOPIC: bundle.topic.spec.topicName
+producer.env = {
+  BROKERS: kafka.getSecret('kafka_brokers_sasl'),
+  USER: kafka.getSecret('user'),
+  PASSWORD: kafka.getSecret('password'),
+  TOPIC: topic.spec.topicName
 }
+
+module.exports = producer
