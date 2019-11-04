@@ -10,7 +10,6 @@ spec:
     server: https://kubernetes.default.svc
   project: default
   source:
-    path: .
     repoURL: https://github.com/IBM/solsa-examples.git
     path: examples/k-container
     plugin:
