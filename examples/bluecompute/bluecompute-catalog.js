@@ -20,9 +20,7 @@
 const solsa = require('solsa')
 
 module.exports = function bcCatalog (appConfig) {
-  const app = new solsa.Bundle()
-
-  app.elasticsearchBinding_Secret = new solsa.core.v1.Secret({
+  let elasticsearchSecret = new solsa.core.v1.Secret({
     metadata: {
       name: appConfig.getInstanceName('elasticsearch-binding'),
       labels: appConfig.addCommonLabelsTo({ micro: 'catalog', tier: 'backend' })
@@ -33,7 +31,7 @@ module.exports = function bcCatalog (appConfig) {
     }
   })
 
-  app.catalogElasticsearch_Deployment = new solsa.extensions.v1beta1.Deployment({
+  let elasticsearchDeployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('catalog-elasticsearch'),
       labels: appConfig.addCommonLabelsTo({ tier: 'backend', micro: 'catalog', datastore: 'elasticsearch' })
@@ -76,11 +74,11 @@ module.exports = function bcCatalog (appConfig) {
       }
     }
   })
-  app.catalogElasticsearch_Deployment.propogateLabels()
-  app.catalogElasticsearch_Service = app.catalogElasticsearch_Deployment.getService()
+  elasticsearchDeployment.propogateLabels()
+  let elasticsearchService = elasticsearchDeployment.getService()
 
   const invHostAndPort = `${appConfig.getInstanceName('inventory')}:${appConfig.values.inventory.ports.http}`
-  app.catalog_ConfigMap = new solsa.core.v1.ConfigMap({
+  let catalogConfigMap = new solsa.core.v1.ConfigMap({
     metadata: {
       name: appConfig.getInstanceName('catalog-config'),
       labels: appConfig.addCommonLabelsTo({ micro: 'catalog', tier: 'backend' })
@@ -91,7 +89,7 @@ module.exports = function bcCatalog (appConfig) {
     }
   })
 
-  app.catalog_Deployment = new solsa.extensions.v1beta1.Deployment({
+  let catalogDeployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('catalog'),
       labels: appConfig.addCommonLabelsTo({ tier: 'backend', micro: 'catalog' })
@@ -100,7 +98,7 @@ module.exports = function bcCatalog (appConfig) {
       replicas: appConfig.values.catalog.replicaCount,
       template: {
         spec: {
-          volumes: [{ name: 'config-volume', configMap: { name: app.catalog_ConfigMap.metadata.name } }],
+          volumes: [{ name: 'config-volume', configMap: { name: catalogConfigMap.metadata.name } }],
           containers: [
             {
               name: 'catalog',
@@ -129,7 +127,7 @@ module.exports = function bcCatalog (appConfig) {
                 {
                   name: 'elasticsearch_url',
                   valueFrom: {
-                    secretKeyRef: { name: app.elasticsearchBinding_Secret.metadata.name, key: 'binding' }
+                    secretKeyRef: { name: elasticsearchSecret.metadata.name, key: 'binding' }
                   }
                 },
                 { name: 'zipkinHost', value: `${appConfig.getInstanceName('zipkin')}` },
@@ -182,8 +180,8 @@ module.exports = function bcCatalog (appConfig) {
       }
     }
   })
-  app.catalog_Deployment.propogateLabels()
-  app.catalog_Service = app.catalog_Deployment.getService()
+  catalogDeployment.propogateLabels()
+  let catalogService = catalogDeployment.getService()
 
-  return app
+  return new solsa.Bundle({ elasticsearchSecret, elasticsearchDeployment, elasticsearchService, catalogConfigMap, catalogDeployment, catalogService })
 }

@@ -15,8 +15,6 @@
  */
 
 const solsa = require('solsa')
-const app = new solsa.Bundle()
-module.exports = app
 
 const path = require('path')
 
@@ -27,25 +25,12 @@ const appConfig = new BlueComputeApp({
   valuesFile: path.join(__dirname, 'bluecompute-values.yaml')
 })
 
-const bcClusterConfig = require('./bluecompute-cluster')
-app.config = bcClusterConfig(appConfig)
-
-const bcAuth = require('./bluecompute-auth')
-app.auth = bcAuth(appConfig)
-
-const bcCatalog = require('./bluecompute-catalog')
-app.catalog = bcCatalog(appConfig)
-
-const bcCustomer = require('./bluecompute-customer')
-app.customer = bcCustomer(appConfig)
-
-const bcOrders = require('./bluecompute-orders')
-app.orders = bcOrders(appConfig)
-
-const bcInventory = require('./bluecompute-inventory')
-app.inventory = bcInventory(appConfig)
-
-const bcWeb = require('./bluecompute-web')
-app.web = bcWeb(appConfig)
-
-app.ingress = app.web.web_Service.getIngress({ vhost: appConfig.appName })
+module.exports = new solsa.Bundle({
+  config: require('./bluecompute-cluster')(appConfig),
+  auth: require('./bluecompute-auth')(appConfig),
+  catalog: require('./bluecompute-catalog')(appConfig),
+  customer: require('./bluecompute-customer')(appConfig),
+  orders: require('./bluecompute-orders')(appConfig),
+  inventory: require('./bluecompute-inventory')(appConfig),
+  web: require('./bluecompute-web')(appConfig)
+})

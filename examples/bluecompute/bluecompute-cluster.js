@@ -20,10 +20,8 @@
 const solsa = require('solsa')
 
 module.exports = function bcClusterConfig (appConfig) {
-  const app = new solsa.Bundle()
-
   // Initialization Job to create keystore secret
-  app.keystoreJob = new solsa.batch.v1.Job({
+  let keystoreJob = new solsa.batch.v1.Job({
     metadata: {
       name: appConfig.getInstanceName('keystore-job'),
       labels: appConfig.addCommonLabelsTo({})
@@ -51,12 +49,12 @@ module.exports = function bcClusterConfig (appConfig) {
       }
     }
   })
-  app.keystoreJob.propogateLabels()
+  keystoreJob.propogateLabels()
 
   /*
    * Add needed capabilities to default ServiceAccount in the deployment namespace
    */
-  app.podSecurityPolicy = new solsa.extensions.v1beta1.PodSecurityPolicy({
+  let podSecurityPolicy = new solsa.extensions.v1beta1.PodSecurityPolicy({
     metadata: {
       name: appConfig.getInstanceName('pod-security-policy'),
       labels: appConfig.addCommonLabelsTo({})
@@ -72,7 +70,7 @@ module.exports = function bcClusterConfig (appConfig) {
       volumes: [ '*' ]
     }
   })
-  app.role = new solsa.rbac.v1beta1.Role({
+  let role = new solsa.rbac.v1beta1.Role({
     metadata: {
       name: appConfig.getInstanceName('role'),
       labels: appConfig.addCommonLabelsTo({})
@@ -81,7 +79,7 @@ module.exports = function bcClusterConfig (appConfig) {
       {
         apiGroups: [ 'extensions' ],
         resources: [ 'podsecuritypolicies' ],
-        resourceNames: [ app.podSecurityPolicy.metadata.name ],
+        resourceNames: [ podSecurityPolicy.metadata.name ],
         verbs: [ 'use' ]
       },
       {
@@ -91,7 +89,7 @@ module.exports = function bcClusterConfig (appConfig) {
       }
     ]
   })
-  app.roleBinding = new solsa.rbac.v1beta1.RoleBinding({
+  let roleBinding = new solsa.rbac.v1beta1.RoleBinding({
     metadata: {
       name: appConfig.getInstanceName('role-binding'),
       labels: appConfig.addCommonLabelsTo({})
@@ -100,9 +98,9 @@ module.exports = function bcClusterConfig (appConfig) {
     roleRef: {
       apiGroup: 'rbac.authorization.k8s.io',
       kind: 'Role',
-      name: app.role.metadata.name
+      name: role.metadata.name
     }
   })
 
-  return app
+  return new solsa.Bundle({ keystoreJob, podSecurityPolicy, role, roleBinding })
 }

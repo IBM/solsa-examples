@@ -20,9 +20,7 @@
 const solsa = require('solsa')
 
 module.exports = function bcInventory (appConfig) {
-  const app = new solsa.Bundle()
-
-  app.inventoryMysqlSecret = new solsa.core.v1.Secret({
+  let inventoryMysqlSecret = new solsa.core.v1.Secret({
     metadata: {
       name: appConfig.getInstanceName('inventory-mysql-secret'),
       labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend' })
@@ -31,7 +29,7 @@ module.exports = function bcInventory (appConfig) {
     data: { 'mysql-password': solsa.base64Encode(appConfig.values.mysql.db.mysqlPassword) }
   })
 
-  app.mysql_Secret = new solsa.core.v1.Secret({
+  let mysqlSecret = new solsa.core.v1.Secret({
     metadata: {
       name: appConfig.getInstanceName('mysql'),
       labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend' })
@@ -43,7 +41,7 @@ module.exports = function bcInventory (appConfig) {
     }
   })
 
-  app.inventoryData_ConfigMap = new solsa.core.v1.ConfigMap({
+  let inventoryDataConfigMap = new solsa.core.v1.ConfigMap({
     metadata: {
       name: appConfig.getInstanceName('inventory-data'),
       labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend' })
@@ -75,7 +73,7 @@ module.exports = function bcInventory (appConfig) {
     }
   })
 
-  app.mysql_PersistentVolumeClaim = new solsa.core.v1.PersistentVolumeClaim({
+  let mysqlPVC = new solsa.core.v1.PersistentVolumeClaim({
     metadata: {
       name: appConfig.getInstanceName('mysql'),
       labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend' })
@@ -86,7 +84,7 @@ module.exports = function bcInventory (appConfig) {
     }
   })
 
-  app.mysql_Deployment = new solsa.extensions.v1beta1.Deployment({
+  let mysqlDeployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('mysql'),
       labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend', service: 'mysql' })
@@ -112,11 +110,11 @@ module.exports = function bcInventory (appConfig) {
               env: [
                 {
                   name: 'MYSQL_ROOT_PASSWORD',
-                  valueFrom: { secretKeyRef: { name: app.mysql_Secret.metadata.name, key: 'mysql-root-password' } }
+                  valueFrom: { secretKeyRef: { name: mysqlSecret.metadata.name, key: 'mysql-root-password' } }
                 },
                 {
                   name: 'MYSQL_PASSWORD',
-                  valueFrom: { secretKeyRef: { name: app.mysql_Secret.metadata.name, key: 'mysql-password' } }
+                  valueFrom: { secretKeyRef: { name: mysqlSecret.metadata.name, key: 'mysql-password' } }
                 },
                 { name: 'MYSQL_USER', value: `${appConfig.values.mysql.db.mysqlUser}` },
                 { name: 'MYSQL_DATABASE', value: `${appConfig.values.mysql.db.mysqlDatabase}` }
@@ -149,10 +147,10 @@ module.exports = function bcInventory (appConfig) {
       }
     }
   })
-  app.mysql_Deployment.propogateLabels()
-  app.mysql_Service = app.mysql_Deployment.getService()
+  mysqlDeployment.propogateLabels()
+  let mysqlService = mysqlDeployment.getService()
 
-  app.inventory_Deployment = new solsa.extensions.v1beta1.Deployment({
+  let inventoryDeployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('inventory'),
       labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend', service: 'inventory' })
@@ -183,7 +181,7 @@ module.exports = function bcInventory (appConfig) {
               env: [
                 {
                   name: 'jdbcURL',
-                  value: `jdbc:mysql://${app.mysql_Service.metadata.name}:${appConfig.values.mysql.ports.sql}/${appConfig.values.mysql.db.mysqlDatabase}?useSSL=false`
+                  value: `jdbc:mysql://${mysqlService.metadata.name}:${appConfig.values.mysql.ports.sql}/${appConfig.values.mysql.db.mysqlDatabase}?useSSL=false`
                 },
                 { name: 'rabbit', value: `${appConfig.getInstanceName('rabbitmq')}` },
                 { name: 'PORT', value: `${appConfig.values.inventory.ports.http}` },
@@ -197,22 +195,22 @@ module.exports = function bcInventory (appConfig) {
       }
     }
   })
-  app.inventory_Deployment.propogateLabels()
-  app.inventory_Service = app.inventory_Deployment.getService()
+  inventoryDeployment.propogateLabels()
+  let inventoryService = inventoryDeployment.getService()
 
   const jobEnv = [
-    { name: 'MYSQL_HOST', value: app.mysql_Service.metadata.name },
+    { name: 'MYSQL_HOST', value: mysqlService.metadata.name },
     { name: 'MYSQL_PORT', value: `${appConfig.values.mysql.ports.sql}` },
     { name: 'MYSQL_DATABASE', value: `${appConfig.values.mysql.db.mysqlDatabase}` },
     { name: 'MYSQL_USER', value: 'root' },
     {
       name: 'MYSQL_PASSWORD',
       valueFrom: {
-        secretKeyRef: { name: app.inventoryMysqlSecret.metadata.name, key: 'mysql-password' }
+        secretKeyRef: { name: inventoryMysqlSecret.metadata.name, key: 'mysql-password' }
       }
     }
   ]
-  app.inventoryJob = new solsa.batch.v1.Job({
+  let inventoryJob = new solsa.batch.v1.Job({
     metadata: {
       name: appConfig.getInstanceName('inventory-job'),
       labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend' })
@@ -221,7 +219,7 @@ module.exports = function bcInventory (appConfig) {
       template: {
         spec: {
           restartPolicy: 'Never',
-          volumes: [{ name: 'inventory-data', configMap: { name: app.inventoryData_ConfigMap.metadata.name } }],
+          volumes: [{ name: 'inventory-data', configMap: { name: inventoryDataConfigMap.metadata.name } }],
           initContainers: [
             {
               name: 'wait-for-mysql',
@@ -251,5 +249,5 @@ module.exports = function bcInventory (appConfig) {
     }
   })
 
-  return app
+  return new solsa.Bundle({ inventoryMysqlSecret, mysqlSecret, inventoryDataConfigMap, mysqlPVC, mysqlDeployment, mysqlService, inventoryDeployment, inventoryService, inventoryJob })
 }

@@ -20,10 +20,8 @@
 const solsa = require('solsa')
 
 module.exports = function bcCustomer (appConfig) {
-  const app = new solsa.Bundle()
-
   // Cloudant database used by catalog microservice
-  app.cloudantBinding_Secret = new solsa.core.v1.Secret({
+  let cloudantSecret = new solsa.core.v1.Secret({
     metadata: {
       name: appConfig.getInstanceName('cloudant-secret'),
       labels: appConfig.addCommonLabelsTo({ micro: 'customer', tier: 'backend' })
@@ -31,7 +29,7 @@ module.exports = function bcCustomer (appConfig) {
     type: 'Opaque',
     data: { 'password': solsa.base64Encode(appConfig.values.cloudant.rootPassword) }
   })
-  app.cloudant_Deployment = new solsa.extensions.v1beta1.Deployment({
+  let cloudantDeployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('cloudant'),
       labels: appConfig.addCommonLabelsTo({ micro: 'customer', service: 'cloudant-db', tier: 'backend' })
@@ -47,7 +45,7 @@ module.exports = function bcCustomer (appConfig) {
               ports: [ { containerPort: appConfig.values.cloudant.ports.port } ],
               env: [{
                 name: 'CLOUDANT_ROOT_PASSWORD',
-                valueFrom: { secretKeyRef: { name: app.cloudantBinding_Secret.metadata.name, key: 'password' } }
+                valueFrom: { secretKeyRef: { name: cloudantSecret.metadata.name, key: 'password' } }
               }
               ]
             }
@@ -56,10 +54,10 @@ module.exports = function bcCustomer (appConfig) {
       }
     }
   })
-  app.cloudant_Deployment.propogateLabels()
-  app.cloudantService = app.cloudant_Deployment.getService()
+  cloudantDeployment.propogateLabels()
+  let cloudantService = cloudantDeployment.getService()
 
-  app.populateCloudant_Job = new solsa.batch.v1.Job({
+  let populateCloudantJob = new solsa.batch.v1.Job({
     metadata: {
       name: appConfig.getInstanceName('populate-cloudant'),
       labels: appConfig.addCommonLabelsTo({ micro: 'customer', tier: 'backend' })
@@ -71,7 +69,7 @@ module.exports = function bcCustomer (appConfig) {
             {
               name: 'wait-for-cloudant',
               image: 'busybox',
-              env: [{ name: 'READINESS_URL', value: `http://${app.cloudantService.metadata.name}:${appConfig.values.cloudant.ports.port}` }],
+              env: [{ name: 'READINESS_URL', value: `http://${cloudantService.metadata.name}:${appConfig.values.cloudant.ports.port}` }],
               command: ['sh', '-c', 'while true; do echo "checking cloudant readiness"; wget -q -O - $READINESS_URL | grep Welcome; result=$?; if [ $result -eq 0 ]; then echo "Success: Cloudant is ready!"; break; fi; echo "...not ready yet; sleeping 3 seconds before retry"; sleep 3; done;']
             }
           ],
@@ -79,7 +77,7 @@ module.exports = function bcCustomer (appConfig) {
             {
               name: 'populate-db',
               image: `${appConfig.values.customer.cloudantInitJob.image.repository}:${appConfig.values.customer.cloudantInitJob.image.tag}`,
-              args: [ app.cloudantService.metadata.name, `${appConfig.values.cloudant.ports.port}` ]
+              args: [ cloudantService.metadata.name, `${appConfig.values.cloudant.ports.port}` ]
             }
           ],
           restartPolicy: 'Never'
@@ -88,8 +86,8 @@ module.exports = function bcCustomer (appConfig) {
     }
   })
 
-  const cloudantHostAndPort = `${app.cloudantService.metadata.name}:${appConfig.values.cloudant.ports.port}`
-  app.customer_ConfigMap = new solsa.core.v1.ConfigMap({
+  const cloudantHostAndPort = `${cloudantService.metadata.name}:${appConfig.values.cloudant.ports.port}`
+  let customerConfigMap = new solsa.core.v1.ConfigMap({
     metadata: {
       name: appConfig.getInstanceName('customer-config'),
       labels: appConfig.addCommonLabelsTo({ tier: 'backend', micro: 'customer' })
@@ -100,7 +98,7 @@ module.exports = function bcCustomer (appConfig) {
   })
 
   const authHostAndPort = `${appConfig.getInstanceName('auth')}:${appConfig.values.auth.ports.https}`
-  app.customer_Deployment = new solsa.extensions.v1beta1.Deployment({
+  let customerDeployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('customer'),
       labels: appConfig.addCommonLabelsTo({ micro: 'customer', service: 'server', tier: 'backend' })
@@ -111,7 +109,7 @@ module.exports = function bcCustomer (appConfig) {
         spec: {
           volumes: [
             { name: 'keystorevol', secret: { secretName: 'keystoresecret' } },
-            { name: 'config-volume', configMap: { name: app.customer_ConfigMap.metadata.name } }
+            { name: 'config-volume', configMap: { name: customerConfigMap.metadata.name } }
           ],
           containers: [
             {
@@ -136,7 +134,7 @@ module.exports = function bcCustomer (appConfig) {
                 { name: 'jwksIssuer', value: `https://${authHostAndPort}/oidc/endpoint/OP` },
                 { name: 'administratorRealm', value: `user:https://${authHostAndPort}/oidc/endpoint/OP/user` },
                 { name: 'auth_health', value: `https://${authHostAndPort}/health` },
-                { name: 'host', value: `${app.cloudantService.metadata.name}` },
+                { name: 'host', value: `${cloudantService.metadata.name}` },
                 { name: 'PORT', value: `${appConfig.values.customer.ports.http}` },
                 { name: 'RELEASE_NAME', value: appConfig.appName },
                 { name: 'jwtid', value: appConfig.values.customer.jwt.id },
@@ -154,8 +152,8 @@ module.exports = function bcCustomer (appConfig) {
       }
     }
   })
-  app.customer_Deployment.propogateLabels()
-  app.customer_Service = app.customer_Deployment.getService()
+  customerDeployment.propogateLabels()
+  let customerService = customerDeployment.getService()
 
-  return app
+  return new solsa.Bundle({ cloudantSecret, cloudantDeployment, cloudantService, populateCloudantJob, customerConfigMap, customerDeployment, customerService })
 }
