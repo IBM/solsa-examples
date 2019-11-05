@@ -21,7 +21,7 @@ const solsa = require('solsa')
 const app = new solsa.Bundle()
 module.exports = app
 
-app.bluecomputePodSecurityPolicy = new solsa.extensions.v1beta1.PodSecurityPolicy({
+app.solutions.bluecomputePodSecurityPolicy = new solsa.extensions.v1beta1.PodSecurityPolicy({
   metadata: {
     name: 'bluecompute-pod-security-policy',
     labels: {
@@ -42,7 +42,7 @@ app.bluecomputePodSecurityPolicy = new solsa.extensions.v1beta1.PodSecurityPolic
   }
 })
 
-app.bluecomputeGrafanaSecret = new solsa.core.v1.Secret({
+app.solutions.bluecomputeGrafanaSecret = new solsa.core.v1.Secret({
   metadata: {
     labels: {
       app: 'bluecompute-grafana',
@@ -57,7 +57,7 @@ app.bluecomputeGrafanaSecret = new solsa.core.v1.Secret({
   data: { username: 'YWRtaW4=', password: 'YWRtaW4=' }
 })
 
-app.bluecomputeBindingRefarchComposeForElasticsearch_Secret = new solsa.core.v1.Secret({
+app.solutions.bluecomputeBindingRefarchComposeForElasticsearch_Secret = new solsa.core.v1.Secret({
   metadata: {
     name: 'bluecompute-binding-refarch-compose-for-elasticsearch',
     namespace: 'bluecompute',
@@ -73,7 +73,7 @@ app.bluecomputeBindingRefarchComposeForElasticsearch_Secret = new solsa.core.v1.
   }
 })
 
-app.bluecomputeInventoryMysqlSecret = new solsa.core.v1.Secret({
+app.solutions.bluecomputeInventoryMysqlSecret = new solsa.core.v1.Secret({
   metadata: {
     name: 'bluecompute-inventory-mysql-secret',
     labels: {
@@ -86,7 +86,7 @@ app.bluecomputeInventoryMysqlSecret = new solsa.core.v1.Secret({
   data: { 'mysql-password': 'cGFzc3dvcmQ=' }
 })
 
-app.bluecomputeInventorydb_Secret = new solsa.core.v1.Secret({
+app.solutions.bluecomputeInventorydb_Secret = new solsa.core.v1.Secret({
   metadata: {
     name: 'bluecompute-inventorydb',
     labels: {
@@ -101,7 +101,7 @@ app.bluecomputeInventorydb_Secret = new solsa.core.v1.Secret({
   data: { 'mysql-root-password': 'cGFzc3dvcmQ=', 'mysql-password': 'cGFzc3dvcmQ=' }
 })
 
-app.bluecomputeMariadb_Secret = new solsa.core.v1.Secret({
+app.solutions.bluecomputeMariadb_Secret = new solsa.core.v1.Secret({
   metadata: {
     name: 'bluecompute-mariadb',
     labels: { app: 'mariadb', chart: 'mariadb-5.2.2', release: 'bluecompute', heritage: 'Tiller' }
@@ -110,7 +110,7 @@ app.bluecomputeMariadb_Secret = new solsa.core.v1.Secret({
   data: { 'mariadb-root-password': 'cGFzc3dvcmQ=', 'mariadb-password': 'cGFzc3dvcmQ=' }
 })
 
-app.bluecomputeMysql_Secret = new solsa.core.v1.Secret({
+app.solutions.bluecomputeMysql_Secret = new solsa.core.v1.Secret({
   metadata: {
     name: 'bluecompute-mysql',
     labels: {
@@ -124,7 +124,7 @@ app.bluecomputeMysql_Secret = new solsa.core.v1.Secret({
   data: { 'mysql-root-password': 'cGFzc3dvcmQ=', 'mysql-password': 'cGFzc3dvcmQ=' }
 })
 
-app.bluecomputeOrdersMariadbSecret = new solsa.core.v1.Secret({
+app.solutions.bluecomputeOrdersMariadbSecret = new solsa.core.v1.Secret({
   metadata: {
     name: 'bluecompute-orders-mariadb-secret',
     labels: {
@@ -137,7 +137,7 @@ app.bluecomputeOrdersMariadbSecret = new solsa.core.v1.Secret({
   data: { 'mariadb-password': 'cGFzc3dvcmQ=' }
 })
 
-app.bluecomputeOrdersdb_Secret = new solsa.core.v1.Secret({
+app.solutions.bluecomputeOrdersdb_Secret = new solsa.core.v1.Secret({
   metadata: {
     name: 'bluecompute-ordersdb',
     labels: {
@@ -152,7 +152,7 @@ app.bluecomputeOrdersdb_Secret = new solsa.core.v1.Secret({
   data: { 'mysql-root-password': 'cGFzc3dvcmQ=', 'mysql-password': 'cGFzc3dvcmQ=' }
 })
 
-app.bluecomputeCatalogConfig_ConfigMap = new solsa.core.v1.ConfigMap({
+app.solutions.bluecomputeCatalogConfig_ConfigMap = new solsa.core.v1.ConfigMap({
   metadata: { name: 'bluecompute-catalog-config' },
   data: {
     'jvm.options': '\n' +
@@ -160,14 +160,14 @@ app.bluecomputeCatalogConfig_ConfigMap = new solsa.core.v1.ConfigMap({
   }
 })
 
-app.bluecomputeCustomerConfig_ConfigMap = new solsa.core.v1.ConfigMap({
+app.solutions.bluecomputeCustomerConfig_ConfigMap = new solsa.core.v1.ConfigMap({
   metadata: { name: 'bluecompute-customer-config' },
   data: {
     'jvm.options': '-Dapplication.rest.client.CloudantClientService/mp-rest/url=http://bluecompute-cloudant-service:80\n'
   }
 })
 
-app.bluecomputePrometheusAlertrules_ConfigMap = new solsa.core.v1.ConfigMap({
+app.solutions.bluecomputePrometheusAlertrules_ConfigMap = new solsa.core.v1.ConfigMap({
   metadata: {
     labels: {
       app: 'bluecompute-prometheus',
@@ -181,7 +181,7 @@ app.bluecomputePrometheusAlertrules_ConfigMap = new solsa.core.v1.ConfigMap({
   data: { 'alert.rules': '' }
 })
 
-app.bluecomputePrometheusAlertmanager_ConfigMap = new solsa.core.v1.ConfigMap({
+app.solutions.bluecomputePrometheusAlertmanager_ConfigMap = new solsa.core.v1.ConfigMap({
   metadata: {
     labels: {
       app: 'bluecompute-prometheus',
@@ -204,7 +204,7 @@ app.bluecomputePrometheusAlertmanager_ConfigMap = new solsa.core.v1.ConfigMap({
   }
 })
 
-app.bluecomputeGrafana_ConfigMap = new solsa.core.v1.ConfigMap({
+app.solutions.bluecomputeGrafana_ConfigMap = new solsa.core.v1.ConfigMap({
   metadata: {
     labels: {
       app: 'bluecompute-grafana',
@@ -220,7 +220,7 @@ app.bluecomputeGrafana_ConfigMap = new solsa.core.v1.ConfigMap({
   }
 })
 
-app.bluecomputeGrafanaDashboards_ConfigMap = new solsa.core.v1.ConfigMap({
+app.solutions.bluecomputeGrafanaDashboards_ConfigMap = new solsa.core.v1.ConfigMap({
   metadata: {
     labels: {
       app: 'bluecompute-grafana',
@@ -240,7 +240,7 @@ app.bluecomputeGrafanaDashboards_ConfigMap = new solsa.core.v1.ConfigMap({
   }
 })
 
-app.bluecomputeGrafanaEntryConfig_ConfigMap = new solsa.core.v1.ConfigMap({
+app.solutions.bluecomputeGrafanaEntryConfig_ConfigMap = new solsa.core.v1.ConfigMap({
   metadata: {
     labels: {
       app: 'bluecompute-grafana',
@@ -260,7 +260,7 @@ app.bluecomputeGrafanaEntryConfig_ConfigMap = new solsa.core.v1.ConfigMap({
   }
 })
 
-app.bluecomputeGrafanaDsEntryConfig_ConfigMap = new solsa.core.v1.ConfigMap({
+app.solutions.bluecomputeGrafanaDsEntryConfig_ConfigMap = new solsa.core.v1.ConfigMap({
   metadata: {
     labels: {
       app: 'bluecompute-grafana',
@@ -297,7 +297,7 @@ app.bluecomputeGrafanaDsEntryConfig_ConfigMap = new solsa.core.v1.ConfigMap({
   }
 })
 
-app.bluecomputePrometheus_ConfigMap = new solsa.core.v1.ConfigMap({
+app.solutions.bluecomputePrometheus_ConfigMap = new solsa.core.v1.ConfigMap({
   metadata: {
     labels: {
       app: 'bluecompute-prometheus',
@@ -313,7 +313,7 @@ app.bluecomputePrometheus_ConfigMap = new solsa.core.v1.ConfigMap({
   }
 })
 
-app.bluecomputeInventoryData_ConfigMap = new solsa.core.v1.ConfigMap({
+app.solutions.bluecomputeInventoryData_ConfigMap = new solsa.core.v1.ConfigMap({
   metadata: {
     name: 'bluecompute-inventory-data',
     labels: {
@@ -349,7 +349,7 @@ app.bluecomputeInventoryData_ConfigMap = new solsa.core.v1.ConfigMap({
   }
 })
 
-app.bluecomputeMariadb_ConfigMap = new solsa.core.v1.ConfigMap({
+app.solutions.bluecomputeMariadb_ConfigMap = new solsa.core.v1.ConfigMap({
   metadata: {
     name: 'bluecompute-mariadb',
     labels: {
@@ -387,7 +387,7 @@ app.bluecomputeMariadb_ConfigMap = new solsa.core.v1.ConfigMap({
   }
 })
 
-app.bluecomputeMariadbTests_ConfigMap = new solsa.core.v1.ConfigMap({
+app.solutions.bluecomputeMariadbTests_ConfigMap = new solsa.core.v1.ConfigMap({
   metadata: { name: 'bluecompute-mariadb-tests' },
   data: {
     'run.sh': '@test "Testing MariaDB is accessible" {\n' +
@@ -396,7 +396,7 @@ app.bluecomputeMariadbTests_ConfigMap = new solsa.core.v1.ConfigMap({
   }
 })
 
-app.bluecomputeMysqlTest_ConfigMap = new solsa.core.v1.ConfigMap({
+app.solutions.bluecomputeMysqlTest_ConfigMap = new solsa.core.v1.ConfigMap({
   metadata: {
     name: 'bluecompute-mysql-test',
     labels: {
@@ -413,7 +413,7 @@ app.bluecomputeMysqlTest_ConfigMap = new solsa.core.v1.ConfigMap({
   }
 })
 
-app.bluecomputeOrdersData_ConfigMap = new solsa.core.v1.ConfigMap({
+app.solutions.bluecomputeOrdersData_ConfigMap = new solsa.core.v1.ConfigMap({
   metadata: {
     name: 'bluecompute-orders-data',
     labels: {
@@ -435,7 +435,7 @@ app.bluecomputeOrdersData_ConfigMap = new solsa.core.v1.ConfigMap({
   }
 })
 
-app.bluecomputeWebConfig_ConfigMap = new solsa.core.v1.ConfigMap({
+app.solutions.bluecomputeWebConfig_ConfigMap = new solsa.core.v1.ConfigMap({
   metadata: {
     labels: {
       app: 'bluecompute',
@@ -469,7 +469,7 @@ app.bluecomputeWebConfig_ConfigMap = new solsa.core.v1.ConfigMap({
   }
 })
 
-app.bluecomputePrometheus_ClusterRole = new solsa.rbac.v1beta1.ClusterRole({
+app.solutions.bluecomputePrometheus_ClusterRole = new solsa.rbac.v1beta1.ClusterRole({
   metadata: {
     labels: {
       app: 'bluecompute-prometheus',
@@ -491,7 +491,7 @@ app.bluecomputePrometheus_ClusterRole = new solsa.rbac.v1beta1.ClusterRole({
   ]
 })
 
-app.bluecomputeClusterRole = new solsa.rbac.v1beta1.ClusterRole({
+app.solutions.bluecomputeClusterRole = new solsa.rbac.v1beta1.ClusterRole({
   metadata: {
     name: 'bluecompute-cluster-role',
     labels: {
@@ -510,7 +510,7 @@ app.bluecomputeClusterRole = new solsa.rbac.v1beta1.ClusterRole({
   ]
 })
 
-app.bluecomputePrometheus_ClusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
+app.solutions.bluecomputePrometheus_ClusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
   metadata: {
     labels: {
       app: 'bluecompute-prometheus',
@@ -529,13 +529,13 @@ app.bluecomputePrometheus_ClusterRoleBinding = new solsa.rbac.v1beta1.ClusterRol
   subjects: [ { kind: 'ServiceAccount', name: 'default', namespace: 'bluecompute' } ]
 })
 
-app.bluecomputeFabric8Rbac_ClusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
+app.solutions.bluecomputeFabric8Rbac_ClusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
   metadata: { name: 'bluecompute-fabric8-rbac' },
   subjects: [ { kind: 'ServiceAccount', name: 'default', namespace: 'bluecompute' } ],
   roleRef: { kind: 'ClusterRole', name: 'cluster-admin', apiGroup: 'rbac.authorization.k8s.io' }
 })
 
-app.bluecomputeClusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
+app.solutions.bluecomputeClusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
   metadata: {
     name: 'bluecompute-cluster-role-binding',
     labels: {
@@ -552,7 +552,7 @@ app.bluecomputeClusterRoleBinding = new solsa.rbac.v1beta1.ClusterRoleBinding({
   }
 })
 
-app.bluecomputeAuth_Service = new solsa.core.v1.Service({
+app.solutions.bluecomputeAuth_Service = new solsa.core.v1.Service({
   metadata: {
     name: 'bluecompute-auth',
     labels: {
@@ -574,7 +574,7 @@ app.bluecomputeAuth_Service = new solsa.core.v1.Service({
   }
 })
 
-app.bluecomputeCatalog_Service = new solsa.core.v1.Service({
+app.solutions.bluecomputeCatalog_Service = new solsa.core.v1.Service({
   metadata: {
     annotations: { bluecompute: 'true' },
     name: 'bluecompute-catalog',
@@ -595,7 +595,7 @@ app.bluecomputeCatalog_Service = new solsa.core.v1.Service({
   }
 })
 
-app.bluecomputeCloudantService = new solsa.core.v1.Service({
+app.solutions.bluecomputeCloudantService = new solsa.core.v1.Service({
   metadata: {
     name: 'bluecompute-cloudant-service',
     labels: { chart: 'customer-0.0.1', release: 'bluecompute', implementation: 'microprofile' }
@@ -612,7 +612,7 @@ app.bluecomputeCloudantService = new solsa.core.v1.Service({
   }
 })
 
-app.bluecomputeCustomer_Service = new solsa.core.v1.Service({
+app.solutions.bluecomputeCustomer_Service = new solsa.core.v1.Service({
   metadata: {
     name: 'bluecompute-customer',
     labels: {
@@ -634,7 +634,7 @@ app.bluecomputeCustomer_Service = new solsa.core.v1.Service({
   }
 })
 
-app.bluecomputePrometheusAlertmanager_Service = new solsa.core.v1.Service({
+app.solutions.bluecomputePrometheusAlertmanager_Service = new solsa.core.v1.Service({
   metadata: {
     labels: {
       app: 'bluecompute-prometheus-alertmanager',
@@ -656,7 +656,7 @@ app.bluecomputePrometheusAlertmanager_Service = new solsa.core.v1.Service({
   }
 })
 
-app.bluecomputeGrafana_Service = new solsa.core.v1.Service({
+app.solutions.bluecomputeGrafana_Service = new solsa.core.v1.Service({
   metadata: {
     labels: {
       app: 'bluecompute-grafana',
@@ -674,7 +674,7 @@ app.bluecomputeGrafana_Service = new solsa.core.v1.Service({
   }
 })
 
-app.bluecomputePrometheus_Service = new solsa.core.v1.Service({
+app.solutions.bluecomputePrometheus_Service = new solsa.core.v1.Service({
   metadata: {
     labels: {
       app: 'bluecompute-prometheus',
@@ -692,7 +692,7 @@ app.bluecomputePrometheus_Service = new solsa.core.v1.Service({
   }
 })
 
-app.bluecomputeCatalogElasticsearch_Service = new solsa.core.v1.Service({
+app.solutions.bluecomputeCatalogElasticsearch_Service = new solsa.core.v1.Service({
   metadata: {
     name: 'bluecompute-catalog-elasticsearch',
     labels: {
@@ -710,7 +710,7 @@ app.bluecomputeCatalogElasticsearch_Service = new solsa.core.v1.Service({
   }
 })
 
-app.bluecomputeInventory_Service = new solsa.core.v1.Service({
+app.solutions.bluecomputeInventory_Service = new solsa.core.v1.Service({
   metadata: {
     annotations: { bluecompute: 'true' },
     name: 'bluecompute-inventory',
@@ -731,7 +731,7 @@ app.bluecomputeInventory_Service = new solsa.core.v1.Service({
   }
 })
 
-app.bluecomputeInventorydb_Service = new solsa.core.v1.Service({
+app.solutions.bluecomputeInventorydb_Service = new solsa.core.v1.Service({
   metadata: {
     name: 'bluecompute-inventorydb',
     labels: {
@@ -749,7 +749,7 @@ app.bluecomputeInventorydb_Service = new solsa.core.v1.Service({
   }
 })
 
-app.bluecomputeMariadb_Service = new solsa.core.v1.Service({
+app.solutions.bluecomputeMariadb_Service = new solsa.core.v1.Service({
   metadata: {
     name: 'bluecompute-mariadb',
     labels: {
@@ -767,7 +767,7 @@ app.bluecomputeMariadb_Service = new solsa.core.v1.Service({
   }
 })
 
-app.bluecomputeMysql_Service = new solsa.core.v1.Service({
+app.solutions.bluecomputeMysql_Service = new solsa.core.v1.Service({
   metadata: {
     name: 'bluecompute-mysql',
     labels: {
@@ -784,7 +784,7 @@ app.bluecomputeMysql_Service = new solsa.core.v1.Service({
   }
 })
 
-app.bluecomputeRabbitmq_Service = new solsa.core.v1.Service({
+app.solutions.bluecomputeRabbitmq_Service = new solsa.core.v1.Service({
   metadata: {
     name: 'bluecompute-rabbitmq',
     labels: {
@@ -805,7 +805,7 @@ app.bluecomputeRabbitmq_Service = new solsa.core.v1.Service({
   }
 })
 
-app.bluecomputeOrders_Service = new solsa.core.v1.Service({
+app.solutions.bluecomputeOrders_Service = new solsa.core.v1.Service({
   metadata: {
     name: 'bluecompute-orders',
     labels: {
@@ -827,7 +827,7 @@ app.bluecomputeOrders_Service = new solsa.core.v1.Service({
   }
 })
 
-app.bluecomputeOrdersdb_Service = new solsa.core.v1.Service({
+app.solutions.bluecomputeOrdersdb_Service = new solsa.core.v1.Service({
   metadata: {
     name: 'bluecompute-ordersdb',
     labels: {
@@ -845,7 +845,7 @@ app.bluecomputeOrdersdb_Service = new solsa.core.v1.Service({
   }
 })
 
-app.bluecomputeWeb_Service = new solsa.core.v1.Service({
+app.solutions.bluecomputeWeb_Service = new solsa.core.v1.Service({
   metadata: {
     name: 'bluecompute-web',
     namespace: 'bluecompute',
@@ -871,7 +871,7 @@ app.bluecomputeWeb_Service = new solsa.core.v1.Service({
   }
 })
 
-app.bluecomputeZipkin_Service = new solsa.core.v1.Service({
+app.solutions.bluecomputeZipkin_Service = new solsa.core.v1.Service({
   metadata: {
     name: 'bluecompute-zipkin',
     labels: {
@@ -888,7 +888,7 @@ app.bluecomputeZipkin_Service = new solsa.core.v1.Service({
   }
 })
 
-app.bluecomputeAuth_Deployment = new solsa.extensions.v1beta1.Deployment({
+app.solutions.bluecomputeAuth_Deployment = new solsa.extensions.v1beta1.Deployment({
   metadata: {
     name: 'bluecompute-auth',
     labels: {
@@ -944,7 +944,7 @@ app.bluecomputeAuth_Deployment = new solsa.extensions.v1beta1.Deployment({
   }
 })
 
-app.bluecomputeCatalog_Deployment = new solsa.extensions.v1beta1.Deployment({
+app.solutions.bluecomputeCatalog_Deployment = new solsa.extensions.v1beta1.Deployment({
   metadata: {
     name: 'bluecompute-catalog',
     labels: {
@@ -1043,7 +1043,7 @@ app.bluecomputeCatalog_Deployment = new solsa.extensions.v1beta1.Deployment({
   }
 })
 
-app.bluecomputeCloudant_Deployment = new solsa.extensions.v1beta1.Deployment({
+app.solutions.bluecomputeCloudant_Deployment = new solsa.extensions.v1beta1.Deployment({
   metadata: {
     name: 'bluecompute-cloudant',
     labels: {
@@ -1084,7 +1084,7 @@ app.bluecomputeCloudant_Deployment = new solsa.extensions.v1beta1.Deployment({
   }
 })
 
-app.bluecomputeCustomer_Deployment = new solsa.extensions.v1beta1.Deployment({
+app.solutions.bluecomputeCustomer_Deployment = new solsa.extensions.v1beta1.Deployment({
   metadata: {
     name: 'bluecompute-customer',
     labels: {
@@ -1163,7 +1163,7 @@ app.bluecomputeCustomer_Deployment = new solsa.extensions.v1beta1.Deployment({
   }
 })
 
-app.bluecomputePrometheusAlertmanager_Deployment = new solsa.extensions.v1beta1.Deployment({
+app.solutions.bluecomputePrometheusAlertmanager_Deployment = new solsa.extensions.v1beta1.Deployment({
   metadata: {
     labels: {
       app: 'bluecompute-prometheus-alertmanager',
@@ -1244,7 +1244,7 @@ app.bluecomputePrometheusAlertmanager_Deployment = new solsa.extensions.v1beta1.
   }
 })
 
-app.bluecomputeGrafana_Deployment = new solsa.extensions.v1beta1.Deployment({
+app.solutions.bluecomputeGrafana_Deployment = new solsa.extensions.v1beta1.Deployment({
   metadata: {
     labels: {
       app: 'bluecompute-grafana',
@@ -1332,7 +1332,7 @@ app.bluecomputeGrafana_Deployment = new solsa.extensions.v1beta1.Deployment({
   }
 })
 
-app.bluecomputePrometheus_Deployment = new solsa.extensions.v1beta1.Deployment({
+app.solutions.bluecomputePrometheus_Deployment = new solsa.extensions.v1beta1.Deployment({
   metadata: {
     labels: {
       app: 'bluecompute-prometheus',
@@ -1426,7 +1426,7 @@ app.bluecomputePrometheus_Deployment = new solsa.extensions.v1beta1.Deployment({
   }
 })
 
-app.bluecomputeDefaultClusterElasticsearch_Deployment = new solsa.extensions.v1beta1.Deployment({
+app.solutions.bluecomputeDefaultClusterElasticsearch_Deployment = new solsa.extensions.v1beta1.Deployment({
   metadata: {
     name: 'bluecompute-default-cluster-elasticsearch',
     namespace: 'bluecompute',
@@ -1479,7 +1479,7 @@ app.bluecomputeDefaultClusterElasticsearch_Deployment = new solsa.extensions.v1b
   }
 })
 
-app.bluecomputeInventory_Deployment = new solsa.extensions.v1beta1.Deployment({
+app.solutions.bluecomputeInventory_Deployment = new solsa.extensions.v1beta1.Deployment({
   metadata: {
     name: 'bluecompute-inventory',
     labels: {
@@ -1535,7 +1535,7 @@ app.bluecomputeInventory_Deployment = new solsa.extensions.v1beta1.Deployment({
   }
 })
 
-app.bluecomputeInventorydb_Deployment = new solsa.extensions.v1beta1.Deployment({
+app.solutions.bluecomputeInventorydb_Deployment = new solsa.extensions.v1beta1.Deployment({
   metadata: {
     name: 'bluecompute-inventorydb',
     labels: {
@@ -1617,7 +1617,7 @@ app.bluecomputeInventorydb_Deployment = new solsa.extensions.v1beta1.Deployment(
   }
 })
 
-app.bluecomputeMysql_Deployment = new solsa.extensions.v1beta1.Deployment({
+app.solutions.bluecomputeMysql_Deployment = new solsa.extensions.v1beta1.Deployment({
   metadata: {
     name: 'bluecompute-mysql',
     labels: {
@@ -1688,7 +1688,7 @@ app.bluecomputeMysql_Deployment = new solsa.extensions.v1beta1.Deployment({
   }
 })
 
-app.bluecomputeRabbitmq_Deployment = new solsa.extensions.v1beta1.Deployment({
+app.solutions.bluecomputeRabbitmq_Deployment = new solsa.extensions.v1beta1.Deployment({
   metadata: {
     name: 'bluecompute-rabbitmq',
     labels: {
@@ -1721,7 +1721,7 @@ app.bluecomputeRabbitmq_Deployment = new solsa.extensions.v1beta1.Deployment({
   }
 })
 
-app.bluecomputeOrders_Deployment = new solsa.extensions.v1beta1.Deployment({
+app.solutions.bluecomputeOrders_Deployment = new solsa.extensions.v1beta1.Deployment({
   metadata: {
     name: 'bluecompute-orders',
     labels: {
@@ -1809,7 +1809,7 @@ app.bluecomputeOrders_Deployment = new solsa.extensions.v1beta1.Deployment({
   }
 })
 
-app.bluecomputeOrdersdb_Deployment = new solsa.extensions.v1beta1.Deployment({
+app.solutions.bluecomputeOrdersdb_Deployment = new solsa.extensions.v1beta1.Deployment({
   metadata: {
     name: 'bluecompute-ordersdb',
     labels: {
@@ -1889,7 +1889,7 @@ app.bluecomputeOrdersdb_Deployment = new solsa.extensions.v1beta1.Deployment({
   }
 })
 
-app.bluecomputeWeb_Deployment = new solsa.extensions.v1beta1.Deployment({
+app.solutions.bluecomputeWeb_Deployment = new solsa.extensions.v1beta1.Deployment({
   metadata: {
     name: 'bluecompute-web',
     labels: {
@@ -1940,7 +1940,7 @@ app.bluecomputeWeb_Deployment = new solsa.extensions.v1beta1.Deployment({
   }
 })
 
-app.bluecomputeZipkin_Deployment = new solsa.extensions.v1beta1.Deployment({
+app.solutions.bluecomputeZipkin_Deployment = new solsa.extensions.v1beta1.Deployment({
   metadata: {
     name: 'bluecompute-zipkin',
     labels: {
@@ -1978,7 +1978,7 @@ app.bluecomputeZipkin_Deployment = new solsa.extensions.v1beta1.Deployment({
   }
 })
 
-app.bluecomputeMariadb_StatefulSet = new solsa.apps.v1beta1.StatefulSet({
+app.solutions.bluecomputeMariadb_StatefulSet = new solsa.apps.v1beta1.StatefulSet({
   metadata: {
     name: 'bluecompute-mariadb',
     labels: {
@@ -2078,7 +2078,7 @@ app.bluecomputeMariadb_StatefulSet = new solsa.apps.v1beta1.StatefulSet({
   }
 })
 
-app.bluecomputePopulate_Job = new solsa.batch.v1.Job({
+app.solutions.bluecomputePopulate_Job = new solsa.batch.v1.Job({
   metadata: { name: 'bluecompute-populate' },
   spec: {
     template: {
@@ -2097,7 +2097,7 @@ app.bluecomputePopulate_Job = new solsa.batch.v1.Job({
   }
 })
 
-app.bluecomputeGrafanaDs_Job = new solsa.batch.v1.Job({
+app.solutions.bluecomputeGrafanaDs_Job = new solsa.batch.v1.Job({
   metadata: {
     labels: {
       app: 'bluecompute-grafana',
@@ -2163,7 +2163,7 @@ app.bluecomputeGrafanaDs_Job = new solsa.batch.v1.Job({
   }
 })
 
-app.bluecomputeInventoryJob = new solsa.batch.v1.Job({
+app.solutions.bluecomputeInventoryJob = new solsa.batch.v1.Job({
   metadata: {
     name: 'bluecompute-inventory-job',
     labels: {
@@ -2238,7 +2238,7 @@ app.bluecomputeInventoryJob = new solsa.batch.v1.Job({
   }
 })
 
-app.bluecomputeKeystoreJob = new solsa.batch.v1.Job({
+app.solutions.bluecomputeKeystoreJob = new solsa.batch.v1.Job({
   metadata: { name: 'bluecompute-keystore-job' },
   spec: {
     template: {
@@ -2260,7 +2260,7 @@ app.bluecomputeKeystoreJob = new solsa.batch.v1.Job({
   }
 })
 
-app.bluecomputeOrdersJob = new solsa.batch.v1.Job({
+app.solutions.bluecomputeOrdersJob = new solsa.batch.v1.Job({
   metadata: {
     name: 'bluecompute-orders-job',
     labels: {
@@ -2335,7 +2335,7 @@ app.bluecomputeOrdersJob = new solsa.batch.v1.Job({
   }
 })
 
-app.bluecomputeWeb_Ingress = new solsa.extensions.v1beta1.Ingress({
+app.solutions.bluecomputeWeb_Ingress = new solsa.extensions.v1beta1.Ingress({
   metadata: {
     annotations: null,
     name: 'bluecompute-web',
