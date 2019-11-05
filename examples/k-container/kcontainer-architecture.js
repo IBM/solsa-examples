@@ -29,49 +29,47 @@ let solsa = require('solsa')
  * @returns a SolSA bundle containing the k-container instance
  */
 module.exports = function kcontainer ({ getImage }) {
-  let bundle = new solsa.Bundle()
-
   // EventStreams configuration
-  bundle.es = new solsa.EventStreams({ name: 'kcontainer-es', plan: 'standard' })
-  bundle.es.addTopic('allocated-orders')
-  bundle.es.addTopic('bluewaterContainer')
-  bundle.es.addTopic('bluewaterProblem')
-  bundle.es.addTopic('bluewaterShip')
-  bundle.es.addTopic('containers')
-  bundle.es.addTopic('containerMetrics')
-  bundle.es.addTopic('errors')
-  bundle.es.addTopic('orders')
-  bundle.es.addTopic('rejected-orders')
+  let es = new solsa.EventStreams({ name: 'kcontainer-es', plan: 'standard' })
+  es.addTopic('allocated-orders')
+  es.addTopic('bluewaterContainer')
+  es.addTopic('bluewaterProblem')
+  es.addTopic('bluewaterShip')
+  es.addTopic('containers')
+  es.addTopic('containerMetrics')
+  es.addTopic('errors')
+  es.addTopic('orders')
+  es.addTopic('rejected-orders')
 
   // Common environment variables shared across kcontainer microservices
   let commonEnv = {
     APPLICATION_NAME: 'kcontainer',
     KAFKA_ENV: 'IBMCLOUD',
-    KAFKA_BROKERS: bundle.es.getSecret('kafka_brokers_sasl_flat'),
-    KAFKA_APIKEY: bundle.es.getSecret('api_key')
+    KAFKA_BROKERS: es.getSecret('kafka_brokers_sasl_flat'),
+    KAFKA_APIKEY: es.getSecret('api_key')
   }
 
   // Internal microservices
-  bundle.fleetms = new solsa.ContainerizedService({ name: 'kc-fleetms', image: getImage('kc-fleetms'), port: 9080, env: commonEnv })
-  bundle.ordercmdms = new solsa.ContainerizedService({ name: 'kc-ordercmdms', image: getImage('kc-ordercmdms'), port: 9080, env: commonEnv })
-  bundle.orderqueryms = new solsa.ContainerizedService({ name: 'kc-orderqueryms', image: getImage('kc-orderqueryms'), port: 9080, env: commonEnv })
-  bundle.voyagesms = new solsa.ContainerizedService({ name: 'kc-voyagesms', image: getImage('kc-voyagesms'), port: 3000, env: commonEnv })
+  let fleetms = new solsa.ContainerizedService({ name: 'kc-fleetms', image: getImage('kc-fleetms'), port: 9080, env: commonEnv })
+  let ordercmdms = new solsa.ContainerizedService({ name: 'kc-ordercmdms', image: getImage('kc-ordercmdms'), port: 9080, env: commonEnv })
+  let orderqueryms = new solsa.ContainerizedService({ name: 'kc-orderqueryms', image: getImage('kc-orderqueryms'), port: 9080, env: commonEnv })
+  let voyagesms = new solsa.ContainerizedService({ name: 'kc-voyagesms', image: getImage('kc-voyagesms'), port: 3000, env: commonEnv })
 
   // UI connects with fleet, ordercmd, orderquery, and voyages via names/ports provided in its environment
-  bundle.ui = new solsa.ContainerizedService({ name: 'kc-ui', image: getImage('kc-ui'), port: 3010 })
-  bundle.ui.env = Object.assign({
-    FLEETMS_SERVICE_SERVICE_HOST: bundle.fleetms.name,
-    FLEETMS_SERVICE_SERVICE_PORT: bundle.fleetms.port,
-    ORDERCOMMANDMS_SERVICE_SERVICE_HOST: bundle.ordercmdms.name,
-    ORDERCOMMANDMS_SERVICE_SERVICE_PORT_HTTP: bundle.ordercmdms.port,
-    ORDERQUERYMS_SERVICE_SERVICE_HOST: bundle.orderqueryms.name,
-    ORDERQUERYMS_SERVICE_SERVICE_PORT_HTTP: bundle.orderqueryms.port,
-    VOYAGESMS_SERVICE_SERVICE_HOST: bundle.voyagesms.name,
-    VOYAGESMS_SERVICE_SERVICE_PORT_HTTP: bundle.voyagesms.port
+  let ui = new solsa.ContainerizedService({ name: 'kc-ui', image: getImage('kc-ui'), port: 3010 })
+  ui.env = Object.assign({
+    FLEETMS_SERVICE_SERVICE_HOST: fleetms.name,
+    FLEETMS_SERVICE_SERVICE_PORT: fleetms.port,
+    ORDERCOMMANDMS_SERVICE_SERVICE_HOST: ordercmdms.name,
+    ORDERCOMMANDMS_SERVICE_SERVICE_PORT_HTTP: ordercmdms.port,
+    ORDERQUERYMS_SERVICE_SERVICE_HOST: orderqueryms.name,
+    ORDERQUERYMS_SERVICE_SERVICE_PORT_HTTP: orderqueryms.port,
+    VOYAGESMS_SERVICE_SERVICE_HOST: voyagesms.name,
+    VOYAGESMS_SERVICE_SERVICE_PORT_HTTP: voyagesms.port
   }, commonEnv)
 
   // expose UI
-  bundle.ingress = bundle.ui.getIngress()
+  let ingress = ui.getIngress({ vhost: 'kcontainer' })
 
-  return bundle
+  return new solsa.Bundle({ es, fleetms, ordercmdms, orderqueryms, voyagesms, ui, ingress })
 }
