@@ -19,9 +19,7 @@
 
 let solsa = require('solsa')
 
-let bundle = new solsa.Bundle()
-
-bundle.task = new solsa.SchemaTransformer({
+module.exports = new solsa.SchemaTransformer({
   name: 'plugh',
   code: function () {
     const x = process.env.v1
@@ -37,5 +35,3 @@ bundle.task = new solsa.SchemaTransformer({
     v3: 'mellon'
   }
 })
-
-module.exports = bundle

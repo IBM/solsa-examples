@@ -37,17 +37,15 @@ const path = require('path')
 const solsa = require('solsa')
 
 module.exports = function translator ({ name, language }) {
-  let bundle = new solsa.Bundle()
+  let watson = new solsa.LanguageTranslator({ name: 'watson-translator-for-' + name })
 
-  bundle.watson = new solsa.LanguageTranslator({ name: 'watson-translator-for-' + name })
+  let translator = new solsa.ContainerizedService({ name, image: 'solsa-translator', build: path.join(__dirname, 'solsa-translator'), port: 8080 })
 
-  bundle.translator = new solsa.ContainerizedService({ name, image: 'solsa-translator', build: path.join(__dirname, 'solsa-translator'), port: 8080 })
+  translator.env = { LANGUAGE: { value: language }, WATSON_URL: watson.getSecret('url'), WATSON_APIKEY: watson.getSecret('apikey') }
 
-  bundle.translator.env = { LANGUAGE: { value: language }, WATSON_URL: bundle.watson.getSecret('url'), WATSON_APIKEY: bundle.watson.getSecret('apikey') }
+  let ingress = translator.getIngress()
 
-  bundle.ingress = bundle.translator.getIngress()
-
-  return bundle
+  return new solsa.Bundle({ watson, translator, ingress })
 }
 ```
 It consists of three components:

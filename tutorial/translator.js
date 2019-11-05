@@ -15,10 +15,8 @@
  */
 
 const solsa = require('solsa')
-const bundle = new solsa.Bundle()
-module.exports = bundle
 
-bundle.translator = new solsa.LanguageTranslator({ name: 'translator', plan: 'lite' })
+module.exports = new solsa.LanguageTranslator({ name: 'translator', plan: 'lite' })
 
 /*
 Try:

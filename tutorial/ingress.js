@@ -15,11 +15,11 @@
  */
 
 const solsa = require('solsa')
-const bundle = new solsa.Bundle()
-module.exports = bundle
 
-bundle.service = new solsa.ContainerizedService({ name: 'hello-john', image: 'docker.io/ibmcom/kn-helloworld', port: 8080, env: { TARGET: 'John' } })
-bundle.ingress = bundle.service.getIngress()
+let service = new solsa.ContainerizedService({ name: 'hello-john', image: 'docker.io/ibmcom/kn-helloworld', port: 8080, env: { TARGET: 'John' } })
+let ingress = service.getIngress()
+
+module.exports = new solsa.Bundle({ service, ingress })
 
 /*
 Try:

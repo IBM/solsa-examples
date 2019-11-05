@@ -29,7 +29,7 @@ const fs = require('fs')
 const path = require('path')
 
 let imageConfigFile = path.join(__dirname, 'dgrove-images.yaml')
-let imageConfig = solsa.parseYaml(fs.readFileSync(imageConfigFile))
+let imageConfig = solsa.parseYaml(fs.readFileSync(imageConfigFile).toString())
 
 function getImage (shortname) {
   const entry = imageConfig.images.find(({ name }) => name === shortname)

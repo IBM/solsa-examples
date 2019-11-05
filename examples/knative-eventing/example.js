@@ -16,26 +16,26 @@
 
 const path = require('path')
 const solsa = require('solsa')
-const bundle = new solsa.Bundle()
-module.exports = bundle
 
 // Event Streams instance
-bundle.kafka = new solsa.EventStreams({ name: 'kafka', plan: 'standard', serviceClassType: 'CF' })
+let kafka = new solsa.EventStreams({ name: 'kafka', plan: 'standard', serviceClassType: 'CF' })
 
 // Event Streams Topic
-bundle.topic = bundle.kafka.getTopic({ name: 'topic', topicName: 'MyTopic' })
+let topic = kafka.getTopic({ name: 'topic', topicName: 'MyTopic' })
 
 // Producer (containerized service) interfacing directly with Event Streams
-bundle.producer = new solsa.ContainerizedService({ name: 'producer', image: 'kafka-producer', build: path.join(__dirname, '..', '..', 'tutorial', 'kafka-producer') })
-bundle.producer.env = {
-  BROKERS: bundle.kafka.getSecret('kafka_brokers_sasl'),
-  USER: bundle.kafka.getSecret('user'),
-  PASSWORD: bundle.kafka.getSecret('password'),
-  TOPIC: bundle.topic.spec.topicName
+let producer = new solsa.ContainerizedService({ name: 'producer', image: 'kafka-producer', build: path.join(__dirname, '..', '..', 'tutorial', 'kafka-producer') })
+producer.env = {
+  BROKERS: kafka.getSecret('kafka_brokers_sasl'),
+  USER: kafka.getSecret('user'),
+  PASSWORD: kafka.getSecret('password'),
+  TOPIC: topic.spec.topicName
 }
 
 // Consumer (Knative service)
-bundle.sink = new solsa.KnativeService({ name: 'sink', image: 'gcr.io/knative-releases/github.com/knative/eventing-sources/cmd/event_display' })
+let sink = new solsa.KnativeService({ name: 'sink', image: 'gcr.io/knative-releases/github.com/knative/eventing-sources/cmd/event_display' })
 
 // Knative event source to connect the topic to the consumer
-bundle.source = bundle.topic.getSource({ name: 'source', sink: bundle.sink })
+let source = topic.getSource({ name: 'source', sink })
+
+module.exports = new solsa.Bundle({ kafka, topic, producer, sink, source })

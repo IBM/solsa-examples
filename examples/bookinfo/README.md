@@ -37,20 +37,18 @@ below (cf. [bookinfo.js](bookinfo.js)):
 let solsa = require('solsa')
 
 module.exports = function bookinfo () {
-  let bundle = new solsa.Bundle()
-
-  bundle.details = new solsa.ContainerizedService({ name: 'details', image: 'istio/examples-bookinfo-details-v1:1.15.0', port: 9080 })
-  bundle.ratings = new solsa.ContainerizedService({ name: 'ratings', image: 'istio/examples-bookinfo-ratings-v1:1.15.0', port: 9080 })
-  bundle.reviews = new solsa.ContainerizedService({ name: 'reviews', image: 'istio/examples-bookinfo-reviews-v1:1.15.0', port: 9080 })
-  bundle.productpage = new solsa.ContainerizedService({ name: 'productpage', image: 'istio/examples-bookinfo-productpage-v1:1.15.0', port: 9080 })
-  bundle.productpage.env = {
-    DETAILS_HOSTNAME: bundle.details.name,
-    RATINGS_HOSTNAME: bundle.ratings.name,
-    REVIEWS_HOSTNAME: bundle.reviews.name
+  let details = new solsa.ContainerizedService({ name: 'details', image: 'istio/examples-bookinfo-details-v1:1.15.0', port: 9080 })
+  let ratings = new solsa.ContainerizedService({ name: 'ratings', image: 'istio/examples-bookinfo-ratings-v1:1.15.0', port: 9080 })
+  let reviews = new solsa.ContainerizedService({ name: 'reviews', image: 'istio/examples-bookinfo-reviews-v1:1.15.0', port: 9080 })
+  let productpage = new solsa.ContainerizedService({ name: 'productpage', image: 'istio/examples-bookinfo-productpage-v1:1.15.0', port: 9080 })
+  productpage.env = {
+    DETAILS_HOSTNAME: details.name,
+    RATINGS_HOSTNAME: ratings.name,
+    REVIEWS_HOSTNAME: reviews.name
   }
-  bundle.entry = bundle.productpage.getIngress()
+  let entry = productpage.getIngress({ vhost: 'bookinfo' })
 
-  return bundle
+  return new solsa.Bundle({ details, ratings, reviews, productpage, entry })
 }
 ```
 The code above defines the four component microservices by
@@ -80,20 +78,29 @@ module.exports = function translatingBookinfo ({ language }) {
   // Create an instance of the basic Bookinfo application pattern
   let bundle = bookinfo()
 
+  // Extract reviews and productpage resources from bundle
+  let reviews = /** @type {solsa.ContainerizedService} */ (bundle.solutions.reviews)
+  let productpage = /** @type {solsa.ContainerizedService} */ (bundle.solutions.productpage)
+
   // Configure a translating review service
-  bundle.translator = new solsa.LanguageTranslator({ name: 'bookinfo-watson-translator' })
-  bundle.translatedReviews = new solsa.ContainerizedService({ name: 'reviews-translator', image: 'solsa-reviews-translator', build: __dirname, main: 'reviews-translator.js', port: 9080 })
-  bundle.translatedReviews.env = {
+  let translator = new solsa.LanguageTranslator({ name: 'bookinfo-watson-translator' })
+  let translatedReviews = new solsa.ContainerizedService({ name: 'reviews-translator', image: 'solsa-reviews-translator', build: __dirname, main: 'reviews-translator.js', port: 9080 })
+
+  translatedReviews.env = {
     LANGUAGE: { value: language },
-    WATSON_TRANSLATOR_URL: bundle.translator.getSecret('url'),
-    WATSON_TRANSLATOR_APIKEY: bundle.translator.getSecret('apikey'),
-    REVIEWS_HOSTNAME: bundle.reviews.name,
-    REVIEWS_PORT: bundle.reviews.port
+    WATSON_TRANSLATOR_URL: translator.getSecret('url'),
+    WATSON_TRANSLATOR_APIKEY: translator.getSecret('apikey'),
+    REVIEWS_HOSTNAME: reviews.name,
+    REVIEWS_PORT: reviews.port
   }
-  bundle.translatedReviews.readinessProbe = { httpGet: { path: '/solsa/readinessProbe', port: bundle.translatedReviews.port } }
+  translatedReviews.readinessProbe = { httpGet: { path: '/solsa/readinessProbe', port: translatedReviews.port } }
 
   // Modify the Bookinfo productpage to use the translating review service
-  bundle.productpage.env.REVIEWS_HOSTNAME = bundle.translatedReviews.name
+  productpage.env.REVIEWS_HOSTNAME = translatedReviews.name
+
+  // Add translator and translatedReviews resources to the bundle
+  bundle.solutions.translator = translator
+  bundle.solutions.translatedReviews = translatedReviews
 
   return bundle
 }

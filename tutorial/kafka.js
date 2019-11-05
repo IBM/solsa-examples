@@ -15,8 +15,8 @@
  */
 
 const solsa = require('solsa')
-const bundle = new solsa.Bundle()
-module.exports = bundle
 
-bundle.kafka = new solsa.EventStreams({ name: 'kafka', plan: 'standard', serviceClassType: 'CF' })
-bundle.topic = bundle.kafka.getTopic({ name: 'topic', topicName: 'MyTopic' })
+let kafka = new solsa.EventStreams({ name: 'kafka', plan: 'standard', serviceClassType: 'CF' })
+let topic = kafka.getTopic({ name: 'topic', topicName: 'MyTopic' })
+
+module.exports = new solsa.Bundle({ kafka, topic })

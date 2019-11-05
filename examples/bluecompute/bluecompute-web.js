@@ -20,8 +20,6 @@
 const solsa = require('solsa')
 
 module.exports = function bcWeb (appConfig) {
-  const app = new solsa.Bundle()
-
   const authHostAndPort = `${appConfig.getInstanceName('auth')}:${appConfig.values.auth.ports.https}`
   const catalogHostAndPort = `${appConfig.getInstanceName('catalog')}:${appConfig.values.catalog.ports.http}`
   const customerHostAndPort = `${appConfig.getInstanceName('customer')}:${appConfig.values.customer.ports.https}`
@@ -64,7 +62,7 @@ module.exports = function bcWeb (appConfig) {
       }
     }
   }
-  app.web_ConfigMap = new solsa.core.v1.ConfigMap({
+  let webConfigMap = new solsa.core.v1.ConfigMap({
     metadata: {
       name: appConfig.getInstanceName('web-config'),
       labels: appConfig.addCommonLabelsTo({ micro: 'web-bff', tier: 'frontend' })
@@ -90,7 +88,7 @@ module.exports = function bcWeb (appConfig) {
     }
   })
 
-  app.web_Deployment = new solsa.extensions.v1beta1.Deployment({
+  let webDeployment = new solsa.extensions.v1beta1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('web'),
       labels: appConfig.addCommonLabelsTo({ micro: 'web-bff', tier: 'frontend' })
@@ -103,7 +101,7 @@ module.exports = function bcWeb (appConfig) {
             {
               name: 'config-volume',
               configMap: {
-                name: app.web_ConfigMap.metadata.name,
+                name: webConfigMap.metadata.name,
                 items: [
                   { key: 'checks', path: 'checks' },
                   { key: 'default.json', path: 'default.json' }
@@ -123,8 +121,9 @@ module.exports = function bcWeb (appConfig) {
       }
     }
   })
-  app.web_Deployment.propogateLabels()
-  app.web_Service = app.web_Deployment.getService()
+  webDeployment.propogateLabels()
+  let webService = webDeployment.getService()
+  let ingress = webService.getIngress({ vhost: appConfig.appName })
 
-  return app
+  return new solsa.Bundle({ webConfigMap, webDeployment, webService, ingress })
 }
