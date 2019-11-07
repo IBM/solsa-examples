@@ -66,7 +66,7 @@ module.exports = bookinfo()
 
 To illustrate the advantage of using `ContainerizedService` where possible, consider
 the equivalent SolSA program using the core Kubernetes construct
-of `Deployment` as shown in [bookinfo-kube.js](bookinfo-kube.js]). Although the SolSA code
+of `Deployment` as shown in [bookinfo-kube.js](bookinfo-kube.js). Although the SolSA code
 is still less verbose than the generated YAML, many more low-level details of each `Deployment`
 need to be explictly specififed by the programmer. Note that both versions of the Bookinfo pattern
 generate identical YAML when processed by `solsa yaml`.
