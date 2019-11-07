@@ -68,7 +68,38 @@ To illustrate the advantage of using `ContainerizedService` where possible, cons
 the equivalent SolSA program using the core Kubernetes construct
 of `Deployment` as shown in [bookinfo-kube.js](bookinfo-kube.js). Although the SolSA code
 is still less verbose than the generated YAML, many more low-level details of each `Deployment`
-need to be explictly specififed by the programmer. Note that both versions of the Bookinfo pattern
+need to be explictly specififed by the programmer. For example, contrast
+```javascript
+  let details = new solsa.ContainerizedService({ name: 'details', image: 'istio/examples-bookinfo-details-v1:1.15.0', port: 9080 })
+```
+with
+```javascript
+let details = new solsa.apps.v1.Deployment({
+  metadata: { name: 'details' },
+  spec: {
+    selector: { matchLabels: { 'solsa.ibm.com/pod': 'details' } },
+    replicas: 1,
+    template: {
+      spec: {
+        containers: [
+          {
+            name: 'details',
+            image: 'istio/examples-bookinfo-details-v1:1.15.0',
+            env: [{ name: 'PORT', value: '9080' }],
+            ports: [{ containerPort: 9080 }],
+            livenessProbe: { tcpSocket: { port: 9080 } },
+            readinessProbe: { tcpSocket: { port: 9080 } }
+          }
+        ]
+      }
+    }
+  }
+})
+let detailsService = details.getService()
+```
+
+
+Note that both versions of the Bookinfo pattern
 generate identical YAML when processed by `solsa yaml`.
 
 ## A Foreign Language Bookinfo
