@@ -54,7 +54,7 @@ module.exports = function bcClusterConfig (appConfig) {
   /*
    * Add needed capabilities to default ServiceAccount in the deployment namespace
    */
-  let podSecurityPolicy = new solsa.extensions.v1beta1.PodSecurityPolicy({
+  let podSecurityPolicy = new solsa.policy.v1beta1.PodSecurityPolicy({
     metadata: {
       name: appConfig.getInstanceName('pod-security-policy'),
       labels: appConfig.addCommonLabelsTo({})
@@ -77,7 +77,7 @@ module.exports = function bcClusterConfig (appConfig) {
     },
     rules: [
       {
-        apiGroups: [ 'extensions' ],
+        apiGroups: [ 'policy' ],
         resources: [ 'podsecuritypolicies' ],
         resourceNames: [ podSecurityPolicy.metadata.name ],
         verbs: [ 'use' ]

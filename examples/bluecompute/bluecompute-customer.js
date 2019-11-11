@@ -29,12 +29,13 @@ module.exports = function bcCustomer (appConfig) {
     type: 'Opaque',
     data: { 'password': solsa.base64Encode(appConfig.values.cloudant.rootPassword) }
   })
-  let cloudantDeployment = new solsa.extensions.v1beta1.Deployment({
+  let cloudantDeployment = new solsa.apps.v1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('cloudant'),
       labels: appConfig.addCommonLabelsTo({ micro: 'customer', service: 'cloudant-db', tier: 'backend' })
     },
     spec: {
+      selector: { matchLabels: { 'solsa.ibm.com/pod': appConfig.getInstanceName('cloudant') } },
       replicas: appConfig.values.cloudant.replicaCount,
       template: {
         spec: {
@@ -98,12 +99,13 @@ module.exports = function bcCustomer (appConfig) {
   })
 
   const authHostAndPort = `${appConfig.getInstanceName('auth')}:${appConfig.values.auth.ports.https}`
-  let customerDeployment = new solsa.extensions.v1beta1.Deployment({
+  let customerDeployment = new solsa.apps.v1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('customer'),
       labels: appConfig.addCommonLabelsTo({ micro: 'customer', service: 'server', tier: 'backend' })
     },
     spec: {
+      selector: { matchLabels: { 'solsa.ibm.com/pod': appConfig.getInstanceName('customer') } },
       replicas: appConfig.values.customer.replicaCount,
       template: {
         spec: {

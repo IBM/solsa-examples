@@ -19,12 +19,13 @@
 const solsa = require('solsa')
 
 module.exports = function bcAuth (appConfig) {
-  let authDeployment = new solsa.extensions.v1beta1.Deployment({
+  let authDeployment = new solsa.apps.v1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('auth'),
       labels: appConfig.addCommonLabelsTo({ micro: 'auth', tier: 'backend' })
     },
     spec: {
+      selector: { matchLabels: { 'solsa.ibm.com/pod': appConfig.getInstanceName('auth') } },
       replicas: appConfig.values.auth.replicaCount,
       template: {
         spec: {

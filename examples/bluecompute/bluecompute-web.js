@@ -88,12 +88,13 @@ module.exports = function bcWeb (appConfig) {
     }
   })
 
-  let webDeployment = new solsa.extensions.v1beta1.Deployment({
+  let webDeployment = new solsa.apps.v1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('web'),
       labels: appConfig.addCommonLabelsTo({ micro: 'web-bff', tier: 'frontend' })
     },
     spec: {
+      selector: { matchLabels: { 'solsa.ibm.com/pod': appConfig.getInstanceName('web') } },
       replicas: appConfig.values.web.replicaCount,
       template: {
         spec: {

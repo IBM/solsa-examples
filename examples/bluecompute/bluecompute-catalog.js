@@ -31,12 +31,13 @@ module.exports = function bcCatalog (appConfig) {
     }
   })
 
-  let elasticsearchDeployment = new solsa.extensions.v1beta1.Deployment({
+  let elasticsearchDeployment = new solsa.apps.v1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('catalog-elasticsearch'),
       labels: appConfig.addCommonLabelsTo({ tier: 'backend', micro: 'catalog', datastore: 'elasticsearch' })
     },
     spec: {
+      selector: { matchLabels: { 'solsa.ibm.com/pod': appConfig.getInstanceName('catalog-elasticsearch') } },
       replicas: appConfig.values.elasticsearch.replicaCount,
       template: {
         spec: {
@@ -89,12 +90,13 @@ module.exports = function bcCatalog (appConfig) {
     }
   })
 
-  let catalogDeployment = new solsa.extensions.v1beta1.Deployment({
+  let catalogDeployment = new solsa.apps.v1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('catalog'),
       labels: appConfig.addCommonLabelsTo({ tier: 'backend', micro: 'catalog' })
     },
     spec: {
+      selector: { matchLabels: { 'solsa.ibm.com/pod': appConfig.getInstanceName('catalog') } },
       replicas: appConfig.values.catalog.replicaCount,
       template: {
         spec: {

@@ -91,12 +91,13 @@ module.exports = function bcOrders (appConfig) {
     }
   })
 
-  let rabbitmqDeployment = new solsa.extensions.v1beta1.Deployment({
+  let rabbitmqDeployment = new solsa.apps.v1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('rabbitmq'),
       labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend', service: 'orders' })
     },
     spec: {
+      selector: { matchLabels: { 'solsa.ibm.com/pod': appConfig.getInstanceName('rabbitmq') } },
       replicas: appConfig.values.rabbitmq.replicaCount,
       template: {
         spec: {
@@ -117,12 +118,13 @@ module.exports = function bcOrders (appConfig) {
   rabbitmqDeployment.propogateLabels()
   let rabbitmqService = rabbitmqDeployment.getService()
 
-  let mariadbStatefulSet = new solsa.apps.v1beta1.StatefulSet({
+  let mariadbStatefulSet = new solsa.apps.v1.StatefulSet({
     metadata: {
       name: appConfig.getInstanceName('mariadb'),
       labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend', service: 'mariadb', component: 'master' })
     },
     spec: {
+      selector: { matchLabels: { 'solsa.ibm.com/pod': appConfig.getInstanceName('mariadb') } },
       serviceName: appConfig.getInstanceName('mariadb'),
       replicas: appConfig.values.mariadb.replicaCount,
       updateStrategy: { type: 'RollingUpdate' },
@@ -204,12 +206,13 @@ module.exports = function bcOrders (appConfig) {
 
   const authHostAndPort = `${appConfig.getInstanceName('auth')}:${appConfig.values.auth.ports.https}`
   const inventoryHostAndPort = `${appConfig.getInstanceName('inventory')}:${appConfig.values.inventory.ports.http}`
-  let ordersDeployment = new solsa.extensions.v1beta1.Deployment({
+  let ordersDeployment = new solsa.apps.v1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('orders'),
       labels: appConfig.addCommonLabelsTo({ micro: 'orders', tier: 'backend', service: 'orders' })
     },
     spec: {
+      selector: { matchLabels: { 'solsa.ibm.com/pod': appConfig.getInstanceName('orders') } },
       replicas: appConfig.values.orders.replicaCount,
       template: {
         spec: {

@@ -84,12 +84,13 @@ module.exports = function bcInventory (appConfig) {
     }
   })
 
-  let mysqlDeployment = new solsa.extensions.v1beta1.Deployment({
+  let mysqlDeployment = new solsa.apps.v1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('mysql'),
       labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend', service: 'mysql' })
     },
     spec: {
+      selector: { matchLabels: { 'solsa.ibm.com/pod': appConfig.getInstanceName('mysql') } },
       template: {
         spec: {
           volumes: [{ name: 'data', emptyDir: {} }],
@@ -150,12 +151,13 @@ module.exports = function bcInventory (appConfig) {
   mysqlDeployment.propogateLabels()
   let mysqlService = mysqlDeployment.getService()
 
-  let inventoryDeployment = new solsa.extensions.v1beta1.Deployment({
+  let inventoryDeployment = new solsa.apps.v1.Deployment({
     metadata: {
       name: appConfig.getInstanceName('inventory'),
       labels: appConfig.addCommonLabelsTo({ micro: 'inventory', tier: 'backend', service: 'inventory' })
     },
     spec: {
+      selector: { matchLabels: { 'solsa.ibm.com/pod': appConfig.getInstanceName('inventory') } },
       replicas: appConfig.values.inventory.replicaCount,
       template: {
         spec: {
