@@ -25,14 +25,9 @@
 
 const solsa = require('solsa')
 const kcontainer = require('./kcontainer-architecture')
-const fs = require('fs')
-const path = require('path')
-
-let imageConfigFile = path.join(__dirname, 'dgrove-images.yaml')
-let imageConfig = solsa.parseYaml(fs.readFileSync(imageConfigFile).toString())
 
 function getImage (shortname) {
-  const entry = imageConfig.images.find(({ name }) => name === shortname)
+  const entry = solsa.getSolutionConfig().images.find(({ name }) => name === shortname)
   if (!entry) return shortname
   var res = shortname
   if (entry.registry) {

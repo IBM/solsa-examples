@@ -18,13 +18,12 @@
 // @ts-check
 
 const solsa = require('solsa')
-const fs = require('fs')
 
 class BlueComputeApp {
-  constructor ({ appName, commonLabels = {}, valuesFile }) {
+  constructor ({ appName, commonLabels = {} }) {
     this.appName = appName
     this.commonLabels = commonLabels
-    this.values = solsa.parseYaml(fs.readFileSync(valuesFile).toString()).services
+    this.values = solsa.getSolutionConfig()
   }
 
   /**

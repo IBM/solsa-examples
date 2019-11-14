@@ -16,13 +16,10 @@
 
 const solsa = require('solsa')
 
-const path = require('path')
-
 const BlueComputeApp = require('./bluecompute-config')
 const appConfig = new BlueComputeApp({
   appName: 'bluecompute',
-  commonLabels: { app: 'bluecompute', implementation: 'microprofile' },
-  valuesFile: path.join(__dirname, 'bluecompute-values.yaml')
+  commonLabels: { app: 'bluecompute', implementation: 'microprofile' }
 })
 
 module.exports = new solsa.Bundle({
