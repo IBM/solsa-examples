@@ -36,11 +36,11 @@ below (cf. [bookinfo.js](bookinfo.js)):
 ```javascript
 let solsa = require('solsa')
 
-module.exports = function bookinfo () {
-  let details = new solsa.ContainerizedService({ name: 'details', image: 'istio/examples-bookinfo-details-v1:1.15.0', port: 9080 })
-  let ratings = new solsa.ContainerizedService({ name: 'ratings', image: 'istio/examples-bookinfo-ratings-v1:1.15.0', port: 9080 })
-  let reviews = new solsa.ContainerizedService({ name: 'reviews', image: 'istio/examples-bookinfo-reviews-v1:1.15.0', port: 9080 })
-  let productpage = new solsa.ContainerizedService({ name: 'productpage', image: 'istio/examples-bookinfo-productpage-v1:1.15.0', port: 9080 })
+module.exports = function bookinfo (values) {
+  let details = new solsa.ContainerizedService({ name: 'details', image: values.details.image, port: values.details.port })
+  let ratings = new solsa.ContainerizedService({ name: 'ratings', image: values.ratings.image, port: values.ratings.port })
+  let reviews = new solsa.ContainerizedService({ name: 'reviews', image: values.reviews.image, port: values.reviews.port })
+  let productpage = new solsa.ContainerizedService({ name: 'productpage', image: values.productpage.image, port: values.productpage.port })
   productpage.env = {
     DETAILS_HOSTNAME: details.name,
     RATINGS_HOSTNAME: ratings.name,
@@ -50,6 +50,7 @@ module.exports = function bookinfo () {
 
   return new solsa.Bundle({ details, ratings, reviews, productpage, entry })
 }
+
 ```
 The code above defines the four component microservices by
 indicating their names, container image, and exposed port.
@@ -58,46 +59,39 @@ the other services are represented explicitly in the specification of
 its environment, which captures the names of the services on which
 it depends.
 
-An instance of the Bookinfo pattern is instantiated as shown below (cf. [instance.js](instance.js)):
-```javascript
-const bookinfo = require('./bookinfo')
-module.exports = bookinfo()
-```
-
 To illustrate the advantage of using `ContainerizedService` where possible, consider
 the equivalent SolSA program using the core Kubernetes construct
 of `Deployment` as shown in [bookinfo-kube.js](bookinfo-kube.js). Although the SolSA code
 is still less verbose than the generated YAML, many more low-level details of each `Deployment`
 need to be explictly specififed by the programmer. For example, contrast
 ```javascript
-  let details = new solsa.ContainerizedService({ name: 'details', image: 'istio/examples-bookinfo-details-v1:1.15.0', port: 9080 })
+  let details = new solsa.ContainerizedService({ name: 'details', image: values.details.image, port: values.details.port })
 ```
 with
 ```javascript
-let details = new solsa.apps.v1.Deployment({
-  metadata: { name: 'details' },
-  spec: {
-    selector: { matchLabels: { 'solsa.ibm.com/pod': 'details' } },
-    replicas: 1,
-    template: {
-      spec: {
-        containers: [
-          {
-            name: 'details',
-            image: 'istio/examples-bookinfo-details-v1:1.15.0',
-            env: [{ name: 'PORT', value: '9080' }],
-            ports: [{ containerPort: 9080 }],
-            livenessProbe: { tcpSocket: { port: 9080 } },
-            readinessProbe: { tcpSocket: { port: 9080 } }
-          }
-        ]
+  let details = new solsa.apps.v1.Deployment({
+    metadata: { name: 'details' },
+    spec: {
+      selector: { matchLabels: { 'solsa.ibm.com/pod': 'details' } },
+      replicas: 1,
+      template: {
+        spec: {
+          containers: [
+            {
+              name: 'details',
+              image: values.details.image,
+              env: [{ name: 'PORT', value: `${values.details.port}` }],
+              ports: [{ containerPort: 9080 }],
+              livenessProbe: { tcpSocket: { port: values.details.port } },
+              readinessProbe: { tcpSocket: { port: values.details.port } }
+            }
+          ]
+        }
       }
     }
-  }
-})
-let detailsService = details.getService()
+  })
+  let detailsService = details.getService()
 ```
-
 
 Note that both versions of the Bookinfo pattern
 generate identical YAML when processed by `solsa yaml`.
@@ -112,9 +106,9 @@ application as shown below (cf. [bookinfo-translator.js](bookinfo-translator.js)
 let solsa = require('solsa')
 let bookinfo = require('./bookinfo.js')
 
-module.exports = function translatingBookinfo ({ language }) {
+module.exports = function translatingBookinfo (values) {
   // Create an instance of the basic Bookinfo application pattern
-  let bundle = bookinfo()
+  let bundle = bookinfo(values)
 
   // Extract reviews and productpage resources from bundle
   let reviews = /** @type {solsa.ContainerizedService} */ (bundle.solutions.reviews)
@@ -122,10 +116,9 @@ module.exports = function translatingBookinfo ({ language }) {
 
   // Configure a translating review service
   let translator = new solsa.LanguageTranslator({ name: 'bookinfo-watson-translator' })
-  let translatedReviews = new solsa.ContainerizedService({ name: 'reviews-translator', image: 'solsa-reviews-translator', build: __dirname, main: 'reviews-translator.js', port: 9080 })
-
+  let translatedReviews = new solsa.ContainerizedService({ name: 'reviews-translator', image: 'solsa-reviews-translator', build: __dirname, main: 'reviews-translator.js', port: reviews.port })
   translatedReviews.env = {
-    LANGUAGE: { value: language },
+    LANGUAGE: { value: values.translator.language },
     WATSON_TRANSLATOR_URL: translator.getSecret('url'),
     WATSON_TRANSLATOR_APIKEY: translator.getSecret('apikey'),
     REVIEWS_HOSTNAME: reviews.name,
@@ -142,6 +135,7 @@ module.exports = function translatingBookinfo ({ language }) {
 
   return bundle
 }
+
 ```
 The first block of code creates an instance of the basic Bookinfo
 application pattern by invoking the `bookinfo` function imported from `bookinfo.js`.
@@ -156,12 +150,10 @@ The final code snippet updates the environment of the `productpage`
 microservice so that it will send its review requests to `translatedReviews`
 instead of `reviews`.
 
-Finally, we can instantiate a bookinfo that translates reviews to
-Spanish with the snippet (cf. [instance-sp.js](instance-sp.js))
-```javascript
-const bookinfo = require('./bookinfo-translator')
-module.exports = bookinfo({ language: 'spanish' })
-```
+By default, the application will translate reviews into Spanish
+(specified by `translator.language` in `values.yaml`). A different
+target language can be selected simply by overriding this value.
+For example `solsa yaml bookinfo-translator.js --set translator.language=french`
 
 Note: before using `sosla yaml` to deploy this application, you will first need to build
 the container image `solsa-reviews-translator` as described in the next section.

@@ -16,11 +16,11 @@
 
 let solsa = require('solsa')
 
-module.exports = function bookinfo () {
-  let details = new solsa.ContainerizedService({ name: 'details', image: 'istio/examples-bookinfo-details-v1:1.15.0', port: 9080 })
-  let ratings = new solsa.ContainerizedService({ name: 'ratings', image: 'istio/examples-bookinfo-ratings-v1:1.15.0', port: 9080 })
-  let reviews = new solsa.ContainerizedService({ name: 'reviews', image: 'istio/examples-bookinfo-reviews-v1:1.15.0', port: 9080 })
-  let productpage = new solsa.ContainerizedService({ name: 'productpage', image: 'istio/examples-bookinfo-productpage-v1:1.15.0', port: 9080 })
+module.exports = function bookinfo (values) {
+  let details = new solsa.ContainerizedService({ name: 'details', image: values.details.image, port: values.details.port })
+  let ratings = new solsa.ContainerizedService({ name: 'ratings', image: values.ratings.image, port: values.ratings.port })
+  let reviews = new solsa.ContainerizedService({ name: 'reviews', image: values.reviews.image, port: values.reviews.port })
+  let productpage = new solsa.ContainerizedService({ name: 'productpage', image: values.productpage.image, port: values.productpage.port })
   productpage.env = {
     DETAILS_HOSTNAME: details.name,
     RATINGS_HOSTNAME: ratings.name,

@@ -14,21 +14,68 @@
  * limitations under the License.
  */
 
-// An instatiation of the k-container application where
-// the image mapping function is defined by accessing
-// a values.yaml file that was loaded with the application
-// and made available via getSolutionConfig().
+// An example of deploying an application that combines containerized existing microservices
+// and IBM Cloud Services using SolSA to manage dependencies and orchestrate the deployment.
 //
-// This is intented to illustrate one possible pattern
-// for using SolSA in a more complex build environment
-// where image details are provided by an
-// external configuration file.
+// This is the IBM Cloud Garage Event Driven Architecture K Container Shipping use case from:
+//   https://github.com/ibm-cloud-architecture/refarch-kc
+//   https://www.ibm.com/cloud/garage/architectures/eventDrivenArchitecture/reference-architecture
 
-const solsa = require('solsa')
-const kcontainer = require('./kcontainer-architecture')
+let solsa = require('solsa')
 
-function getImage (shortname) {
-  const entry = solsa.getSolutionConfig()[shortname]
+/**
+ * Instantiate an instance of the kcontainer application.
+ */
+module.exports = function kcontainer (values) {
+  // EventStreams configuration
+  let es = new solsa.EventStreams({ name: 'kcontainer-es', plan: 'standard' })
+  es.addTopic('allocated-orders')
+  es.addTopic('bluewaterContainer')
+  es.addTopic('bluewaterProblem')
+  es.addTopic('bluewaterShip')
+  es.addTopic('containers')
+  es.addTopic('containerMetrics')
+  es.addTopic('errors')
+  es.addTopic('orders')
+  es.addTopic('rejected-orders')
+
+  // Common environment variables shared across kcontainer microservices
+  let commonEnv = {
+    APPLICATION_NAME: 'kcontainer',
+    KAFKA_ENV: 'IBMCLOUD',
+    KAFKA_BROKERS: es.getSecret('kafka_brokers_sasl_flat'),
+    KAFKA_APIKEY: es.getSecret('api_key')
+  }
+
+  // Internal microservices
+  let fleetms = new solsa.ContainerizedService({ name: 'kc-fleetms', image: getImage('fleetms', values), port: 9080, env: commonEnv })
+  let ordercmdms = new solsa.ContainerizedService({ name: 'kc-ordercmdms', image: getImage('ordercmdms', values), port: 9080, env: commonEnv })
+  let orderqueryms = new solsa.ContainerizedService({ name: 'kc-orderqueryms', image: getImage('orderqueryms', values), port: 9080, env: commonEnv })
+  let voyagesms = new solsa.ContainerizedService({ name: 'kc-voyagesms', image: getImage('voyagesms', values), port: 3000, env: commonEnv })
+
+  // UI connects with fleet, ordercmd, orderquery, and voyages via names/ports provided in its environment
+  let ui = new solsa.ContainerizedService({ name: 'kc-ui', image: getImage('ui', values), port: 3010 })
+  ui.env = Object.assign({
+    FLEETMS_SERVICE_SERVICE_HOST: fleetms.name,
+    FLEETMS_SERVICE_SERVICE_PORT: fleetms.port,
+    ORDERCOMMANDMS_SERVICE_SERVICE_HOST: ordercmdms.name,
+    ORDERCOMMANDMS_SERVICE_SERVICE_PORT_HTTP: ordercmdms.port,
+    ORDERQUERYMS_SERVICE_SERVICE_HOST: orderqueryms.name,
+    ORDERQUERYMS_SERVICE_SERVICE_PORT_HTTP: orderqueryms.port,
+    VOYAGESMS_SERVICE_SERVICE_HOST: voyagesms.name,
+    VOYAGESMS_SERVICE_SERVICE_PORT_HTTP: voyagesms.port
+  }, commonEnv)
+
+  // expose UI
+  let ingress = ui.getIngress({ vhost: 'kcontainer' })
+
+  return new solsa.Bundle({ es, fleetms, ordercmdms, orderqueryms, voyagesms, ui, ingress })
+}
+
+// Using the shortname, lookup the image details in the context object values
+// and return a detailed image name consisting of registry, name, and tag.
+function getImage (shortname, values) {
+  const entry = values[shortname]
   if (!entry || !entry.image) return shortname
   var res = entry.image.name
   if (entry.image.registry) {
@@ -39,5 +86,3 @@ function getImage (shortname) {
   }
   return res
 }
-
-module.exports = kcontainer({ getImage: getImage })

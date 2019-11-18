@@ -16,102 +16,104 @@
 
 let solsa = require('solsa')
 
-let details = new solsa.apps.v1.Deployment({
-  metadata: { name: 'details' },
-  spec: {
-    selector: { matchLabels: { 'solsa.ibm.com/pod': 'details' } },
-    replicas: 1,
-    template: {
-      spec: {
-        containers: [
-          {
-            name: 'details',
-            image: 'istio/examples-bookinfo-details-v1:1.15.0',
-            env: [{ name: 'PORT', value: '9080' }],
-            ports: [{ containerPort: 9080 }],
-            livenessProbe: { tcpSocket: { port: 9080 } },
-            readinessProbe: { tcpSocket: { port: 9080 } }
-          }
-        ]
+module.exports = function (values) {
+  let details = new solsa.apps.v1.Deployment({
+    metadata: { name: 'details' },
+    spec: {
+      selector: { matchLabels: { 'solsa.ibm.com/pod': 'details' } },
+      replicas: 1,
+      template: {
+        spec: {
+          containers: [
+            {
+              name: 'details',
+              image: values.details.image,
+              env: [{ name: 'PORT', value: `${values.details.port}` }],
+              ports: [{ containerPort: 9080 }],
+              livenessProbe: { tcpSocket: { port: values.details.port } },
+              readinessProbe: { tcpSocket: { port: values.details.port } }
+            }
+          ]
+        }
       }
     }
-  }
-})
-let detailsService = details.getService()
+  })
+  let detailsService = details.getService()
 
-let reviews = new solsa.apps.v1.Deployment({
-  metadata: { name: 'reviews' },
-  spec: {
-    selector: { matchLabels: { 'solsa.ibm.com/pod': 'reviews' } },
-    replicas: 1,
-    template: {
-      spec: {
-        containers: [
-          {
-            name: 'reviews',
-            image: 'istio/examples-bookinfo-reviews-v1:1.15.0',
-            env: [{ name: 'PORT', value: '9080' }],
-            ports: [{ containerPort: 9080 }],
-            livenessProbe: { tcpSocket: { port: 9080 } },
-            readinessProbe: { tcpSocket: { port: 9080 } }
-          }
-        ]
+  let reviews = new solsa.apps.v1.Deployment({
+    metadata: { name: 'reviews' },
+    spec: {
+      selector: { matchLabels: { 'solsa.ibm.com/pod': 'reviews' } },
+      replicas: 1,
+      template: {
+        spec: {
+          containers: [
+            {
+              name: 'reviews',
+              image: values.reviews.image,
+              env: [{ name: 'PORT', value: `${values.reviews.port}` }],
+              ports: [{ containerPort: values.reviews.port }],
+              livenessProbe: { tcpSocket: { port: values.reviews.port } },
+              readinessProbe: { tcpSocket: { port: values.reviews.port } }
+            }
+          ]
+        }
       }
     }
-  }
-})
-let reviewsService = reviews.getService()
+  })
+  let reviewsService = reviews.getService()
 
-let ratings = new solsa.apps.v1.Deployment({
-  metadata: { name: 'ratings' },
-  spec: {
-    selector: { matchLabels: { 'solsa.ibm.com/pod': 'ratings' } },
-    replicas: 1,
-    template: {
-      spec: {
-        containers: [
-          {
-            name: 'ratings',
-            image: 'istio/examples-bookinfo-ratings-v1:1.15.0',
-            env: [{ name: 'PORT', value: '9080' }],
-            ports: [{ containerPort: 9080 }],
-            livenessProbe: { tcpSocket: { port: 9080 } },
-            readinessProbe: { tcpSocket: { port: 9080 } }
-          }
-        ]
+  let ratings = new solsa.apps.v1.Deployment({
+    metadata: { name: 'ratings' },
+    spec: {
+      selector: { matchLabels: { 'solsa.ibm.com/pod': 'ratings' } },
+      replicas: 1,
+      template: {
+        spec: {
+          containers: [
+            {
+              name: 'ratings',
+              image: values.ratings.image,
+              env: [{ name: 'PORT', value: `${values.ratings.port}` }],
+              ports: [{ containerPort: values.ratings.port }],
+              livenessProbe: { tcpSocket: { port: values.ratings.port } },
+              readinessProbe: { tcpSocket: { port: values.ratings.port } }
+            }
+          ]
+        }
       }
     }
-  }
-})
-let ratingsService = ratings.getService()
+  })
+  let ratingsService = ratings.getService()
 
-let productpage = new solsa.apps.v1.Deployment({
-  metadata: { name: 'productpage' },
-  spec: {
-    selector: { matchLabels: { 'solsa.ibm.com/pod': 'productpage' } },
-    replicas: 1,
-    template: {
-      spec: {
-        containers: [
-          {
-            name: 'productpage',
-            image: 'istio/examples-bookinfo-productpage-v1:1.15.0',
-            env: [
-              { name: 'PORT', value: '9080' },
-              { name: 'DETAILS_HOSTNAME', value: details.metadata.name },
-              { name: 'RATINGS_HOSTNAME', value: ratings.metadata.name },
-              { name: 'REVIEWS_HOSTNAME', value: reviews.metadata.name }
-            ],
-            ports: [{ containerPort: 9080 }],
-            livenessProbe: { tcpSocket: { port: 9080 } },
-            readinessProbe: { tcpSocket: { port: 9080 } }
-          }
-        ]
+  let productpage = new solsa.apps.v1.Deployment({
+    metadata: { name: 'productpage' },
+    spec: {
+      selector: { matchLabels: { 'solsa.ibm.com/pod': 'productpage' } },
+      replicas: 1,
+      template: {
+        spec: {
+          containers: [
+            {
+              name: 'productpage',
+              image: values.productpage.image,
+              env: [
+                { name: 'PORT', value: `${values.productpage.port}` },
+                { name: 'DETAILS_HOSTNAME', value: details.metadata.name },
+                { name: 'RATINGS_HOSTNAME', value: ratings.metadata.name },
+                { name: 'REVIEWS_HOSTNAME', value: reviews.metadata.name }
+              ],
+              ports: [{ containerPort: values.productpage.port }],
+              livenessProbe: { tcpSocket: { port: values.productpage.port } },
+              readinessProbe: { tcpSocket: { port: values.productpage.port } }
+            }
+          ]
+        }
       }
     }
-  }
-})
-let productpageService = productpage.getService()
-let ingress = productpageService.getIngress({ vhost: 'bookinfo' })
+  })
+  let productpageService = productpage.getService()
+  let ingress = productpageService.getIngress({ vhost: 'bookinfo' })
 
-module.exports = new solsa.Bundle({ details, detailsService, reviews, reviewsService, ratings, ratingsService, productpage, productpageService, ingress })
+  return new solsa.Bundle({ details, detailsService, reviews, reviewsService, ratings, ratingsService, productpage, productpageService, ingress })
+}

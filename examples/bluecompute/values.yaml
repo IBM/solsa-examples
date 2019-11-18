@@ -1,3 +1,9 @@
+bluecompute:
+    appName: 'bluecompute'
+    commonLabels:
+      app: 'bluecompute'
+      implementation: 'microprofile'
+
 auth:
   replicaCount: 1
   image:

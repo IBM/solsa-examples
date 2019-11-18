@@ -1,0 +1,18 @@
+details:
+  image: 'istio/examples-bookinfo-details-v1:1.15.0'
+  port: 9080
+
+ratings:
+  image: 'istio/examples-bookinfo-ratings-v1:1.15.0'
+  port: 9080
+
+reviews:
+  image: 'istio/examples-bookinfo-reviews-v1:1.15.0'
+  port: 9080
+
+productpage:
+   image: 'istio/examples-bookinfo-productpage-v1:1.15.0'
+   port: 9080
+
+translator:
+  language: spanish
