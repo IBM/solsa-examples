@@ -1,16 +1,25 @@
-images:
-  - name: kc-fleetms
-    registry: dgrove
+fleetms:
+  image:
+    name: 'kc-fleetms'
+    registry: docker.io/dgrove
     tag: 'ee496d9'
-  - name: kc-ordercmdms
-    registry: dgrove
+ordercmdms:
+  image:
+    name: 'kc-ordercmdms'
+    registry: docker.io/dgrove
     tag: 'ibmcase-v1'
-  - name: kc-orderqueryms
-    registry: dgrove
+orderqueryms:
+  image:
+    name: 'kc-orderqueryms'
+    registry: docker.io/dgrove
     tag: 'ibmcase-v1'
-  - name: kc-voyagesms
-    registry: dgrove
+voyagesms:
+  image:
+    name: 'kc-voyagesms'
+    registry: docker.io/dgrove
     tag: 'ee496d9'
-  - name: kc-ui
-    registry: dgrove
+ui:
+  image:
+    name: kc-ui
+    registry: docker.io/dgrove
     tag: ibmcase-v1
