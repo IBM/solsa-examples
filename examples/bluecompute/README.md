@@ -71,7 +71,7 @@ defining BlueCompute even more concise and less error-prone.
    A `BlueComputeConfig` class plays a similar role to the `values.yaml`
    file of a Helm chart by centralizing instance-specific configuration
    values (In fact, the bulk of BlueComputeConfig is simply a wrapper
-   around a `bluecompute-values.yaml` file that was derived from the
+   around a `values.yaml` file that was trivially derived from the
    `values.yaml` files of the Helm charts originally used to deploy
    the sub-components). The top-level file, bluecompute.js,
    instantiates an instance of `BlueComputeConfig` and then invokes

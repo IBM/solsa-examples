@@ -50,13 +50,13 @@ module.exports = function kcontainer ({ getImage }) {
   }
 
   // Internal microservices
-  let fleetms = new solsa.ContainerizedService({ name: 'kc-fleetms', image: getImage('kc-fleetms'), port: 9080, env: commonEnv })
-  let ordercmdms = new solsa.ContainerizedService({ name: 'kc-ordercmdms', image: getImage('kc-ordercmdms'), port: 9080, env: commonEnv })
-  let orderqueryms = new solsa.ContainerizedService({ name: 'kc-orderqueryms', image: getImage('kc-orderqueryms'), port: 9080, env: commonEnv })
-  let voyagesms = new solsa.ContainerizedService({ name: 'kc-voyagesms', image: getImage('kc-voyagesms'), port: 3000, env: commonEnv })
+  let fleetms = new solsa.ContainerizedService({ name: 'kc-fleetms', image: getImage('fleetms'), port: 9080, env: commonEnv })
+  let ordercmdms = new solsa.ContainerizedService({ name: 'kc-ordercmdms', image: getImage('ordercmdms'), port: 9080, env: commonEnv })
+  let orderqueryms = new solsa.ContainerizedService({ name: 'kc-orderqueryms', image: getImage('orderqueryms'), port: 9080, env: commonEnv })
+  let voyagesms = new solsa.ContainerizedService({ name: 'kc-voyagesms', image: getImage('voyagesms'), port: 3000, env: commonEnv })
 
   // UI connects with fleet, ordercmd, orderquery, and voyages via names/ports provided in its environment
-  let ui = new solsa.ContainerizedService({ name: 'kc-ui', image: getImage('kc-ui'), port: 3010 })
+  let ui = new solsa.ContainerizedService({ name: 'kc-ui', image: getImage('ui'), port: 3010 })
   ui.env = Object.assign({
     FLEETMS_SERVICE_SERVICE_HOST: fleetms.name,
     FLEETMS_SERVICE_SERVICE_PORT: fleetms.port,

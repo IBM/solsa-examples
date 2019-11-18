@@ -331,7 +331,7 @@ this is handled by the `oc` CLI.
 
 ### Ingress options for Red Hat OpenShift on IBM Cloud
 
-A Red Hat OpenShift on IBM Cloud (ROKS) cluster supports both Kubernetes Ingress
+A Red Hat OpenShift on IBM Cloud cluster supports both Kubernetes Ingress
 and OpenShift Routes.  You can choose which type of ingress you want to generate
 by specifying the ingress for the cluster as either
 [iks](https://github.com/IBM/solsa/blob/master/docs/SolSAConfig.md#ibm-cloud-kubernetes-service-standard-cluster)

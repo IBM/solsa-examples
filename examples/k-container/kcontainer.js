@@ -15,31 +15,27 @@
  */
 
 // An instatiation of the k-container application where
-// the image mapping function is defined by reading
-// a yaml file that specifies the details of an image.
+// the image mapping function is defined by accessing
+// a values.yaml file that was loaded with the application
+// and made available via getSolutionConfig().
 //
 // This is intented to illustrate one possible pattern
 // for using SolSA in a more complex build environment
-// where image details would be provided by an
-// externally-generated config file.
+// where image details are provided by an
+// external configuration file.
 
 const solsa = require('solsa')
 const kcontainer = require('./kcontainer-architecture')
-const fs = require('fs')
-const path = require('path')
-
-let imageConfigFile = path.join(__dirname, 'dgrove-images.yaml')
-let imageConfig = solsa.parseYaml(fs.readFileSync(imageConfigFile).toString())
 
 function getImage (shortname) {
-  const entry = imageConfig.images.find(({ name }) => name === shortname)
-  if (!entry) return shortname
-  var res = shortname
-  if (entry.registry) {
-    res = `${entry.registry}/${shortname}`
+  const entry = solsa.getSolutionConfig()[shortname]
+  if (!entry || !entry.image) return shortname
+  var res = entry.image.name
+  if (entry.image.registry) {
+    res = `${entry.image.registry}/${res}`
   }
-  if (entry.tag) {
-    res = `${res}:${entry.tag}`
+  if (entry.image.tag) {
+    res = `${res}:${entry.image.tag}`
   }
   return res
 }
