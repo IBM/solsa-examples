@@ -23,9 +23,9 @@
 let solsa = require('solsa')
 let bookinfo = require('./bookinfo.js')
 
-module.exports = function translatingBookinfo ({ language }) {
+module.exports = function translatingBookinfo (values) {
   // Create an instance of the basic Bookinfo application pattern
-  let bundle = bookinfo()
+  let bundle = bookinfo(values)
 
   // Extract reviews and productpage resources from bundle
   let reviews = /** @type {solsa.ContainerizedService} */ (bundle.solutions.reviews)
@@ -33,10 +33,9 @@ module.exports = function translatingBookinfo ({ language }) {
 
   // Configure a translating review service
   let translator = new solsa.LanguageTranslator({ name: 'bookinfo-watson-translator' })
-  let translatedReviews = new solsa.ContainerizedService({ name: 'reviews-translator', image: 'solsa-reviews-translator', build: __dirname, main: 'reviews-translator.js', port: 9080 })
-
+  let translatedReviews = new solsa.ContainerizedService({ name: 'reviews-translator', image: 'solsa-reviews-translator', build: __dirname, main: 'reviews-translator.js', port: reviews.port })
   translatedReviews.env = {
-    LANGUAGE: { value: language },
+    LANGUAGE: { value: values.translator.language },
     WATSON_TRANSLATOR_URL: translator.getSecret('url'),
     WATSON_TRANSLATOR_APIKEY: translator.getSecret('apikey'),
     REVIEWS_HOSTNAME: reviews.name,
