@@ -30,15 +30,12 @@ are leveraged "under the covers" by SolSA to actually create and configure the
 EventStreams instance and adapt its binding secrets to the format expected by the
 K Container microservices.
 
-The architectural pattern is defined in [kcontainer-architecture.js](./kcontainer-architecture.js),
-which exports a function that given an image renaming function returns a SolSA `Bundle`
+The architectural pattern is defined in [kcontainer.js](./kcontainer.js),
+which exports a function that maps an application context derived from the
+configuration information provided in [values.yaml](./values.yaml) returns a SolSA `Bundle`
 instantiating the pattern.  Of interest in the architecture specification is the concise
 declaration of the `EventStreams` instance and its associated topics, and the connection of the
 various microservices to that instance and each other through their respective `env` bindings.
-
-The file [kcontainer.js](./kcontainer.js) creates a concrete instance of the pattern by providing
-a concrete mapping of logical image names to specific tagged images on dockerhub
-that is specified via data in a values.yaml file.
 
 ## Deployment
 

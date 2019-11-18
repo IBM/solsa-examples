@@ -16,18 +16,43 @@
 
 const solsa = require('solsa')
 
-const BlueComputeApp = require('./bluecompute-config')
-const appConfig = new BlueComputeApp({
-  appName: 'bluecompute',
-  commonLabels: { app: 'bluecompute', implementation: 'microprofile' }
-})
+module.exports = function (values) {
+  const appConfig = new BlueComputeApp(values)
 
-module.exports = new solsa.Bundle({
-  config: require('./bluecompute-cluster')(appConfig),
-  auth: require('./bluecompute-auth')(appConfig),
-  catalog: require('./bluecompute-catalog')(appConfig),
-  customer: require('./bluecompute-customer')(appConfig),
-  orders: require('./bluecompute-orders')(appConfig),
-  inventory: require('./bluecompute-inventory')(appConfig),
-  web: require('./bluecompute-web')(appConfig)
-})
+  return new solsa.Bundle({
+    config: require('./bluecompute-cluster')(appConfig),
+    auth: require('./bluecompute-auth')(appConfig),
+    catalog: require('./bluecompute-catalog')(appConfig),
+    customer: require('./bluecompute-customer')(appConfig),
+    orders: require('./bluecompute-orders')(appConfig),
+    inventory: require('./bluecompute-inventory')(appConfig),
+    web: require('./bluecompute-web')(appConfig)
+  })
+}
+
+/**
+ * Add some application-specific helper methods around the
+ * data contained in values.yaml to capture repeated access patterns.
+ */
+class BlueComputeApp {
+  constructor (values) {
+    this.appName = values.bluecompute.appName
+    this.values = values
+  }
+
+  /**
+   * Map a logical name to the instance specific name
+   * @param {string} name The logical name of the desired resource
+   * @returns The instance-specific name for the resource
+   */
+  getInstanceName (name) {
+    return `${this.appName}-${name}`
+  }
+
+  /**
+   * add this.values.bluecompute.commonLabels to the argument label dictionary and return it
+   */
+  addCommonLabelsTo (labels) {
+    return Object.assign(labels, this.values.bluecompute.commonLabels)
+  }
+}
