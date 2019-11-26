@@ -1559,7 +1559,7 @@ app.solutions.bluecomputeInventorydb_Deployment = new solsa.extensions.v1beta1.D
         initContainers: [
           {
             name: 'remove-lost-found',
-            image: 'busybox:1.25.0',
+            image: 'docker.io/library/busybox:1.25.0',
             imagePullPolicy: 'Always',
             command: [ 'rm', '-fr', '/var/lib/mysql/lost+found' ],
             volumeMounts: [ { name: 'data', mountPath: '/var/lib/mysql' } ]
@@ -1634,7 +1634,7 @@ app.solutions.bluecomputeMysql_Deployment = new solsa.extensions.v1beta1.Deploym
         initContainers: [
           {
             name: 'remove-lost-found',
-            image: 'busybox:1.25.0',
+            image: 'docker.io/library/busybox:1.25.0',
             imagePullPolicy: 'IfNotPresent',
             command: [ 'rm', '-fr', '/var/lib/mysql/lost+found' ],
             volumeMounts: [ { name: 'data', mountPath: '/var/lib/mysql' } ]
@@ -1643,7 +1643,7 @@ app.solutions.bluecomputeMysql_Deployment = new solsa.extensions.v1beta1.Deploym
         containers: [
           {
             name: 'bluecompute-mysql',
-            image: 'mysql:5.7.14',
+            image: 'docker.io/library/mysql:5.7.14',
             imagePullPolicy: 'IfNotPresent',
             resources: { requests: { cpu: '100m', memory: '256Mi' } },
             env: [
@@ -1833,7 +1833,7 @@ app.solutions.bluecomputeOrdersdb_Deployment = new solsa.extensions.v1beta1.Depl
         initContainers: [
           {
             name: 'remove-lost-found',
-            image: 'busybox:1.25.0',
+            image: 'docker.io/library/busybox:1.25.0',
             imagePullPolicy: 'Always',
             command: [ 'rm', '-fr', '/var/lib/mysql/lost+found' ],
             volumeMounts: [ { name: 'data', mountPath: '/var/lib/mysql' } ]
@@ -2187,7 +2187,7 @@ app.solutions.bluecomputeInventoryJob = new solsa.batch.v1.Job({
         initContainers: [
           {
             name: 'test-mysql',
-            image: 'mysql:5.7.14',
+            image: 'docker.io/library/mysql:5.7.14',
             imagePullPolicy: 'Always',
             command: [
               '/bin/bash',
@@ -2211,7 +2211,7 @@ app.solutions.bluecomputeInventoryJob = new solsa.batch.v1.Job({
         containers: [
           {
             name: 'populate-mysql',
-            image: 'mysql:5.7.14',
+            image: 'docker.io/library/mysql:5.7.14',
             imagePullPolicy: 'Always',
             volumeMounts: [ { mountPath: '/inventory-data', name: 'inventory-data', readOnly: false } ],
             command: [ '/bin/bash', '-c' ],
@@ -2284,7 +2284,7 @@ app.solutions.bluecomputeOrdersJob = new solsa.batch.v1.Job({
         initContainers: [
           {
             name: 'test-mariadb',
-            image: 'mysql:5.7.14',
+            image: 'docker.io/library/mysql:5.7.14',
             imagePullPolicy: 'IfNotPresent',
             command: [
               '/bin/bash',
@@ -2308,7 +2308,7 @@ app.solutions.bluecomputeOrdersJob = new solsa.batch.v1.Job({
         containers: [
           {
             name: 'populate-mysql',
-            image: 'mysql:5.7.14',
+            image: 'docker.io/library/mysql:5.7.14',
             imagePullPolicy: 'IfNotPresent',
             volumeMounts: [ { mountPath: '/orders-data', name: 'orders-data', readOnly: false } ],
             command: [ '/bin/bash', '-c' ],

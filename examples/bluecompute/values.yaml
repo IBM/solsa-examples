@@ -101,7 +101,7 @@ keystore:
 
 mysql:
   image:
-    repository: "mysql"
+    repository: "docker.io/library/mysql"
     tag: "5.7.14"
   ports:
     sql: 3306
@@ -160,7 +160,7 @@ orders:
 rabbitmq:
   replicaCount: 1
   image:
-    repository: rabbitmq
+    repository: docker.io/library/rabbitmq
     tag: latest
   ports:
     main: 5672
