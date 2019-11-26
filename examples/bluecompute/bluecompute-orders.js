@@ -153,17 +153,9 @@ module.exports = function bcOrders (appConfig) {
               name: 'mariadb',
               image: `${appConfig.values.mariadb.image.repository}:${appConfig.values.mariadb.image.tag}`,
               env: [
-                {
-                  name: 'MARIADB_ROOT_PASSWORD',
-                  valueFrom: {
-                    secretKeyRef: { name: mariadbSecret.metadata.name, key: 'mariadb-root-password' }
-                  }
-                },
+                mariadbSecret.getEnvVar({ name: 'MARIADB_ROOT_PASSWORD', key: 'mariadb-root-password' }),
                 { name: 'MARIADB_USER', value: `${appConfig.values.mariadb.db.user}` },
-                {
-                  name: 'MARIADB_PASSWORD',
-                  valueFrom: { secretKeyRef: { name: mariadbSecret.metadata.name, key: 'mariadb-password' } }
-                },
+                mariadbSecret.getEnvVar({ name: 'MARIADB_PASSWORD', key: 'mariadb-password' }),
                 { name: 'MARIADB_DATABASE', value: `${appConfig.values.mariadb.db.name}` }
               ],
               ports: [{ name: 'mysql', containerPort: appConfig.values.mariadb.ports.mysql }],
@@ -286,12 +278,7 @@ module.exports = function bcOrders (appConfig) {
     { name: 'MYSQL_PORT', value: `${appConfig.values.mariadb.ports.mysql}` },
     { name: 'MYSQL_DATABASE', value: `${appConfig.values.mariadb.db.name}` },
     { name: 'MYSQL_USER', value: 'root' },
-    {
-      name: 'MYSQL_PASSWORD',
-      valueFrom: {
-        secretKeyRef: { name: ordersMariadbSecret.metadata.name, key: 'mariadb-password' }
-      }
-    }
+    ordersMariadbSecret.getEnvVar({ name: 'MYSQL_PASSWORD', key: 'mariadb-password' })
   ]
   let ordersJob = new solsa.batch.v1.Job({
     metadata: {

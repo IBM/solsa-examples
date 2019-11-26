@@ -97,7 +97,7 @@ module.exports = function bcInventory (appConfig) {
           initContainers: [
             {
               name: 'remove-lost-found',
-              image: 'busybox:1.25.0',
+              image: 'docker.io/library/busybox:1.25.0',
               imagePullPolicy: 'IfNotPresent',
               command: ['rm', '-fr', '/var/lib/mysql/lost+found'],
               volumeMounts: [{ name: 'data', mountPath: '/var/lib/mysql' }]
@@ -109,14 +109,8 @@ module.exports = function bcInventory (appConfig) {
               image: `${appConfig.values.mysql.image.repository}:${appConfig.values.mysql.image.tag}`,
               resources: appConfig.values.mysql.resources,
               env: [
-                {
-                  name: 'MYSQL_ROOT_PASSWORD',
-                  valueFrom: { secretKeyRef: { name: mysqlSecret.metadata.name, key: 'mysql-root-password' } }
-                },
-                {
-                  name: 'MYSQL_PASSWORD',
-                  valueFrom: { secretKeyRef: { name: mysqlSecret.metadata.name, key: 'mysql-password' } }
-                },
+                mysqlSecret.getEnvVar({ name: 'MYSQL_ROOT_PASSWORD', key: 'mysql-root-password' }),
+                mysqlSecret.getEnvVar({ name: 'MYSQL_PASSWORD', key: 'mysql-password' }),
                 { name: 'MYSQL_USER', value: `${appConfig.values.mysql.db.mysqlUser}` },
                 { name: 'MYSQL_DATABASE', value: `${appConfig.values.mysql.db.mysqlDatabase}` }
               ],
@@ -205,12 +199,7 @@ module.exports = function bcInventory (appConfig) {
     { name: 'MYSQL_PORT', value: `${appConfig.values.mysql.ports.sql}` },
     { name: 'MYSQL_DATABASE', value: `${appConfig.values.mysql.db.mysqlDatabase}` },
     { name: 'MYSQL_USER', value: 'root' },
-    {
-      name: 'MYSQL_PASSWORD',
-      valueFrom: {
-        secretKeyRef: { name: inventoryMysqlSecret.metadata.name, key: 'mysql-password' }
-      }
-    }
+    inventoryMysqlSecret.getEnvVar({ name: 'MYSQL_PASSWORD', key: 'mysql-password' })
   ]
   let inventoryJob = new solsa.batch.v1.Job({
     metadata: {

@@ -126,12 +126,7 @@ module.exports = function bcCatalog (appConfig) {
               resources: appConfig.values.catalog.resources,
               env: [
                 { name: 'inventory_health', value: `http://${invHostAndPort}/health` },
-                {
-                  name: 'elasticsearch_url',
-                  valueFrom: {
-                    secretKeyRef: { name: elasticsearchSecret.metadata.name, key: 'binding' }
-                  }
-                },
+                elasticsearchSecret.getEnvVar({ name: 'elasticsearch_url', key: 'binding' }),
                 { name: 'zipkinHost', value: `${appConfig.getInstanceName('zipkin')}` },
                 { name: 'zipkinPort', value: `${appConfig.values.zipkin.ports.zipkin}` },
                 { name: 'PORT', value: `${appConfig.values.catalog.ports.http}` },

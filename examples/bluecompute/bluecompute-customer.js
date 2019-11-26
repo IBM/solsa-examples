@@ -44,11 +44,7 @@ module.exports = function bcCustomer (appConfig) {
               name: 'cloudant',
               image: `${appConfig.values.cloudant.image.repository}:${appConfig.values.cloudant.image.tag}`,
               ports: [ { containerPort: appConfig.values.cloudant.ports.port } ],
-              env: [{
-                name: 'CLOUDANT_ROOT_PASSWORD',
-                valueFrom: { secretKeyRef: { name: cloudantSecret.metadata.name, key: 'password' } }
-              }
-              ]
+              env: [ cloudantSecret.getEnvVar({ name: 'CLOUDANT_ROOT_PASSWORD', key: 'password' }) ]
             }
           ]
         }
@@ -69,7 +65,7 @@ module.exports = function bcCustomer (appConfig) {
           initContainers: [
             {
               name: 'wait-for-cloudant',
-              image: 'busybox',
+              image: 'docker.io/library/busybox',
               env: [{ name: 'READINESS_URL', value: `http://${cloudantService.metadata.name}:${appConfig.values.cloudant.ports.port}` }],
               command: ['sh', '-c', 'while true; do echo "checking cloudant readiness"; wget -q -O - $READINESS_URL | grep Welcome; result=$?; if [ $result -eq 0 ]; then echo "Success: Cloudant is ready!"; break; fi; echo "...not ready yet; sleeping 3 seconds before retry"; sleep 3; done;']
             }
