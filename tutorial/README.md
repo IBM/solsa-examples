@@ -228,6 +228,13 @@ latter, SolSA automatically derives parameters for the new resource from
 parameters of the existing resource, such as the port of the ingress from the
 port of the containerized service.
 
+In this very common case of wanting an `Ingress` that exposes the sole port defined
+by the `ContainerizedService`, we could use a simpler construction which just
+passes the value `true` to an optional `ingress` parameter of the constructor.
+```javascript
+module.exports = new solsa.ContainerizedService({ name: 'hello-john', image: 'docker.io/ibmcom/kn-helloworld', port: 8080, ingress: true, env: { TARGET: 'John' } })
+```
+
 To synthesize YAML for an ingress, SolSA needs to know about the cluster this
 ingress is intended for. This information must be provided as part of a SolSA
 configuration file. By default, the `sosla` CLI looks for a configuration file
@@ -346,20 +353,18 @@ service:
 ```javascript
 const solsa = require('solsa')
 
-let service = new solsa.KnativeService({ name: 'hello-knative', image: 'docker.io/ibmcom/kn-helloworld', env: { TARGET: 'Knative' } })
-let ingress = service.getIngress()
-
-module.exports = new solsa.Bundle({ service, ingress })
+module.exports = new solsa.KnativeService({ name: 'hello-knative', image: 'docker.io/ibmcom/kn-helloworld', ingress: true, env: { TARGET: 'Knative' } })
 ```
 The formula is essentially the same. We replace the `ContainerizedService` class
 with the `KnativeService` class. Here we don't need to specify the port, as
 Knative can detect it automatically. We also changed the value of the `TARGET`
 environment variable to show a different output.
 
-The ingress definition is again a one-liner. But is is handled very differently
+Requesting an ingress definition is again simply a boolean parameter to the constructor.
+But is is handled very differently
 under the hood. On IKS (IBM Cloud Kubernetes Service), Knative services are
-exposed by default, so no YAML is needed to have an ingress. But, if no ingress
-is requested by the solution, a label is added to the generated YAML to disable
+exposed by default, so no YAML is needed to have an ingress. But, ingress
+is disable by passing in `false` for ingress, a label is added to the generated YAML to disable
 the default IKS behavior:
 ```yaml
   labels:
